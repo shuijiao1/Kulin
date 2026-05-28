@@ -1,0 +1,14 @@
+site_name: 哪吒
+language: zh_CN
+install_host: example.com
+force_auth: false
+listen_host: 0.0.0.0
+listen_port: 8008
+jwt_timeout: 168
+agent_secret_key: change-me
+location: Asia/Shanghai
+user_template: user-dist
+admin_template: admin-dist
+tsdb:
+  data_path: data/tsdb
+  retention_days: 7

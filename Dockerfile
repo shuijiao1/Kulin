@@ -1,18 +1,14 @@
-FROM alpine AS depend
-RUN apk add --update --no-cache ca-certificates tzdata
+FROM debian:13-slim
 
-FROM busybox:stable-musl
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates tzdata \
+    && rm -rf /var/lib/apt/lists/*
 
-ARG TARGETOS
-ARG TARGETARCH
-
-COPY --from=depend /etc/ssl/certs /etc/ssl/certs
-COPY --from=depend /usr/share/zoneinfo /usr/share/zoneinfo
 COPY ./script/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 WORKDIR /dashboard
-COPY dist/dashboard-${TARGETOS}-${TARGETARCH} ./app
+COPY dist/dashboard-linux-amd64 ./app
 
 VOLUME ["/dashboard/data"]
 EXPOSE 8008

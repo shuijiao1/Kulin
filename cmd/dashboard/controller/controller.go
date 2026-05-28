@@ -57,20 +57,16 @@ func routers(r *gin.Engine, frontendDist fs.FS) {
 	}
 	api := r.Group("api/v1")
 	api.POST("/login", authMiddleware.LoginHandler)
-	api.GET("/oauth2/:provider", commonHandler(oauth2redirect))
 
 	fallbackAuthMw := fallbackAuthMiddleware(authMiddleware)
 	fallbackAuth := api.Group("", fallbackAuthMw)
 	fallbackAuth.GET("/setting", commonHandler(listConfig))
-	fallbackAuth.GET("/oauth2/callback", commonHandler(oauth2callback(authMiddleware)))
 
 	authMw := authMiddleware.MiddlewareFunc()
 	optionalAuthMw := utils.IfOr(singleton.Conf.ForceAuth, authMw, fallbackAuthMw)
 
 	optionalAuth := api.Group("", optionalAuthMw)
 	optionalAuth.GET("/ws/server", commonHandler(serverStream))
-	optionalAuth.GET("/server-group", commonHandler(listServerGroup))
-
 	optionalAuth.GET("/service", commonHandler(showService))
 	optionalAuth.GET("/service/server", commonHandler(listServerWithServices))
 	optionalAuth.GET("/service/:id/history", commonHandler(getServiceHistory))
@@ -78,19 +74,12 @@ func routers(r *gin.Engine, frontendDist fs.FS) {
 	optionalAuth.GET("/server/:id/metrics", commonHandler(getServerMetrics))
 
 	auth := api.Group("", authMw)
-
 	auth.GET("/refresh-token", authMiddleware.RefreshHandler)
-
-	auth.POST("/terminal", commonHandler(createTerminal))
-	auth.GET("/ws/terminal/:id", commonHandler(terminalStream))
-
-	auth.POST("/file", commonHandler(createFM))
-	auth.GET("/ws/file/:id", commonHandler(fmStream))
-
 	auth.GET("/profile", commonHandler(getProfile))
 	auth.POST("/profile", commonHandler(updateProfile))
-	auth.POST("/oauth2/:provider/unbind", commonHandler(unbindOauth2))
 
+	// Kulin slim keeps only: users/login, servers, ping/tcping services,
+	// alert rules, Telegram notifications, and basic settings.
 	auth.GET("/user", adminHandler(listUser))
 	auth.POST("/user", adminHandler(createUser))
 	auth.POST("/batch-delete/user", adminHandler(batchDeleteUser))
@@ -100,27 +89,14 @@ func routers(r *gin.Engine, frontendDist fs.FS) {
 	auth.PATCH("/service/:id", commonHandler(updateService))
 	auth.POST("/batch-delete/service", commonHandler(batchDeleteService))
 
-	auth.POST("/server-group", commonHandler(createServerGroup))
-	auth.PATCH("/server-group/:id", commonHandler(updateServerGroup))
-	auth.POST("/batch-delete/server-group", commonHandler(batchDeleteServerGroup))
-
-	auth.GET("/notification-group", commonHandler(listNotificationGroup))
-	auth.POST("/notification-group", commonHandler(createNotificationGroup))
-	auth.PATCH("/notification-group/:id", commonHandler(updateNotificationGroup))
-	auth.POST("/batch-delete/notification-group", commonHandler(batchDeleteNotificationGroup))
-
 	auth.GET("/server", listHandler(listServer))
 	auth.PATCH("/server/:id", commonHandler(updateServer))
 	auth.GET("/server/config/:id", commonHandler(getServerConfig))
 	auth.POST("/server/config", commonHandler(setServerConfig))
 	auth.POST("/batch-delete/server", commonHandler(batchDeleteServer))
+	// Keep route as no-op compatibility for old frontends/API clients; Kulin UI does not expose groups.
 	auth.POST("/batch-move/server", commonHandler(batchMoveServer))
 	auth.POST("/force-update/server", commonHandler(forceUpdateServer))
-
-	auth.GET("/transfer", listHandler(listServerTransfer))
-	auth.POST("/transfer/:id/cancel", commonHandler(cancelServerTransfer))
-	auth.POST("/transfer/:id/retry", commonHandler(retryServerTransfer))
-	auth.GET("/ws/transfer", commonHandler(transferStream))
 
 	auth.GET("/notification", listHandler(listNotification))
 	auth.POST("/notification", commonHandler(createNotification))
@@ -132,31 +108,44 @@ func routers(r *gin.Engine, frontendDist fs.FS) {
 	auth.PATCH("/alert-rule/:id", commonHandler(updateAlertRule))
 	auth.POST("/batch-delete/alert-rule", commonHandler(batchDeleteAlertRule))
 
-	auth.GET("/cron", listHandler(listCron))
-	auth.POST("/cron", commonHandler(createCron))
-	auth.PATCH("/cron/:id", commonHandler(updateCron))
-	auth.POST("/cron/:id/manual", commonHandler(manualTriggerCron))
-	auth.POST("/batch-delete/cron", commonHandler(batchDeleteCron))
-
-	auth.GET("/ddns", listHandler(listDDNS))
-	auth.GET("/ddns/providers", commonHandler(listProviders))
-	auth.POST("/ddns", commonHandler(createDDNS))
-	auth.PATCH("/ddns/:id", commonHandler(updateDDNS))
-	auth.POST("/batch-delete/ddns", commonHandler(batchDeleteDDNS))
-
-	auth.GET("/nat", listHandler(listNAT))
-	auth.POST("/nat", commonHandler(createNAT))
-	auth.PATCH("/nat/:id", commonHandler(updateNAT))
-	auth.POST("/batch-delete/nat", commonHandler(batchDeleteNAT))
-
-	auth.GET("/waf", pAdminHandler(listBlockedAddress))
-	auth.POST("/batch-delete/waf", adminHandler(batchDeleteBlockedAddress))
-
-	auth.GET("/online-user", pAdminHandler(listOnlineUser))
-	auth.POST("/online-user/batch-block", adminHandler(batchBlockOnlineUser))
-
 	auth.PATCH("/setting", adminHandler(updateConfig))
 	auth.POST("/maintenance", adminHandler(runMaintenance))
+
+	// Explicitly return disabled errors for removed Nezha O&M features.
+	auth.POST("/terminal", commonHandler(disabledFeature("terminal")))
+	auth.GET("/ws/terminal/:id", commonHandler(disabledFeature("terminal")))
+	auth.POST("/file", commonHandler(disabledFeature("file manager")))
+	auth.GET("/ws/file/:id", commonHandler(disabledFeature("file manager")))
+	auth.GET("/cron", commonHandler(disabledFeature("scheduled tasks")))
+	auth.POST("/cron", commonHandler(disabledFeature("scheduled tasks")))
+	auth.PATCH("/cron/:id", commonHandler(disabledFeature("scheduled tasks")))
+	auth.POST("/cron/:id/manual", commonHandler(disabledFeature("scheduled tasks")))
+	auth.POST("/batch-delete/cron", commonHandler(disabledFeature("scheduled tasks")))
+	auth.GET("/ddns", commonHandler(disabledFeature("ddns")))
+	auth.GET("/ddns/providers", commonHandler(disabledFeature("ddns")))
+	auth.POST("/ddns", commonHandler(disabledFeature("ddns")))
+	auth.PATCH("/ddns/:id", commonHandler(disabledFeature("ddns")))
+	auth.POST("/batch-delete/ddns", commonHandler(disabledFeature("ddns")))
+	auth.GET("/nat", commonHandler(disabledFeature("nat")))
+	auth.POST("/nat", commonHandler(disabledFeature("nat")))
+	auth.PATCH("/nat/:id", commonHandler(disabledFeature("nat")))
+	auth.POST("/batch-delete/nat", commonHandler(disabledFeature("nat")))
+	auth.GET("/transfer", commonHandler(disabledFeature("server transfer")))
+	auth.POST("/transfer/:id/cancel", commonHandler(disabledFeature("server transfer")))
+	auth.POST("/transfer/:id/retry", commonHandler(disabledFeature("server transfer")))
+	auth.GET("/ws/transfer", commonHandler(disabledFeature("server transfer")))
+	auth.GET("/server-group", commonHandler(disabledFeature("server groups")))
+	auth.POST("/server-group", commonHandler(disabledFeature("server groups")))
+	auth.PATCH("/server-group/:id", commonHandler(disabledFeature("server groups")))
+	auth.POST("/batch-delete/server-group", commonHandler(disabledFeature("server groups")))
+	auth.GET("/notification-group", commonHandler(disabledFeature("notification groups")))
+	auth.POST("/notification-group", commonHandler(disabledFeature("notification groups")))
+	auth.PATCH("/notification-group/:id", commonHandler(disabledFeature("notification groups")))
+	auth.POST("/batch-delete/notification-group", commonHandler(disabledFeature("notification groups")))
+	auth.GET("/waf", commonHandler(disabledFeature("waf")))
+	auth.POST("/batch-delete/waf", commonHandler(disabledFeature("waf")))
+	auth.GET("/online-user", commonHandler(disabledFeature("online users")))
+	auth.POST("/online-user/batch-block", commonHandler(disabledFeature("online users")))
 
 	r.NoRoute(fallbackToFrontend(frontendDist))
 }

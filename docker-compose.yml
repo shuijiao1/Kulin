@@ -1,0 +1,13 @@
+name: kulin-nezha
+
+services:
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kulin-nezha-dashboard
+    restart: unless-stopped
+    ports:
+      - "8031:8008"
+    volumes:
+      - ./data:/dashboard/data
