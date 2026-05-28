@@ -2,6 +2,7 @@ name: kulin-nezha
 
 services:
   dashboard:
+    image: ghcr.io/shuijiao1/kulin:latest
     build:
       context: .
       dockerfile: Dockerfile

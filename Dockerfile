@@ -8,7 +8,9 @@ COPY ./script/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 WORKDIR /dashboard
-COPY dist/dashboard-linux-amd64 ./app
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
+COPY dist/dashboard-${TARGETOS}-${TARGETARCH} ./app
 
 VOLUME ["/dashboard/data"]
 EXPOSE 8008
