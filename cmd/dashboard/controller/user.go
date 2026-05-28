@@ -2,13 +2,11 @@ package controller
 
 import (
 	"slices"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/pkg/utils"
 	"github.com/nezhahq/nezha/service/singleton"
 )
 
@@ -182,78 +180,4 @@ func batchDeleteUser(c *gin.Context) (any, error) {
 
 	err := singleton.OnUserDelete(ids, newGormError)
 	return nil, err
-}
-
-// List online users
-// @Summary List online users
-// @Security BearerAuth
-// @Schemes
-// @Description List online users
-// @Tags auth required
-// @Param limit query uint false "Page limit"
-// @Param offset query uint false "Page offset"
-// @Produce json
-// @Success 200 {object} model.PaginatedResponse[[]model.OnlineUser, model.OnlineUser]
-// @Router /online-user [get]
-func listOnlineUser(c *gin.Context) (*model.Value[[]*model.OnlineUser], error) {
-	var isAdmin bool
-	u, ok := c.Get(model.CtxKeyAuthorizedUser)
-	if ok {
-		isAdmin = u.(*model.User).Role.IsAdmin()
-	}
-	limit, err := strconv.Atoi(c.Query("limit"))
-	if err != nil || limit < 1 {
-		limit = 25
-	}
-
-	offset, err := strconv.Atoi(c.Query("offset"))
-	if err != nil || offset < 0 {
-		offset = 0
-	}
-
-	users := singleton.GetOnlineUsers(limit, offset)
-	if !isAdmin {
-		var newUsers []*model.OnlineUser
-		for _, user := range users {
-			newUsers = append(newUsers, &model.OnlineUser{
-				UserID:      user.UserID,
-				IP:          utils.IPDesensitize(user.IP),
-				ConnectedAt: user.ConnectedAt,
-			})
-		}
-		users = newUsers
-	}
-
-	return &model.Value[[]*model.OnlineUser]{
-		Value: users,
-		Pagination: model.Pagination{
-			Offset: offset,
-			Limit:  limit,
-			Total:  int64(singleton.GetOnlineUserCount()),
-		},
-	}, nil
-}
-
-// Batch block online user
-// @Summary Batch block online user
-// @Security BearerAuth
-// @Schemes
-// @Description Batch block online user
-// @Tags admin required
-// @Accept json
-// @Param request body []string true "block list"
-// @Produce json
-// @Success 200 {object} model.CommonResponse[any]
-// @Router /online-user/batch-block [post]
-func batchBlockOnlineUser(c *gin.Context) (any, error) {
-	var list []string
-	if err := c.ShouldBindJSON(&list); err != nil {
-		return nil, err
-	}
-
-	if err := singleton.BlockByIPs(utils.Unique(list)); err != nil {
-		return nil, newGormError("%v", err)
-	}
-
-	return nil, nil
 }

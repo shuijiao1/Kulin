@@ -311,17 +311,6 @@ func (s *NezhaHandler) ReportGeoIP(c context.Context, r *pb.GeoIP) (*pb.GeoIP, e
 		return nil, fmt.Errorf("server not found")
 	}
 
-	// 检查并更新DDNS
-	if server.EnableDDNS && joinedIP != "" &&
-		(server.GeoIP == nil || server.GeoIP.IP != geoip.IP) {
-		ipv4 := geoip.IP.IPv4Addr
-		ipv6 := geoip.IP.IPv6Addr
-
-		if err := singleton.ServerShared.UpdateDDNS(server, &model.IP{IPv4Addr: ipv4, IPv6Addr: ipv6}); err != nil {
-			log.Printf("NEZHA>> Failed to update DDNS for server %d: %v", err, server.ID)
-		}
-	}
-
 	// 发送IP变动通知
 	if server.GeoIP != nil && singleton.Conf.EnableIPChangeNotification &&
 		((singleton.Conf.Cover == model.ConfigCoverAll && !singleton.Conf.IgnoredIPNotificationServerIDs[clientID]) ||

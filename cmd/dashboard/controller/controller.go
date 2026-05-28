@@ -78,8 +78,6 @@ func routers(r *gin.Engine, frontendDist fs.FS) {
 	auth.GET("/profile", commonHandler(getProfile))
 	auth.POST("/profile", commonHandler(updateProfile))
 
-	// Kulin slim keeps only: users/login, servers, ping/tcping services,
-	// alert rules, Telegram notifications, and basic settings.
 	auth.GET("/user", adminHandler(listUser))
 	auth.POST("/user", adminHandler(createUser))
 	auth.POST("/batch-delete/user", adminHandler(batchDeleteUser))
@@ -94,8 +92,6 @@ func routers(r *gin.Engine, frontendDist fs.FS) {
 	auth.GET("/server/config/:id", commonHandler(getServerConfig))
 	auth.POST("/server/config", commonHandler(setServerConfig))
 	auth.POST("/batch-delete/server", commonHandler(batchDeleteServer))
-	// Keep route as no-op compatibility for old frontends/API clients; Kulin UI does not expose groups.
-	auth.POST("/batch-move/server", commonHandler(batchMoveServer))
 	auth.POST("/force-update/server", commonHandler(forceUpdateServer))
 
 	auth.GET("/notification", listHandler(listNotification))
@@ -110,42 +106,6 @@ func routers(r *gin.Engine, frontendDist fs.FS) {
 
 	auth.PATCH("/setting", adminHandler(updateConfig))
 	auth.POST("/maintenance", adminHandler(runMaintenance))
-
-	// Explicitly return disabled errors for removed Nezha O&M features.
-	auth.POST("/terminal", commonHandler(disabledFeature("terminal")))
-	auth.GET("/ws/terminal/:id", commonHandler(disabledFeature("terminal")))
-	auth.POST("/file", commonHandler(disabledFeature("file manager")))
-	auth.GET("/ws/file/:id", commonHandler(disabledFeature("file manager")))
-	auth.GET("/cron", commonHandler(disabledFeature("scheduled tasks")))
-	auth.POST("/cron", commonHandler(disabledFeature("scheduled tasks")))
-	auth.PATCH("/cron/:id", commonHandler(disabledFeature("scheduled tasks")))
-	auth.POST("/cron/:id/manual", commonHandler(disabledFeature("scheduled tasks")))
-	auth.POST("/batch-delete/cron", commonHandler(disabledFeature("scheduled tasks")))
-	auth.GET("/ddns", commonHandler(disabledFeature("ddns")))
-	auth.GET("/ddns/providers", commonHandler(disabledFeature("ddns")))
-	auth.POST("/ddns", commonHandler(disabledFeature("ddns")))
-	auth.PATCH("/ddns/:id", commonHandler(disabledFeature("ddns")))
-	auth.POST("/batch-delete/ddns", commonHandler(disabledFeature("ddns")))
-	auth.GET("/nat", commonHandler(disabledFeature("nat")))
-	auth.POST("/nat", commonHandler(disabledFeature("nat")))
-	auth.PATCH("/nat/:id", commonHandler(disabledFeature("nat")))
-	auth.POST("/batch-delete/nat", commonHandler(disabledFeature("nat")))
-	auth.GET("/transfer", commonHandler(disabledFeature("server transfer")))
-	auth.POST("/transfer/:id/cancel", commonHandler(disabledFeature("server transfer")))
-	auth.POST("/transfer/:id/retry", commonHandler(disabledFeature("server transfer")))
-	auth.GET("/ws/transfer", commonHandler(disabledFeature("server transfer")))
-	auth.GET("/server-group", commonHandler(disabledFeature("server groups")))
-	auth.POST("/server-group", commonHandler(disabledFeature("server groups")))
-	auth.PATCH("/server-group/:id", commonHandler(disabledFeature("server groups")))
-	auth.POST("/batch-delete/server-group", commonHandler(disabledFeature("server groups")))
-	auth.GET("/notification-group", commonHandler(disabledFeature("notification groups")))
-	auth.POST("/notification-group", commonHandler(disabledFeature("notification groups")))
-	auth.PATCH("/notification-group/:id", commonHandler(disabledFeature("notification groups")))
-	auth.POST("/batch-delete/notification-group", commonHandler(disabledFeature("notification groups")))
-	auth.GET("/waf", commonHandler(disabledFeature("waf")))
-	auth.POST("/batch-delete/waf", commonHandler(disabledFeature("waf")))
-	auth.GET("/online-user", commonHandler(disabledFeature("online users")))
-	auth.POST("/online-user/batch-block", commonHandler(disabledFeature("online users")))
 
 	r.NoRoute(fallbackToFrontend(frontendDist))
 }
@@ -367,23 +327,11 @@ func fallbackToFrontend(frontendDist fs.FS) func(*gin.Context) {
 		regexp.MustCompile(`^/dashboard/$`),
 		regexp.MustCompile(`^/dashboard/login$`),
 		regexp.MustCompile(`^/dashboard/service$`),
-		regexp.MustCompile(`^/dashboard/cron$`),
 		regexp.MustCompile(`^/dashboard/notification$`),
 		regexp.MustCompile(`^/dashboard/alert-rule$`),
-		regexp.MustCompile(`^/dashboard/ddns$`),
-		regexp.MustCompile(`^/dashboard/nat$`),
-		regexp.MustCompile(`^/dashboard/server-group$`),
-		regexp.MustCompile(`^/dashboard/notification-group$`),
 		regexp.MustCompile(`^/dashboard/profile$`),
 		regexp.MustCompile(`^/dashboard/settings$`),
 		regexp.MustCompile(`^/dashboard/settings/user$`),
-		regexp.MustCompile(`^/dashboard/settings/online-user$`),
-		regexp.MustCompile(`^/dashboard/settings/waf$`),
-		// 注意：这里的白名单决定哪些 URL 走 index.html fallback；漏一条就会把
-		// 直接刷新该页面变成 404（HTTP 状态码层面，body 仍是 index.html，所以
-		// 浏览器内 SPA 看起来正常，但 monitoring / 链接预览会以为站点挂了）。
-		// 新增前端路由时必须在 admin-frontend/src/main.tsx 与这里同步加。
-		regexp.MustCompile(`^/dashboard/transfer$`),
 	}
 
 	getFallbackStatusCode := func(path string) int {
