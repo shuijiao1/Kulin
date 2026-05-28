@@ -175,6 +175,62 @@
     <link rel="modulepreload" crossorigin href="/assets/i18n-iso-countries.BBxFVUU8.js">
     <link rel="modulepreload" crossorigin href="/assets/i18next.C77IuWVK.js">
     <link rel="stylesheet" crossorigin href="/assets/index.BGIjSQ1Z.css">
+  
+<script id="kulin-traffic-progress">
+;(() => {
+  const cfg = Object.assign({ showTrafficStats: true, insertAfter: true, interval: 60000, toggleInterval: 0, duration: 500, apiUrl: '/api/v1/service', enableLog: false }, window.TrafficScriptConfig || {});
+  const fmt = (bytes) => {
+    bytes = Number(bytes || 0);
+    if (bytes === 0) return ['0', 'B'];
+    const units = ['B','KB','MB','GB','TB','PB'];
+    let i = 0;
+    while (bytes >= 1024 && i < units.length - 1) { bytes /= 1024; i++; }
+    return [bytes.toFixed(i === 0 ? 0 : 2), units[i]];
+  };
+  const pct = (used,total) => total ? Math.min((Number(used || 0) / Number(total || 0)) * 100, 100) : 0;
+  const date = (v) => { const d = new Date(v); return Number.isNaN(+d) ? '' : d.toLocaleDateString('zh-CN'); };
+  const color = (p) => p <= 35 ? 'hsl(142, 69%, 45%)' : p <= 85 ? 'hsl(32, 85%, 55%)' : 'hsl(0, 75%, 50%)';
+  let cache = null;
+  const fetchData = async () => {
+    const now = Date.now();
+    if (cache && now - cache.ts < cfg.interval) return cache.data;
+    const res = await fetch(cfg.apiUrl);
+    const json = await res.json();
+    const data = json?.data?.cycle_transfer_stats || {};
+    cache = { ts: now, data };
+    return data;
+  };
+  const render = async () => {
+    if (!cfg.showTrafficStats) return;
+    const data = await fetchData().catch(() => null);
+    if (!data) return;
+    const byName = new Map();
+    Object.values(data).forEach(c => {
+      if (!c?.server_name) return;
+      Object.entries(c.server_name).forEach(([id, name]) => byName.set(String(name).trim(), { id, name, transfer: c.transfer?.[id] || 0, max: c.max || 0, from: c.from, to: c.to, next: c.next_update?.[id] }));
+    });
+    document.querySelectorAll('section.grid.items-center.gap-2').forEach(section => {
+      const name = section.querySelector('p')?.textContent?.trim();
+      const info = byName.get(name);
+      if (!info) return;
+      const container = section.closest('div');
+      if (!container || container.querySelector(`.kulin-traffic-${info.id}`)) return;
+      const anchor = cfg.insertAfter ? (container.querySelector('section.flex.items-center.w-full.justify-between.gap-1') || container.querySelector('section.grid.items-center.gap-3')) : container.querySelector('section.grid.items-center.gap-3');
+      if (!anchor) return;
+      const [used, usedUnit] = fmt(info.transfer), [total, totalUnit] = fmt(info.max), p = pct(info.transfer, info.max);
+      const el = document.createElement('div');
+      el.className = `space-y-1.5 new-inserted-element kulin-traffic-${info.id}`;
+      el.style.width = '100%';
+      el.innerHTML = `<div class="flex items-center justify-between"><div class="flex items-baseline gap-1"><span class="text-[10px] font-medium text-neutral-800 dark:text-neutral-200">${used}</span><span class="text-[10px] font-medium text-neutral-800 dark:text-neutral-200">${usedUnit}</span><span class="text-[10px] text-neutral-500 dark:text-neutral-400">/ </span><span class="text-[10px] text-neutral-500 dark:text-neutral-400">${total}</span><span class="text-[10px] text-neutral-500 dark:text-neutral-400">${totalUnit}</span></div><div class="text-[10px] font-medium text-neutral-600 dark:text-neutral-300">${date(info.from)} - ${date(info.to)}</div></div><div class="relative h-1.5"><div class="absolute inset-0 bg-neutral-100 dark:bg-neutral-800 rounded-full"></div><div class="absolute inset-0 rounded-full transition-all duration-300" style="width:${p}%;max-width:100%;background-color:${color(p)}"></div></div>`;
+      anchor.after(el);
+    });
+  };
+  const obs = new MutationObserver(() => render());
+  const start = () => { render(); obs.observe(document.body, { childList: true, subtree: true }); setInterval(render, cfg.interval); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();
+})();
+</script>
+
   </head>
   <body>
     <div id="root"></div>
