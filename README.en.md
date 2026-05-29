@@ -6,7 +6,7 @@
 ![Docker](https://img.shields.io/badge/docker-ghcr.io%2Fshuijiao1%2Fkulin-blue?style=flat-square)
 ![License](https://img.shields.io/github/license/shuijiao1/Kulin?style=flat-square)
 
-> **Kulin** is a slim server probe dashboard forked from [Nezha](https://github.com/nezhahq/nezha). It keeps common monitoring, service checks, alerts, and Telegram notifications while removing complex ops features.
+> **Kulin** is a slim server probe dashboard forked from [Nezha](https://github.com/nezhahq/nezha). It keeps common server monitoring, latency checks, alerts, and Telegram notifications while removing complex ops entries from the admin source and build output.
 
 ---
 
@@ -14,23 +14,23 @@
 
 - Server status: online state, CPU, memory, disk, load, uptime, OS, arch, virtualization, IP/region
 - Network speed, total traffic, and cycle transfer display
-- Ping / TCPing service monitoring
+- ICMP Ping / TCPing latency monitoring
 - Offline, resource, and traffic alerts
 - Telegram notifications
-- Login, user management, server sorting, hiding, notes, and Agent config
+- Login, user management, server sorting, hiding, billing notes, and Agent install commands
 - Based on Nezha Agent/data model, suitable for migration or self-hosting
 
 ---
 
 ## 🧹 Removed / Disabled
 
-Kulin disables and removes these complex features from the UI:
+Kulin removes these complex feature entries from the admin source, routes, and build output:
 
 - Web Terminal / file manager
 - Scheduled tasks / Cron
-- DDNS / NAT / server transfer
+- DDNS / NAT / server config panel
 - Server groups / notification groups
-- OAuth / WAF / online user management
+- OAuth / online user management
 - Complex notification channels and theme marketplace
 
 ---
@@ -84,7 +84,7 @@ When using a reverse proxy, keep `/proto.NezhaService/*` proxied to the dashboar
 
 ## ⚙️ Agent
 
-Copy the Agent installation command from the panel, or make sure the Agent config includes:
+Copy the Agent installation command from the panel. Keeping remote command execution disabled on the Agent side is recommended:
 
 ```yaml
 server: example.com:443

@@ -81,18 +81,25 @@ func (r *AlertRule) Check(points [][]bool) (int, bool) {
 	for ruleIndex, rule := range r.Rules {
 		duration := int(rule.Duration)
 		if rule.IsTransferDurationRule() {
-			// 循环区间流量报警
+			// Legacy cycle-transfer alert rules may still exist before DB migration.
+			// Keep this branch defensive so old data can never crash the sentinel.
 			if durations[ruleIndex] < 1 {
 				durations[ruleIndex] = 1
 			}
 			if hasPassedRule {
 				continue
 			}
-			// 只要最后一次检查超出了规则范围 就认为检查未通过
 			if len(points) > 0 && points[len(points)-1][ruleIndex] {
 				hasPassedRule = true
 			}
-		} else if rule.IsOfflineRule() {
+			continue
+		}
+		// Invalid legacy or partially-saved alert rules must not crash the
+		// sentinel. Treat missing/zero duration as one sample.
+		if duration <= 0 {
+			duration = 1
+		}
+		if rule.IsOfflineRule() {
 			// 离线报警，检查直到最后一次在线的离线采样点是否大于 duration
 			if hasPassedRule = boundCheck(len(points), duration, hasPassedRule); hasPassedRule {
 				continue

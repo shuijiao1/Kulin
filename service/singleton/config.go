@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/pkg/utils"
 )
 
 var Conf *ConfigClass
@@ -15,7 +14,6 @@ type ConfigClass struct {
 	*model.Config
 
 	IgnoredIPNotificationServerIDs map[uint64]bool `json:"ignored_ip_notification_server_ids,omitempty"`
-	Oauth2Providers                []string        `json:"oauth2_providers,omitempty"`
 }
 
 // InitConfigFromPath 从给出的文件路径中加载配置
@@ -36,7 +34,6 @@ func InitConfigFromPath(path string) error {
 	}
 
 	Conf.updateIgnoredIPNotificationID()
-	Conf.Oauth2Providers = utils.MapKeysToSlice(Conf.Oauth2)
 	return nil
 }
 

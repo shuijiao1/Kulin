@@ -6,7 +6,7 @@
 ![Docker](https://img.shields.io/badge/docker-ghcr.io%2Fshuijiao1%2Fkulin-blue?style=flat-square)
 ![License](https://img.shields.io/github/license/shuijiao1/Kulin?style=flat-square)
 
-> **Kulin** 是基于 [Nezha](https://github.com/nezhahq/nezha) fork 的精简服务器探针面板，保留常用监控、服务监控、告警和 Telegram 通知，移除复杂运维功能。
+> **Kulin** 是基于 [Nezha](https://github.com/nezhahq/nezha) fork 的精简服务器探针面板，保留常用服务器监控、延迟监控、告警和 Telegram 通知，并从后台源码与构建产物中移除复杂运维入口。
 
 ---
 
@@ -14,23 +14,23 @@
 
 - 服务器状态监控：在线状态、CPU、内存、硬盘、负载、运行时间、系统、架构、虚拟化、IP/地区
 - 网络速率、总流量和周期流量展示
-- Ping / TCPing 服务监控
+- ICMP Ping / TCPing 延迟监控
 - 离线、资源、流量告警
 - Telegram 通知
-- 登录、用户管理、服务器排序、隐藏、备注和 Agent 配置
+- 登录、用户管理、服务器排序、隐藏、账单备注和 Agent 安装命令
 - 基于 Nezha Agent / 数据模型，适合从 Nezha 迁移或自部署
 
 ---
 
 ## 🧹 精简内容
 
-Kulin 默认禁用并从界面中移除这些复杂功能：
+Kulin 从后台源码、路由和构建产物中移除这些复杂功能入口：
 
 - Web Terminal / 文件管理
 - 计划任务 / Cron
-- DDNS / NAT / 服务器转移
+- DDNS / NAT / 服务器配置面板
 - 服务器分组 / 通知分组
-- OAuth / WAF / 在线用户管理
+- OAuth / 在线用户管理
 - 复杂多通知渠道和主题市场
 
 ---
@@ -84,7 +84,7 @@ docker compose logs -f
 
 ## ⚙️ Agent 接入
 
-在面板中复制 Agent 安装命令，或手动确保 Agent 配置包含：
+在面板中复制 Agent 安装命令。Agent 侧建议保持远程命令执行关闭：
 
 ```yaml
 server: example.com:443

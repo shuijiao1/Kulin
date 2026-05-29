@@ -3,8 +3,6 @@ package controller
 import (
 	"slices"
 	"strconv"
-	"sync"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
@@ -73,6 +71,12 @@ func updateServer(c *gin.Context) (any, error) {
 	s.Note = sf.Note
 	s.PublicNote = sf.PublicNote
 	s.HideForGuest = sf.HideForGuest
+	s.CycleTransferEnabled = sf.CycleTransferEnabled
+	s.CycleTransferType = sf.CycleTransferType
+	s.CycleTransferMax = sf.CycleTransferMax
+	s.CycleTransferStart = sf.CycleTransferStart
+	s.CycleTransferInterval = sf.CycleTransferInterval
+	s.CycleTransferUnit = sf.CycleTransferUnit
 
 	if err := singleton.DB.Save(&s).Error; err != nil {
 		return nil, newGormError("%v", err)
@@ -119,13 +123,7 @@ func batchDeleteServer(c *gin.Context) (any, error) {
 
 	singleton.AlertsLock.Lock()
 	for _, sid := range servers {
-		for _, alert := range singleton.Alerts {
-			if singleton.AlertsCycleTransferStatsStore[alert.ID] != nil {
-				delete(singleton.AlertsCycleTransferStatsStore[alert.ID].ServerName, sid)
-				delete(singleton.AlertsCycleTransferStatsStore[alert.ID].Transfer, sid)
-				delete(singleton.AlertsCycleTransferStatsStore[alert.ID].NextUpdate, sid)
-			}
-		}
+		delete(singleton.AlertsCycleTransferStatsStore, sid)
 	}
 	singleton.DB.Unscoped().Delete(&model.Transfer{}, "server_id in (?)", servers)
 	singleton.AlertsLock.Unlock()
@@ -190,46 +188,7 @@ func forceUpdateServer(c *gin.Context) (*model.ServerTaskResponse, error) {
 // @Success 200 {object} model.CommonResponse[string]
 // @Router /server/config/{id} [get]
 func getServerConfig(c *gin.Context) (string, error) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 64)
-	if err != nil {
-		return "", err
-	}
-
-	s, ok := singleton.ServerShared.Get(id)
-	if !ok {
-		return "", nil
-	}
-	stream := s.GetTaskStream()
-	if stream == nil {
-		return "", nil
-	}
-
-	if !s.HasPermission(c) {
-		return "", singleton.Localizer.ErrorT("permission denied")
-	}
-
-	if err := stream.Send(&pb.Task{
-		Type: model.TaskTypeReportConfig,
-	}); err != nil {
-		return "", err
-	}
-
-	timeout := time.NewTimer(time.Second * 10)
-	select {
-	case <-timeout.C:
-		return "", singleton.Localizer.ErrorT("operation timeout")
-	case data := <-s.ConfigCache:
-		timeout.Stop()
-		switch data := data.(type) {
-		case string:
-			return data, nil
-		case error:
-			return "", singleton.Localizer.ErrorT("get server config failed: %v", data)
-		}
-	}
-
-	return "", singleton.Localizer.ErrorT("get server config failed")
+	return "", singleton.Localizer.ErrorT("server config has been removed")
 }
 
 // Set server config
@@ -244,65 +203,7 @@ func getServerConfig(c *gin.Context) (string, error) {
 // @Success 200 {object} model.CommonResponse[model.ServerTaskResponse]
 // @Router /server/config [post]
 func setServerConfig(c *gin.Context) (*model.ServerTaskResponse, error) {
-	var configForm model.ServerConfigForm
-	if err := c.ShouldBindJSON(&configForm); err != nil {
-		return nil, err
-	}
-
-	var resp model.ServerTaskResponse
-	slist := singleton.ServerShared.GetList()
-	servers := make([]*model.Server, 0, len(configForm.Servers))
-	for _, sid := range configForm.Servers {
-		if s, ok := slist[sid]; ok {
-			if !s.HasPermission(c) {
-				return nil, singleton.Localizer.ErrorT("permission denied")
-			}
-			if s.GetTaskStream() == nil {
-				resp.Offline = append(resp.Offline, s.ID)
-				continue
-			}
-			servers = append(servers, s)
-		}
-	}
-
-	var wg sync.WaitGroup
-	var respMu sync.Mutex
-
-	for i := 0; i < len(servers); i += 10 {
-		end := min(i+10, len(servers))
-		group := servers[i:end]
-
-		wg.Add(1)
-		go func(srvGroup []*model.Server) {
-			defer wg.Done()
-			for _, s := range srvGroup {
-				// Create and send the task.
-				task := &pb.Task{
-					Type: model.TaskTypeApplyConfig,
-					Data: configForm.Config,
-				}
-				stream := s.GetTaskStream()
-				if stream == nil {
-					respMu.Lock()
-					resp.Offline = append(resp.Offline, s.ID)
-					respMu.Unlock()
-					continue
-				}
-				if err := stream.Send(task); err != nil {
-					respMu.Lock()
-					resp.Failure = append(resp.Failure, s.ID)
-					respMu.Unlock()
-					continue
-				}
-				respMu.Lock()
-				resp.Success = append(resp.Success, s.ID)
-				respMu.Unlock()
-			}
-		}(group)
-	}
-
-	wg.Wait()
-	return &resp, nil
+	return nil, singleton.Localizer.ErrorT("server config has been removed")
 }
 
 var serverMetricMap = map[string]tsdb.MetricType{

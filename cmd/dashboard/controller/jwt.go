@@ -61,14 +61,14 @@ func issueJWTSession(c *gin.Context, user *model.User, jwtTimeoutHours int) (map
 
 func initParams() *jwt.GinJWTMiddleware {
 	return &jwt.GinJWTMiddleware{
-		Realm:       singleton.Conf.SiteName,
-		Key:         []byte(singleton.Conf.JWTSecretKey),
-		CookieName:  "nz-jwt",
-		SendCookie:  true,
+		Realm:      singleton.Conf.SiteName,
+		Key:        []byte(singleton.Conf.JWTSecretKey),
+		CookieName: "nz-jwt",
+		SendCookie: true,
 		// Pin the signing algorithm so a future library default change (or an
 		// `alg: none` confusion attempt) cannot weaken token validation.
 		SigningAlgorithm: "HS256",
-		// Lax keeps OAuth callback redirects (top-level GET navigations from
+		// Lax keeps external login callback redirects (top-level GET navigations from
 		// the provider domain) working while blocking cross-site POST CSRF.
 		// HttpOnly/Secure are intentionally left default: the frontend reads
 		// `!!document.cookie` for login-state display and many deployments
@@ -189,15 +189,10 @@ func authenticator() func(c *gin.Context) (any, error) {
 		var user model.User
 		realip := c.GetString(model.CtxKeyRealIPStr)
 
-		if err := singleton.DB.Select("id", "password", "reject_password", "token_version").Where("username = ?", loginVals.Username).First(&user).Error; err != nil {
+		if err := singleton.DB.Select("id", "password", "token_version").Where("username = ?", loginVals.Username).First(&user).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
 				model.BlockIP(singleton.DB, realip, model.WAFBlockReasonTypeLoginFail, model.BlockIDUnknownUser)
 			}
-			return nil, jwt.ErrFailedAuthentication
-		}
-
-		if user.RejectPassword {
-			model.BlockIP(singleton.DB, realip, model.WAFBlockReasonTypeLoginFail, int64(user.ID))
 			return nil, jwt.ErrFailedAuthentication
 		}
 

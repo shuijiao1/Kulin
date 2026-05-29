@@ -3,6 +3,7 @@ package model
 import (
 	"github.com/goccy/go-json"
 	"slices"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -18,6 +19,13 @@ type Server struct {
 	PublicNote   string `json:"public_note,omitempty"`    // 公开备注
 	DisplayIndex int    `json:"display_index"`            // 展示排序，越大越靠前
 	HideForGuest bool   `json:"hide_for_guest,omitempty"` // 对游客隐藏
+
+	CycleTransferEnabled  bool       `json:"cycle_transfer_enabled,omitempty"`  // 启用每服务器周期流量条
+	CycleTransferType     string     `json:"cycle_transfer_type,omitempty"`     // transfer_in_cycle/transfer_out_cycle/transfer_all_cycle（内部兼容值）
+	CycleTransferMax      uint64     `json:"cycle_transfer_max,omitempty"`      // 周期流量配额（字节）
+	CycleTransferStart    *time.Time `json:"cycle_transfer_start,omitempty"`    // 周期开始时间
+	CycleTransferInterval uint64     `json:"cycle_transfer_interval,omitempty"` // 周期间隔
+	CycleTransferUnit     string     `json:"cycle_transfer_unit,omitempty"`     // hour/day/week/month/year
 
 	Host       *Host      `gorm:"-" json:"host,omitempty"`
 	State      *HostState `gorm:"-" json:"state,omitempty"`
@@ -35,6 +43,35 @@ type Server struct {
 
 	PrevTransferInSnapshot  uint64 `gorm:"-" json:"-"` // 上次数据点时的入站使用量
 	PrevTransferOutSnapshot uint64 `gorm:"-" json:"-"` // 上次数据点时的出站使用量
+}
+
+func (s *Server) CycleTransferRule() *Rule {
+	if s == nil || !s.CycleTransferEnabled || s.CycleTransferMax == 0 || s.CycleTransferStart == nil {
+		return nil
+	}
+	ruleType := s.CycleTransferType
+	switch ruleType {
+	case "transfer_in_cycle", "transfer_out_cycle", "transfer_all_cycle":
+	default:
+		ruleType = "transfer_all_cycle"
+	}
+	interval := s.CycleTransferInterval
+	if interval == 0 {
+		interval = 1
+	}
+	unit := strings.ToLower(s.CycleTransferUnit)
+	switch unit {
+	case "hour", "day", "week", "month", "year":
+	default:
+		unit = "month"
+	}
+	return &Rule{
+		Type:          ruleType,
+		Max:           float64(s.CycleTransferMax),
+		CycleStart:    s.CycleTransferStart,
+		CycleInterval: interval,
+		CycleUnit:     unit,
+	}
 }
 
 // taskStreamHolder wraps the interface so atomic.Pointer (which requires a

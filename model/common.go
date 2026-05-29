@@ -19,10 +19,6 @@ const (
 	CtxKeyIsIPMismatch   = "ckipm"
 )
 
-const (
-	CacheKeyOauth2State = "cko2s::"
-)
-
 type CtxKeyRealIP struct{}
 type CtxKeyConnectingIP struct{}
 

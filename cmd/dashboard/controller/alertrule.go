@@ -4,7 +4,6 @@ import (
 	"maps"
 	"slices"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
@@ -174,20 +173,11 @@ func validateRule(c *gin.Context, r *model.AlertRule) error {
 				return singleton.Localizer.ErrorT("permission denied")
 			}
 
-			if !rule.IsTransferDurationRule() {
-				if rule.Duration < 3 {
-					return singleton.Localizer.ErrorT("duration need to be at least 3")
-				}
-			} else {
-				if rule.CycleInterval < 1 {
-					return singleton.Localizer.ErrorT("cycle_interval need to be at least 1")
-				}
-				if rule.CycleStart == nil {
-					return singleton.Localizer.ErrorT("cycle_start is not set")
-				}
-				if rule.CycleStart.After(time.Now()) {
-					return singleton.Localizer.ErrorT("cycle_start is a future value")
-				}
+			if rule.IsTransferDurationRule() {
+				return singleton.Localizer.ErrorT("cycle transfer settings have been moved to server edit")
+			}
+			if rule.Duration < 3 {
+				return singleton.Localizer.ErrorT("duration need to be at least 3")
 			}
 		}
 	} else {

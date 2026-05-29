@@ -80,9 +80,6 @@ type Config struct {
 	jwtSecretFromEnv  bool `koanf:"-" json:"-" yaml:"-"`
 	jwtSecretFromYAML bool `koanf:"-" json:"-" yaml:"-"`
 
-	// oauth2 配置
-	Oauth2 map[string]*Oauth2Config `koanf:"oauth2" json:"oauth2,omitempty"`
-
 	// HTTPS 配置
 	HTTPS HTTPSConf `koanf:"https" json:"https"`
 

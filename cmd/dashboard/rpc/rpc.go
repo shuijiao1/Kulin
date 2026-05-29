@@ -3,17 +3,12 @@ package rpc
 import (
 	"context"
 	"fmt"
-	"log"
-	"net/http"
-	"net/netip"
-	"time"
-
-	"github.com/goccy/go-json"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
+	"log"
+	"net/netip"
 
-	"github.com/hashicorp/go-uuid"
 	"github.com/nezhahq/nezha/model"
 	"github.com/nezhahq/nezha/pkg/utils"
 	"github.com/nezhahq/nezha/proto"
@@ -25,7 +20,7 @@ func ServeRPC() *grpc.Server {
 	server := grpc.NewServer(grpc.ChainUnaryInterceptor(getRealIp, waf))
 	rpcService.NezhaHandlerSingleton = rpcService.NewNezhaHandler()
 	// Install the IOStream revocation hook so ServerTransferShared can tear
-	// down terminal/FM/NAT sessions held by the previous owner on every
+	// down terminal/FM sessions held by the previous owner on every
 	// ownership rotation (Register/revertTransition/OnServersDeleted).
 	singleton.ServerTransferStreamRevocationHook = rpcService.NezhaHandlerSingleton.RevokeStreamsForServer
 	proto.RegisterNezhaServiceServer(server, rpcService.NezhaHandlerSingleton)
@@ -137,71 +132,6 @@ func DispatchKeepalive() {
 			stream.Send(&proto.Task{Type: model.TaskTypeKeepalive})
 		}
 	})
-}
-
-func ServeNAT(w http.ResponseWriter, r *http.Request, natConfig *model.NAT) {
-	server, _ := singleton.ServerShared.Get(natConfig.ServerID)
-	if server == nil {
-		w.WriteHeader(http.StatusServiceUnavailable)
-		w.Write([]byte("server not found or not connected"))
-		return
-	}
-	stream := server.GetTaskStream()
-	if stream == nil {
-		w.WriteHeader(http.StatusServiceUnavailable)
-		w.Write([]byte("server not found or not connected"))
-		return
-	}
-
-	streamId, err := uuid.GenerateUUID()
-	if err != nil {
-		w.WriteHeader(http.StatusServiceUnavailable)
-		w.Write(fmt.Appendf(nil, "stream id error: %v", err))
-		return
-	}
-
-	// NAT streams are anonymous HTTP-facing tunnels; they are NOT reachable
-	// via removed dashboard stream endpoints, so the creator user ID does not
-	// need to identify a real user. The targetServerID
-	// IS required though — the receiving agent must prove it is the server the
-	// NAT config addressed, otherwise any agent that snoops the streamId can
-	// answer NAT traffic on behalf of an unrelated host.
-	rpcService.NezhaHandlerSingleton.CreateStream(streamId, 0, server.ID)
-	defer rpcService.NezhaHandlerSingleton.CloseStream(streamId)
-
-	taskData, err := json.Marshal(model.TaskNAT{
-		StreamID: streamId,
-		Host:     natConfig.Host,
-	})
-	if err != nil {
-		w.WriteHeader(http.StatusServiceUnavailable)
-		w.Write(fmt.Appendf(nil, "task data error: %v", err))
-		return
-	}
-
-	if err := stream.Send(&proto.Task{
-		Type: model.TaskTypeNAT,
-		Data: string(taskData),
-	}); err != nil {
-		w.WriteHeader(http.StatusServiceUnavailable)
-		w.Write(fmt.Appendf(nil, "send task error: %v", err))
-		return
-	}
-
-	wWrapped, err := utils.NewRequestWrapper(r, w)
-	if err != nil {
-		w.WriteHeader(http.StatusServiceUnavailable)
-		w.Write(fmt.Appendf(nil, "request wrapper error: %v", err))
-		return
-	}
-
-	if err := rpcService.NezhaHandlerSingleton.UserConnected(streamId, wWrapped); err != nil {
-		w.WriteHeader(http.StatusServiceUnavailable)
-		w.Write(fmt.Appendf(nil, "user connected error: %v", err))
-		return
-	}
-
-	rpcService.NezhaHandlerSingleton.StartStream(streamId, time.Second*10)
 }
 
 func canSendTaskToServer(task *model.Service, server *model.Server) bool {

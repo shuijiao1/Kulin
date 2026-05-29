@@ -256,8 +256,8 @@ func (s *NezhaHandler) IOStream(stream pb.NezhaService_IOStreamServer) error {
 
 	streamId := string(id.Data[4:])
 
-	// agent 侧归属校验：只有 createTerminal / createFM / ServeNAT 选定的目标 server
-	// 才能接管该 stream。漏掉这一步等同于把 terminal / fm / NAT 会话向所有合法 agent
+	// agent 侧归属校验：只有 createTerminal / createFM 选定的目标 server
+	// 才能接管该 stream。漏掉这一步等同于把 terminal / fm 会话向所有合法 agent
 	// 开放（任何获得 streamId 的 agent 都能抢答），构成 session-hijack RCE 中介。
 	// 这是 commit 6661d6a（user 侧归属校验）的对偶补丁。先校验后启 keepalive，
 	// 避免未授权 agent 触发悬空 goroutine 持续向其发心跳。

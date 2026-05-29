@@ -21,7 +21,6 @@ const (
 	TaskTypeUpgrade
 	TaskTypeKeepalive
 	TaskTypeTerminalGRPC
-	TaskTypeNAT
 	TaskTypeReportHostInfoDeprecated
 	TaskTypeFM
 	TaskTypeReportConfig
@@ -34,11 +33,6 @@ const (
 
 type TerminalTask struct {
 	StreamID string
-}
-
-type TaskNAT struct {
-	StreamID string
-	Host     string
 }
 
 type TaskFM struct {
@@ -136,7 +130,7 @@ func (m *Service) AfterFind(tx *gorm.DB) error {
 func IsServiceSentinelNeeded(t uint64) bool {
 	switch t {
 	case TaskTypeCommand, TaskTypeTerminalGRPC, TaskTypeUpgrade,
-		TaskTypeKeepalive, TaskTypeNAT, TaskTypeFM,
+		TaskTypeKeepalive, TaskTypeFM,
 		TaskTypeReportConfig, TaskTypeApplyConfig,
 		TaskTypeServerTransferApply:
 		return false

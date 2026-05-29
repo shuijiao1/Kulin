@@ -24,18 +24,9 @@ func getProfile(c *gin.Context) (*model.Profile, error) {
 	if !ok {
 		return nil, singleton.Localizer.ErrorT("unauthorized")
 	}
-	var ob []model.Oauth2Bind
-	if err := singleton.DB.Where("user_id = ?", auth.(*model.User).ID).Find(&ob).Error; err != nil {
-		return nil, newGormError("%v", err)
-	}
-	var obMap = make(map[string]string)
-	for _, v := range ob {
-		obMap[v.Provider] = v.OpenID
-	}
 	return &model.Profile{
-		User:       *auth.(*model.User),
-		LoginIP:    c.GetString(model.CtxKeyRealIPStr),
-		Oauth2Bind: obMap,
+		User:    *auth.(*model.User),
+		LoginIP: c.GetString(model.CtxKeyRealIPStr),
 	}, nil
 }
 
@@ -71,18 +62,8 @@ func updateProfile(c *gin.Context) (any, error) {
 		return nil, err
 	}
 
-	var bindCount int64
-	if err := singleton.DB.Model(&model.Oauth2Bind{}).Where("user_id = ?", auth.(*model.User).ID).Count(&bindCount).Error; err != nil {
-		return nil, newGormError("%v", err)
-	}
-
-	if pf.RejectPassword && bindCount < 1 {
-		return nil, singleton.Localizer.ErrorT("you don't have any oauth2 bindings")
-	}
-
 	user.Username = pf.NewUsername
 	user.Password = string(hash)
-	user.RejectPassword = pf.RejectPassword
 	user.TokenVersion += 1
 	if err := singleton.DB.Save(&user).Error; err != nil {
 		return nil, newGormError("%v", err)

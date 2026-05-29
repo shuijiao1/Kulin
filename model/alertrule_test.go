@@ -14,47 +14,9 @@ type arSt struct {
 }
 
 func TestAlertRules(t *testing.T) {
-	t.Run("CycleRules", testCycleRules)
 	t.Run("OfflineRules", testOfflineRules)
 	t.Run("GeneralRules", testGeneralRules)
 	t.Run("CombinedRules", testCombinedRules)
-}
-
-func testCycleRules(t *testing.T) {
-	cases := []arSt{
-		{
-			rule: &AlertRule{
-				Rules: []*Rule{
-					{
-						Type: "_cycle",
-					},
-				},
-			},
-			msg:    "CyclePass",
-			points: [][]bool{{false}, {true}},
-			expD:   1,
-			exp:    true,
-		},
-		{
-			rule: &AlertRule{
-				Rules: []*Rule{
-					{
-						Type: "_cycle",
-					},
-				},
-			},
-			msg:    "CycleFail",
-			points: [][]bool{{true}, {false}},
-			expD:   1,
-			exp:    false,
-		},
-	}
-
-	for _, c := range cases {
-		d, passed := c.rule.Check(c.points)
-		assertEq(t, c.msg, c.expD, d)
-		assertEq(t, c.msg, c.exp, passed)
-	}
 }
 
 func testOfflineRules(t *testing.T) {

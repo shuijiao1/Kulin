@@ -30,9 +30,7 @@ var (
 
 	ServerShared          *ServerClass
 	ServiceSentinelShared *ServiceSentinel
-	DDNSShared            *DDNSClass
 	NotificationShared    *NotificationClass
-	NATShared             *NATClass
 	CronShared            *CronClass
 	// ServerTransferShared is initialized in LoadSingleton AFTER ServerShared
 	// (so the in-memory pending index can write back into ServerShared.UserID
@@ -58,8 +56,6 @@ func InitTimezoneAndCache() error {
 func LoadSingleton(bus chan<- *model.Service) (err error) {
 	initI18n() // 加载本地化服务
 	initUser() // 加载用户ID绑定表
-	NATShared = NewNATClass()
-	DDNSShared = NewDDNSClass()
 	NotificationShared = NewNotificationClass()
 	ServerShared = NewServerClass()
 	CronShared = NewCronClass()
@@ -93,9 +89,11 @@ func InitDBFromPath(path string) error {
 	err = DB.AutoMigrate(model.Server{}, model.User{}, model.ServerGroup{}, model.NotificationGroup{},
 		model.Notification{}, model.AlertRule{}, model.Service{}, model.NotificationGroupNotification{},
 		model.Cron{}, model.Transfer{}, model.ServerGroupServer{},
-		model.NAT{}, model.DDNSProfile{}, model.NotificationGroupNotification{},
-		model.WAF{}, model.Oauth2Bind{}, model.ServerTransfer{}, model.JWTSession{})
+		model.WAF{}, model.ServerTransfer{}, model.JWTSession{})
 	if err != nil {
+		return err
+	}
+	if err := migrateCycleTransferRulesToServers(); err != nil {
 		return err
 	}
 
@@ -144,30 +142,17 @@ func CleanMonitorHistory() {
 	var allServerKeep time.Time
 	specialServerKeep := make(map[uint64]time.Time)
 	var specialServerIDs []uint64
-	var alerts []model.AlertRule
-	DB.Find(&alerts)
-	for _, alert := range alerts {
-		for _, rule := range alert.Rules {
-			// 是不是流量记录规则
-			if !rule.IsTransferDurationRule() {
-				continue
-			}
-			dataCouldRemoveBefore := rule.GetTransferDurationStart().UTC()
-			// 判断规则影响的机器范围
-			if rule.Cover == model.RuleCoverAll {
-				// 更新全局可以清理的数据点
-				if allServerKeep.IsZero() || allServerKeep.After(dataCouldRemoveBefore) {
-					allServerKeep = dataCouldRemoveBefore
-				}
-			} else {
-				// 更新特定机器可以清理数据点
-				for id := range rule.Ignore {
-					if specialServerKeep[id].IsZero() || specialServerKeep[id].After(dataCouldRemoveBefore) {
-						specialServerKeep[id] = dataCouldRemoveBefore
-						specialServerIDs = append(specialServerIDs, id)
-					}
-				}
-			}
+	var servers []model.Server
+	DB.Find(&servers)
+	for _, server := range servers {
+		rule := server.CycleTransferRule()
+		if rule == nil {
+			continue
+		}
+		dataCouldRemoveBefore := rule.GetTransferDurationStart().UTC()
+		if specialServerKeep[server.ID].IsZero() || specialServerKeep[server.ID].After(dataCouldRemoveBefore) {
+			specialServerKeep[server.ID] = dataCouldRemoveBefore
+			specialServerIDs = append(specialServerIDs, server.ID)
 		}
 	}
 	for id, couldRemove := range specialServerKeep {

@@ -35,7 +35,6 @@ func listConfig(c *gin.Context) (*model.SettingResponse, error) {
 			ConfigForGuests:                config.ConfigForGuests,
 			ConfigDashboard:                config.ConfigDashboard,
 			IgnoredIPNotificationServerIDs: config.IgnoredIPNotificationServerIDs,
-			Oauth2Providers:                config.Oauth2Providers,
 		},
 		Version:           singleton.Version,
 		FrontendTemplates: singleton.FrontendTemplates,
@@ -53,7 +52,6 @@ func listConfig(c *gin.Context) (*model.SettingResponse, error) {
 			Config: model.Setting{
 				ConfigForGuests: configForGuests,
 				ConfigDashboard: configDashboard,
-				Oauth2Providers: config.Oauth2Providers,
 			},
 			TSDBEnabled: singleton.TSDBEnabled(),
 		}

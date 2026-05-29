@@ -145,17 +145,6 @@ func OnUserDelete(id []uint64, errorFunc func(string, ...any) error) error {
 		}
 
 		if server {
-			AlertsLock.Lock()
-			for _, sid := range servers {
-				for _, alert := range Alerts {
-					if AlertsCycleTransferStatsStore[alert.ID] != nil {
-						delete(AlertsCycleTransferStatsStore[alert.ID].ServerName, sid)
-						delete(AlertsCycleTransferStatsStore[alert.ID].Transfer, sid)
-						delete(AlertsCycleTransferStatsStore[alert.ID].NextUpdate, sid)
-					}
-				}
-			}
-			AlertsLock.Unlock()
 			// Cancel pending transfers before ServerShared drops the
 			// in-memory entry: same ordering rationale as batchDeleteServer.
 			if ServerTransferShared != nil {

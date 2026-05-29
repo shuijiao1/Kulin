@@ -26,6 +26,13 @@ type ServerForm struct {
 	PublicNote   string `json:"public_note,omitempty" validate:"optional"`    // 公开备注
 	DisplayIndex int    `json:"display_index,omitempty" default:"0"`          // 展示排序，越大越靠前
 	HideForGuest bool   `json:"hide_for_guest,omitempty" validate:"optional"` // 对游客隐藏
+
+	CycleTransferEnabled  bool       `json:"cycle_transfer_enabled,omitempty" validate:"optional"`
+	CycleTransferType     string     `json:"cycle_transfer_type,omitempty" validate:"optional"`
+	CycleTransferMax      uint64     `json:"cycle_transfer_max,omitempty" validate:"optional"`
+	CycleTransferStart    *time.Time `json:"cycle_transfer_start,omitempty" validate:"optional"`
+	CycleTransferInterval uint64     `json:"cycle_transfer_interval,omitempty" validate:"optional"`
+	CycleTransferUnit     string     `json:"cycle_transfer_unit,omitempty" validate:"optional"`
 }
 
 type ServerConfigForm struct {
