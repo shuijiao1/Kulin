@@ -5,4 +5,4 @@ type swaggerInfo struct {
 	BasePath string
 }
 
-var SwaggerInfo = &swaggerInfo{Version: "kulin-slim"}
+var SwaggerInfo = &swaggerInfo{Version: "kulin-dashboard"}

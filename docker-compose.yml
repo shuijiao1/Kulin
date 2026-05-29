@@ -1,12 +1,12 @@
-name: kulin-nezha
+name: kulin-dashboard
 
 services:
   dashboard:
-    image: ghcr.io/shuijiao1/kulin:latest
+    image: ghcr.io/shuijiao1/kulin-dashboard:latest
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: kulin-nezha-dashboard
+    container_name: kulin-dashboard
     restart: unless-stopped
     ports:
       - "8031:8008"

@@ -44,18 +44,18 @@ jobs:
           CC: ${{ matrix.cc }}
         run: |
           mkdir -p dist
-          go build -trimpath -buildvcs=false -ldflags="-s -w -X github.com/nezhahq/nezha/service/singleton.Version=${GITHUB_REF_NAME}" -o "dist/dashboard-${GOOS}-${GOARCH}" ./cmd/dashboard
+          go build -trimpath -buildvcs=false -ldflags="-s -w -X github.com/nezhahq/nezha/service/singleton.Version=${GITHUB_REF_NAME}" -o "dist/kulin-dashboard-${GOOS}-${GOARCH}" ./cmd/dashboard
 
       - name: Package binary
         run: |
           cd dist
-          zip "kulin-dashboard-${{ matrix.goos }}-${{ matrix.goarch }}.zip" "dashboard-${{ matrix.goos }}-${{ matrix.goarch }}"
+          zip "kulin-dashboard-${{ matrix.goos }}-${{ matrix.goarch }}.zip" "kulin-dashboard-${{ matrix.goos }}-${{ matrix.goarch }}"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: dashboard-${{ matrix.goos }}-${{ matrix.goarch }}
+          name: kulin-dashboard-${{ matrix.goos }}-${{ matrix.goarch }}
           path: |
-            dist/dashboard-${{ matrix.goos }}-${{ matrix.goarch }}
+            dist/kulin-dashboard-${{ matrix.goos }}-${{ matrix.goarch }}
             dist/kulin-dashboard-${{ matrix.goos }}-${{ matrix.goarch }}.zip
 
   docker:
@@ -67,15 +67,15 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          pattern: dashboard-*
+          pattern: kulin-dashboard-*
           path: dist-artifacts
           merge-multiple: true
 
       - name: Prepare dist
         run: |
           mkdir -p dist
-          cp dist-artifacts/dashboard-linux-* dist/
-          chmod +x dist/dashboard-linux-*
+          cp dist-artifacts/kulin-dashboard-linux-* dist/
+          chmod +x dist/kulin-dashboard-linux-*
 
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
@@ -91,7 +91,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/kulin
+          images: ghcr.io/${{ github.repository_owner }}/kulin-dashboard
           tags: |
             type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/') }}
             type=ref,event=tag
@@ -115,7 +115,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          pattern: dashboard-*
+          pattern: kulin-dashboard-*
           path: assets
           merge-multiple: true
 

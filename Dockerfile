@@ -10,7 +10,7 @@ RUN chmod +x /entrypoint.sh
 WORKDIR /dashboard
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
-COPY dist/dashboard-${TARGETOS}-${TARGETARCH} ./app
+COPY dist/kulin-dashboard-${TARGETOS}-${TARGETARCH} ./app
 
 VOLUME ["/dashboard/data"]
 EXPOSE 8008

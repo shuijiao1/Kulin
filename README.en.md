@@ -3,7 +3,7 @@
 [中文](README.md) | **English**
 
 ![GitHub Release](https://img.shields.io/github/v/release/shuijiao1/Kulin?style=flat-square)
-![Docker](https://img.shields.io/badge/docker-ghcr.io%2Fshuijiao1%2Fkulin-blue?style=flat-square)
+![Docker](https://img.shields.io/badge/docker-ghcr.io%2Fshuijiao1%2Fkulin-dashboard-blue?style=flat-square)
 ![License](https://img.shields.io/github/license/shuijiao1/Kulin?style=flat-square)
 
 > **Kulin** is a slim server probe dashboard forked from [Nezha](https://github.com/nezhahq/nezha). It keeps common server monitoring, latency checks, alerts, and Telegram notifications while removing complex ops entries from the admin source and build output.
@@ -43,11 +43,11 @@ Kulin removes these complex feature entries from the admin source, routes, and b
 mkdir -p /opt/kulin/data && cd /opt/kulin
 
 cat > docker-compose.yml <<'YAML'
-name: kulin
+name: kulin-dashboard
 
 services:
   dashboard:
-    image: ghcr.io/shuijiao1/kulin:latest
+    image: ghcr.io/shuijiao1/kulin-dashboard:latest
     container_name: kulin-dashboard
     restart: unless-stopped
     ports:
@@ -100,7 +100,7 @@ When migrating from Nezha, keep the original server UUID to avoid duplicate serv
 
 ```bash
 go test ./model ./service/singleton ./service/rpc
-CGO_ENABLED=1 go build -trimpath -ldflags='-s -w' -o dist/dashboard-linux-amd64 ./cmd/dashboard
+CGO_ENABLED=1 go build -trimpath -ldflags='-s -w' -o dist/kulin-dashboard-linux-amd64 ./cmd/dashboard
 docker compose build dashboard
 ```
 
