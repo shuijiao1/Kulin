@@ -1,0 +1,14 @@
+Kulin
+Copyright 2026 shuijiao1
+
+This product includes software developed as part of Nezha
+(https://github.com/nezhahq/nezha), Copyright 2020 naiba,
+licensed under the Apache License, Version 2.0.
+
+You may obtain a copy of the License at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Modifications have been made to the original Nezha source,
+including simplification of the server monitoring dashboard
+and removal of certain operations features.
