@@ -10,6 +10,10 @@ type SettingForm struct {
 	InstallHost                 string `json:"install_host,omitempty" validate:"optional"`
 	CustomCode                  string `json:"custom_code,omitempty" validate:"optional"`
 	CustomCodeDashboard         string `json:"custom_code_dashboard,omitempty" validate:"optional"`
+	FrontendTheme               string `json:"frontend_theme,omitempty" validate:"optional"`
+	LogoURL                     string `json:"logo_url,omitempty" validate:"optional"`
+	BackgroundURL               string `json:"background_url,omitempty" validate:"optional"`
+	MobileBackgroundURL         string `json:"mobile_background_url,omitempty" validate:"optional"`
 	WebRealIPHeader             string `json:"web_real_ip_header,omitempty" validate:"optional"`   // 前端真实IP
 	AgentRealIPHeader           string `json:"agent_real_ip_header,omitempty" validate:"optional"` // Agent真实IP
 	UserTemplate                string `json:"user_template,omitempty" validate:"optional"`

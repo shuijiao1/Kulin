@@ -38,6 +38,10 @@ type ConfigForGuests struct {
 	SiteName            string `koanf:"site_name" json:"site_name"`
 	CustomCode          string `koanf:"custom_code" json:"custom_code,omitempty"`
 	CustomCodeDashboard string `koanf:"custom_code_dashboard" json:"custom_code_dashboard,omitempty"`
+	FrontendTheme       string `koanf:"frontend_theme" json:"frontend_theme,omitempty"`
+	LogoURL             string `koanf:"logo_url" json:"logo_url,omitempty"`
+	BackgroundURL       string `koanf:"background_url" json:"background_url,omitempty"`
+	MobileBackgroundURL string `koanf:"mobile_background_url" json:"mobile_background_url,omitempty"`
 }
 
 type ConfigDashboard struct {
