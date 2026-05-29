@@ -98,50 +98,6 @@ func (c *NotificationClass) Update(n *model.Notification) {
 	c.sortList()
 }
 
-func (c *NotificationClass) UpdateGroup(ng *model.NotificationGroup, ngn []uint64) {
-	c.groupMu.Lock()
-	defer c.groupMu.Unlock()
-
-	_, ok := c.groupList[ng.ID]
-	c.groupList[ng.ID] = ng.Name
-
-	c.listMu.Lock()
-	defer c.listMu.Unlock()
-	if !ok {
-		c.groupToIDList[ng.ID] = make(map[uint64]*model.Notification, len(ngn))
-		for _, n := range ngn {
-			if c.idToGroupList[n] == nil {
-				c.idToGroupList[n] = make(map[uint64]struct{})
-			}
-			c.idToGroupList[n][ng.ID] = struct{}{}
-			c.groupToIDList[ng.ID][n] = c.list[n]
-		}
-	} else {
-		oldList := make(map[uint64]struct{})
-		for nid := range c.groupToIDList[ng.ID] {
-			oldList[nid] = struct{}{}
-		}
-
-		c.groupToIDList[ng.ID] = make(map[uint64]*model.Notification)
-		for _, nid := range ngn {
-			c.groupToIDList[ng.ID][nid] = c.list[nid]
-			if c.idToGroupList[nid] == nil {
-				c.idToGroupList[nid] = make(map[uint64]struct{})
-			}
-			c.idToGroupList[nid][ng.ID] = struct{}{}
-		}
-
-		for oldID := range oldList {
-			if _, ok := c.groupToIDList[ng.ID][oldID]; !ok {
-				delete(c.groupToIDList[oldID], ng.ID)
-				if len(c.idToGroupList[oldID]) == 0 {
-					delete(c.idToGroupList, oldID)
-				}
-			}
-		}
-	}
-}
-
 func (c *NotificationClass) Delete(idList []uint64) {
 	c.listMu.Lock()
 
@@ -158,18 +114,6 @@ func (c *NotificationClass) Delete(idList []uint64) {
 
 	c.listMu.Unlock()
 	c.sortList()
-}
-
-func (c *NotificationClass) DeleteGroup(gids []uint64) {
-	c.listMu.Lock()
-	defer c.listMu.Unlock()
-	c.groupMu.Lock()
-	defer c.groupMu.Unlock()
-
-	for _, gid := range gids {
-		delete(c.groupList, gid)
-		delete(c.groupToIDList, gid)
-	}
 }
 
 func (c *NotificationClass) GetGroupName(gid uint64) string {
@@ -260,10 +204,6 @@ func (c *NotificationClass) SendNotification(notificationGroupID uint64, desc st
 type _NotificationMuteLabel struct{}
 
 var NotificationMuteLabel _NotificationMuteLabel
-
-func (_NotificationMuteLabel) IPChanged(serverId uint64) string {
-	return fmt.Sprintf("bf::ic-%d", serverId)
-}
 
 func (_NotificationMuteLabel) ServerIncident(alertId uint64, serverId uint64) string {
 	return fmt.Sprintf("bf::sei-%d-%d", alertId, serverId)

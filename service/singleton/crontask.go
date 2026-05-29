@@ -246,10 +246,6 @@ func (c *CronClass) deleteAlertTriggerCronResultAuthorizations(cronIDs []uint64)
 	}
 }
 
-func ManualTrigger(cr *model.Cron) {
-	CronTrigger(cr)()
-}
-
 func CronTrigger(cr *model.Cron, triggerServer ...uint64) func() {
 	crIgnoreMap := make(map[uint64]bool)
 	for _, server := range cr.Servers {

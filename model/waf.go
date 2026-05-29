@@ -87,21 +87,6 @@ func UnblockIP(db *gorm.DB, ip string, uid int64) error {
 	return db.Unscoped().Delete(&WAF{}, "ip = ? and block_identifier = ?", ipBinary, uid).Error
 }
 
-func BatchUnblockIP(db *gorm.DB, ip []string) error {
-	if len(ip) < 1 {
-		return nil
-	}
-	ips := make([][]byte, 0, len(ip))
-	for _, s := range ip {
-		ipBinary, err := utils.IPStringToBinary(s)
-		if err != nil {
-			continue
-		}
-		ips = append(ips, ipBinary)
-	}
-	return db.Unscoped().Delete(&WAF{}, "ip in (?)", ips).Error
-}
-
 func BlockIP(db *gorm.DB, ip string, reason uint8, uid int64) error {
 	if ip == "" {
 		return nil

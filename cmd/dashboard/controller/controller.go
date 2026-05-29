@@ -226,41 +226,6 @@ func listHandler[S ~[]E, E model.CommonInterface](handler handlerFunc[S]) func(*
 	}
 }
 
-func pCommonHandler[S ~[]E, E any](handler pHandlerFunc[S, E]) func(*gin.Context) {
-	return func(c *gin.Context) {
-		data, err := handler(c)
-		if err != nil {
-			c.JSON(http.StatusOK, newErrorResponse(err))
-			return
-		}
-
-		c.JSON(http.StatusOK, model.PaginatedResponse[S, E]{Success: true, Data: data})
-	}
-}
-
-func pAdminHandler[S ~[]E, E any](handler pHandlerFunc[S, E]) func(*gin.Context) {
-	return func(c *gin.Context) {
-		auth, ok := c.Get(model.CtxKeyAuthorizedUser)
-		if !ok {
-			c.JSON(http.StatusOK, newErrorResponse(singleton.Localizer.ErrorT("unauthorized")))
-			return
-		}
-		user := *auth.(*model.User)
-		if !user.Role.IsAdmin() {
-			c.JSON(http.StatusOK, newErrorResponse(singleton.Localizer.ErrorT("permission denied")))
-			return
-		}
-
-		data, err := handler(c)
-		if err != nil {
-			c.JSON(http.StatusOK, newErrorResponse(err))
-			return
-		}
-
-		c.JSON(http.StatusOK, model.PaginatedResponse[S, E]{Success: true, Data: data})
-	}
-}
-
 func filter[S ~[]E, E model.CommonInterface](ctx *gin.Context, s S) S {
 	return slices.DeleteFunc(s, func(e E) bool {
 		return !e.HasPermission(ctx)

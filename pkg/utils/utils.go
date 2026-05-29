@@ -11,7 +11,6 @@ import (
 	"net/netip"
 	"regexp"
 	"slices"
-	"strconv"
 	"strings"
 
 	"golang.org/x/exp/constraints"
@@ -100,25 +99,9 @@ func IfOr[T any](a bool, x, y T) T {
 	return y
 }
 
-func Itoa[T constraints.Integer](i T) string {
-	switch any(i).(type) {
-	case int, int8, int16, int32, int64:
-		return strconv.FormatInt(int64(i), 10)
-	case uint, uint8, uint16, uint32, uint64:
-		return strconv.FormatUint(uint64(i), 10)
-	default:
-		return ""
-	}
-}
-
 func MapValuesToSlice[Map ~map[K]V, K comparable, V any](m Map) []V {
 	s := make([]V, 0, len(m))
 	return slices.AppendSeq(s, maps.Values(m))
-}
-
-func MapKeysToSlice[Map ~map[K]V, K comparable, V any](m Map) []K {
-	s := make([]K, 0, len(m))
-	return slices.AppendSeq(s, maps.Keys(m))
 }
 
 func Unique[S ~[]E, E cmp.Ordered](list S) S {
@@ -129,16 +112,6 @@ func Unique[S ~[]E, E cmp.Ordered](list S) S {
 	copy(out, list)
 	slices.Sort(out)
 	return slices.Compact(out)
-}
-
-func ConvertSeq[In, Out any](seq iter.Seq[In], f func(In) Out) iter.Seq[Out] {
-	return func(yield func(Out) bool) {
-		for in := range seq {
-			if !yield(f(in)) {
-				return
-			}
-		}
-	}
 }
 
 func ConvertSeq2[KIn, VIn, KOut, VOut any](seq iter.Seq2[KIn, VIn], f func(KIn, VIn) (KOut, VOut)) iter.Seq2[KOut, VOut] {
