@@ -16,6 +16,9 @@ KULIN_LANGUAGE="${KULIN_LANGUAGE:-zh_CN}"
 KULIN_LOCATION="${KULIN_LOCATION:-Asia/Shanghai}"
 KULIN_INSTALL_HOST="${KULIN_INSTALL_HOST:-}"
 KULIN_AGENT_SECRET="${KULIN_AGENT_SECRET:-}"
+KULIN_DOMAIN="${KULIN_DOMAIN:-}"
+KULIN_EMAIL="${KULIN_EMAIL:-}"
+KULIN_BIND="${KULIN_BIND:-}"
 
 log() { echo -e "${GREEN}$*${NC}"; }
 warn() { echo -e "${YELLOW}$*${NC}"; }
@@ -108,7 +111,43 @@ resolve_install_host() {
   fi
 }
 
+reverse_proxy_enabled() {
+  [[ -n "${KULIN_DOMAIN}" ]]
+}
+
+write_caddyfile() {
+  reverse_proxy_enabled || return 0
+
+  mkdir -p "${INSTALL_DIR}/caddy"
+
+  local email_block=""
+  if [[ -n "${KULIN_EMAIL}" ]]; then
+    email_block="
+	email ${KULIN_EMAIL}"
+  fi
+
+  cat > "${INSTALL_DIR}/caddy/Caddyfile" <<CADDY
+{
+${email_block}
+}
+
+${KULIN_DOMAIN} {
+    encode zstd gzip
+    reverse_proxy dashboard:8008
+}
+CADDY
+}
+
 write_compose() {
+  local bind_addr="${KULIN_BIND}"
+  if [[ -z "${bind_addr}" ]]; then
+    if reverse_proxy_enabled; then
+      bind_addr="127.0.0.1"
+    else
+      bind_addr="0.0.0.0"
+    fi
+  fi
+
   cat > "${INSTALL_DIR}/docker-compose.yml" <<YAML
 name: kulin-dashboard
 
@@ -118,10 +157,34 @@ services:
     container_name: kulin-dashboard
     restart: unless-stopped
     ports:
-      - "${KULIN_PORT}:8008"
+      - "${bind_addr}:${KULIN_PORT}:8008"
     volumes:
       - ./data:/dashboard/data
 YAML
+
+  if reverse_proxy_enabled; then
+    cat >> "${INSTALL_DIR}/docker-compose.yml" <<YAML
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: kulin-caddy
+    restart: unless-stopped
+    depends_on:
+      - dashboard
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:
+YAML
+  fi
 }
 
 write_config_if_missing() {
@@ -134,7 +197,11 @@ write_config_if_missing() {
   fi
 
   local install_host agent_secret
-  install_host=$(resolve_install_host)
+  if reverse_proxy_enabled && [[ -z "${KULIN_INSTALL_HOST}" ]]; then
+    install_host="${KULIN_DOMAIN}"
+  else
+    install_host=$(resolve_install_host)
+  fi
   agent_secret="${KULIN_AGENT_SECRET:-$(random_secret)}"
 
   cat > "${config}" <<YAML
@@ -163,6 +230,7 @@ YAML
 
 install_kulin() {
   mkdir -p "${INSTALL_DIR}"
+  write_caddyfile
   write_compose
   write_config_if_missing
 
@@ -179,10 +247,18 @@ show_result() {
   echo -e "${CYAN}============================================${NC}"
   log "Kulin 安装完成"
   echo -e "安装目录：${INSTALL_DIR}"
-  echo -e "访问地址：http://${install_host:-127.0.0.1:${KULIN_PORT}}"
+  if reverse_proxy_enabled; then
+    echo -e "访问地址：https://${KULIN_DOMAIN}"
+    echo -e "反代服务：Caddy 容器 kulin-caddy（自动申请 HTTPS）"
+  else
+    echo -e "访问地址：http://${install_host:-127.0.0.1:${KULIN_PORT}}"
+  fi
   echo -e "默认账号：admin"
   echo -e "默认密码：admin"
-  warn "上线后请立刻修改默认密码，并按需配置反向代理 / HTTPS。"
+  warn "上线后请立刻修改默认密码。"
+  if ! reverse_proxy_enabled; then
+    warn "如需自动 HTTPS 反代，可用 KULIN_DOMAIN=你的域名 运行本脚本。"
+  fi
   echo -e "${CYAN}============================================${NC}"
 }
 

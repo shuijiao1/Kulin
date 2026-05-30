@@ -117,7 +117,13 @@ bash <(curl -Ls https://github.com/shuijiao1/Kulin/releases/latest/download/inst
 # 自定义安装目录、端口和 Agent 连接地址
 INSTALL_DIR=/opt/kulin KULIN_PORT=8008 KULIN_INSTALL_HOST=example.com:443 \
   bash <(curl -Ls https://github.com/shuijiao1/Kulin/releases/latest/download/install.sh)
+
+# 自动配置 Caddy 反代和 HTTPS，需要域名已解析到当前服务器
+KULIN_DOMAIN=kulin.example.com \
+  bash <(curl -Ls https://github.com/shuijiao1/Kulin/releases/latest/download/install.sh)
 ```
+
+使用 `KULIN_DOMAIN` 时，脚本会额外启动 `kulin-caddy` 容器，自动监听 `80/443` 并反代到 Kulin；同时面板本体只绑定 `127.0.0.1:${KULIN_PORT}`，避免直接暴露端口。
 
 ---
 
