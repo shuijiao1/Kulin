@@ -6,7 +6,7 @@
 ![Docker](https://img.shields.io/badge/docker-ghcr.io%2Fshuijiao1%2Fkulin-dashboard-blue?style=flat-square)
 ![License](https://img.shields.io/github/license/shuijiao1/Kulin?style=flat-square)
 
-> **Kulin** 是基于 [Nezha](https://github.com/nezhahq/nezha) fork 的精简服务器探针面板，保留常用服务器监控、延迟监控、告警和 Telegram 通知，并从后台源码与构建产物中移除复杂运维入口。
+> **Kulin** 是基于 [Nezha](https://github.com/nezhahq/nezha) fork 的精简服务器探针面板，面向轻量自部署场景：保留常用监控、延迟监控、告警和 Telegram 通知，同时移除复杂运维入口，并加入更适合个人面板的主题与品牌设置。
 
 ---
 
@@ -22,16 +22,32 @@
 
 ---
 
-## 🧹 精简内容
+## ➕ 新增 / 保留
 
-Kulin 从后台源码、路由和构建产物中移除这些复杂功能入口：
+Kulin 在精简 Nezha 的同时，补充并保留了更适合自用面板的设置：
+
+- 默认站点名调整为 **哪吒探针**，后台设置页可单独修改站点名称
+- Logo / 头像链接可在后台设置；配置为空时，前台使用内置官方默认头像
+- 背景图、移动端背景图可在后台单独设置
+- 保留自定义前台代码和后台自定义代码
+- 新增前台主题效果选项：默认主题 / 高斯模糊主题
+- 更新设置时会保留已有的主题、Logo、背景图等用户配置；只有在后台明确清空时才会清除
+- Docker 镜像不会覆盖挂载目录中的 `data/config.yaml`、数据库和历史数据
+
+---
+
+## 🧹 删除 / 精简
+
+Kulin 从后台源码、路由和构建产物中移除了这些复杂或不常用的入口，让面板更轻：
 
 - Web Terminal / 文件管理
 - 计划任务 / Cron
 - DDNS / NAT / 服务器配置面板
 - 服务器分组 / 通知分组
 - OAuth / 在线用户管理
-- 复杂多通知渠道和主题市场
+- 复杂多通知渠道
+- 主题市场和不必要的外部主题入口
+- 默认水饺头像、默认“水饺的探针”等个人化展示内容
 
 ---
 
@@ -57,7 +73,7 @@ services:
 YAML
 
 cat > data/config.yaml <<'YAML'
-site_name: Kulin
+site_name: 哪吒探针
 language: zh_CN
 install_host: example.com:443
 force_auth: false
@@ -68,6 +84,9 @@ agent_secret_key: change-me
 location: Asia/Shanghai
 user_template: user-dist
 admin_template: admin-dist
+logo_url: ""
+background_url: ""
+mobile_background_url: ""
 tsdb:
   data_path: data/tsdb
   retention_days: 7
@@ -79,6 +98,19 @@ docker compose logs -f
 ```
 
 反向代理时，请保留 `/proto.NezhaService/*` 的 h2c 转发给 Dashboard 端口，否则 Agent 无法稳定回连。
+
+---
+
+## ⚙️ 设置说明
+
+- **站点名称**：后台设置页可修改；配置为空或新安装时默认显示 `哪吒探针`
+- **头像 / Logo 链接**：可留空；留空时前台显示内置官方默认头像
+- **背景链接**：桌面端背景图，可留空
+- **移动端背景链接**：移动端背景图，可留空
+- **前台主题效果**：可选择默认主题或高斯模糊主题
+- **自定义代码**：可分别配置前台和后台自定义代码
+
+> 更新镜像或重建容器不会自动改写这些配置；请确保 `./data:/dashboard/data` 挂载保持不变。
 
 ---
 
