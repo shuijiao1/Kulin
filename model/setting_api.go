@@ -1,22 +1,22 @@
 package model
 
 type SettingForm struct {
-	DNSServers                  string `json:"dns_servers,omitempty" validate:"optional"`
-	IgnoredIPNotification       string `json:"ignored_ip_notification,omitempty" validate:"optional"`
-	IPChangeNotificationGroupID uint64 `json:"ip_change_notification_group_id,omitempty"` // IP变更提醒的通知组
-	Cover                       uint8  `json:"cover,omitempty"`
-	SiteName                    string `json:"site_name,omitempty" minLength:"1"`
-	Language                    string `json:"language,omitempty" minLength:"2"`
-	InstallHost                 string `json:"install_host,omitempty" validate:"optional"`
-	CustomCode                  string `json:"custom_code,omitempty" validate:"optional"`
-	CustomCodeDashboard         string `json:"custom_code_dashboard,omitempty" validate:"optional"`
-	FrontendTheme               string `json:"frontend_theme,omitempty" validate:"optional"`
-	LogoURL                     string `json:"logo_url,omitempty" validate:"optional"`
-	BackgroundURL               string `json:"background_url,omitempty" validate:"optional"`
-	MobileBackgroundURL         string `json:"mobile_background_url,omitempty" validate:"optional"`
-	WebRealIPHeader             string `json:"web_real_ip_header,omitempty" validate:"optional"`   // 前端真实IP
-	AgentRealIPHeader           string `json:"agent_real_ip_header,omitempty" validate:"optional"` // Agent真实IP
-	UserTemplate                string `json:"user_template,omitempty" validate:"optional"`
+	DNSServers                  string  `json:"dns_servers,omitempty" validate:"optional"`
+	IgnoredIPNotification       string  `json:"ignored_ip_notification,omitempty" validate:"optional"`
+	IPChangeNotificationGroupID uint64  `json:"ip_change_notification_group_id,omitempty"` // IP变更提醒的通知组
+	Cover                       uint8   `json:"cover,omitempty"`
+	SiteName                    string  `json:"site_name,omitempty" minLength:"1"`
+	Language                    string  `json:"language,omitempty" minLength:"2"`
+	InstallHost                 string  `json:"install_host,omitempty" validate:"optional"`
+	CustomCode                  string  `json:"custom_code,omitempty" validate:"optional"`
+	CustomCodeDashboard         string  `json:"custom_code_dashboard,omitempty" validate:"optional"`
+	FrontendTheme               *string `json:"frontend_theme,omitempty" validate:"optional"`
+	LogoURL                     *string `json:"logo_url,omitempty" validate:"optional"`
+	BackgroundURL               *string `json:"background_url,omitempty" validate:"optional"`
+	MobileBackgroundURL         *string `json:"mobile_background_url,omitempty" validate:"optional"`
+	WebRealIPHeader             string  `json:"web_real_ip_header,omitempty" validate:"optional"`   // 前端真实IP
+	AgentRealIPHeader           string  `json:"agent_real_ip_header,omitempty" validate:"optional"` // Agent真实IP
+	UserTemplate                string  `json:"user_template,omitempty" validate:"optional"`
 
 	AgentTLS                    bool `json:"tls,omitempty" validate:"optional"`
 	EnableIPChangeNotification  bool `json:"enable_ip_change_notification,omitempty" validate:"optional"`

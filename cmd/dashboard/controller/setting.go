@@ -101,10 +101,18 @@ func updateConfig(c *gin.Context) (any, error) {
 	singleton.Conf.DNSServers = sf.DNSServers
 	singleton.Conf.CustomCode = sf.CustomCode
 	singleton.Conf.CustomCodeDashboard = sf.CustomCodeDashboard
-	singleton.Conf.FrontendTheme = sf.FrontendTheme
-	singleton.Conf.LogoURL = sf.LogoURL
-	singleton.Conf.BackgroundURL = sf.BackgroundURL
-	singleton.Conf.MobileBackgroundURL = sf.MobileBackgroundURL
+	if sf.FrontendTheme != nil {
+		singleton.Conf.FrontendTheme = *sf.FrontendTheme
+	}
+	if sf.LogoURL != nil {
+		singleton.Conf.LogoURL = *sf.LogoURL
+	}
+	if sf.BackgroundURL != nil {
+		singleton.Conf.BackgroundURL = *sf.BackgroundURL
+	}
+	if sf.MobileBackgroundURL != nil {
+		singleton.Conf.MobileBackgroundURL = *sf.MobileBackgroundURL
+	}
 	singleton.Conf.WebRealIPHeader = sf.WebRealIPHeader
 	singleton.Conf.AgentRealIPHeader = sf.AgentRealIPHeader
 	singleton.Conf.AgentTLS = sf.AgentTLS
