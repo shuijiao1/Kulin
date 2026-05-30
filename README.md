@@ -108,19 +108,21 @@ docker run --rm --entrypoint /dashboard/kulin-migrate \
 > 推荐全新安装使用。脚本会自动安装 Docker / Docker Compose，创建 `/opt/kulin`，生成最小配置并启动面板。首次安装默认管理员为 `admin / admin`，上线后请立刻修改密码。
 
 ```bash
-bash <(curl -Ls https://github.com/shuijiao1/Kulin/releases/latest/download/install.sh)
+bash <(curl -Ls https://github.com/shuijiao1/Kulin/releases/latest/download/install.sh) install
 ```
+
+如果不带 `install` 参数运行，脚本会进入精简管理菜单，可安装/更新、修改配置、重启、查看日志或卸载。
 
 常用自定义参数：
 
 ```bash
 # 自定义安装目录、端口和 Agent 连接地址
 INSTALL_DIR=/opt/kulin KULIN_PORT=8008 KULIN_INSTALL_HOST=example.com:443 \
-  bash <(curl -Ls https://github.com/shuijiao1/Kulin/releases/latest/download/install.sh)
+  bash <(curl -Ls https://github.com/shuijiao1/Kulin/releases/latest/download/install.sh) install
 
 # 填写反代域名，只写入 install_host；具体 HTTPS / 反代请自行在 Nginx、Caddy、1Panel 等工具中配置
 KULIN_DOMAIN=kulin.example.com \
-  bash <(curl -Ls https://github.com/shuijiao1/Kulin/releases/latest/download/install.sh)
+  bash <(curl -Ls https://github.com/shuijiao1/Kulin/releases/latest/download/install.sh) install
 ```
 
 使用 `KULIN_DOMAIN` 时，脚本只会把面板的 `install_host` 写成该域名，方便 Agent 使用正式域名连接；不会接管服务器上的 Nginx / Caddy / 防火墙 / 证书配置。请自行将域名反代到 `127.0.0.1:${KULIN_PORT}`。

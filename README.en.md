@@ -103,6 +103,32 @@ docker run --rm --entrypoint /dashboard/kulin-migrate \
 
 ---
 
+## 🚀 One-line Install
+
+> Recommended for fresh installs. The script installs Docker / Docker Compose, creates `/opt/kulin`, writes a minimal config, and starts the dashboard. The default first login is `admin / admin`; change it immediately after deployment.
+
+```bash
+bash <(curl -Ls https://github.com/shuijiao1/Kulin/releases/latest/download/install.sh) install
+```
+
+Run the script without `install` to open the lightweight management menu for install/update, config changes, restart, logs, and uninstall.
+
+Common custom variables:
+
+```bash
+# Custom install directory, port, and Agent connection host
+INSTALL_DIR=/opt/kulin KULIN_PORT=8008 KULIN_INSTALL_HOST=example.com:443 \
+  bash <(curl -Ls https://github.com/shuijiao1/Kulin/releases/latest/download/install.sh) install
+
+# Set the public reverse-proxy domain; configure HTTPS / reverse proxy yourself with Nginx, Caddy, 1Panel, etc.
+KULIN_DOMAIN=kulin.example.com \
+  bash <(curl -Ls https://github.com/shuijiao1/Kulin/releases/latest/download/install.sh) install
+```
+
+When `KULIN_DOMAIN` is set, the script only writes that value to `install_host` so Agents can connect through your public domain. It does not take over Nginx / Caddy / firewall / certificate management. Configure your reverse proxy to `127.0.0.1:${KULIN_PORT}` manually.
+
+---
+
 ## 🚀 Docker Compose
 
 > Docker Compose is recommended. Fresh installs create `admin / admin`; change the password immediately after deployment.
