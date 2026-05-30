@@ -103,6 +103,24 @@ docker run --rm --entrypoint /dashboard/kulin-migrate \
 
 ---
 
+## 🚀 一键安装
+
+> 推荐全新安装使用。脚本会自动安装 Docker / Docker Compose，创建 `/opt/kulin`，生成最小配置并启动面板。首次安装默认管理员为 `admin / admin`，上线后请立刻修改密码。
+
+```bash
+bash <(curl -Ls https://github.com/shuijiao1/Kulin/releases/latest/download/install.sh)
+```
+
+常用自定义参数：
+
+```bash
+# 自定义安装目录、端口和 Agent 连接地址
+INSTALL_DIR=/opt/kulin KULIN_PORT=8008 KULIN_INSTALL_HOST=example.com:443 \
+  bash <(curl -Ls https://github.com/shuijiao1/Kulin/releases/latest/download/install.sh)
+```
+
+---
+
 ## 🚀 Docker Compose 部署
 
 > 推荐使用 Docker Compose。首次安装默认管理员为 `admin / admin`，上线后请立刻修改密码。

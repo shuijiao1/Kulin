@@ -122,11 +122,16 @@ jobs:
           path: assets
           merge-multiple: true
 
-      - name: Keep release zips only
+      - uses: actions/checkout@v4
+
+      - name: Keep release zips and install script
         run: |
           find assets -type f ! -name '*.zip' -delete
+          cp scripts/install.sh assets/install.sh
 
       - uses: softprops/action-gh-release@v2
         with:
-          files: assets/*.zip
+          files: |
+            assets/*.zip
+            assets/install.sh
           generate_release_notes: true
