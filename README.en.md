@@ -6,65 +6,75 @@
 ![Docker](https://img.shields.io/badge/docker-ghcr.io%2Fshuijiao1%2Fkulin-dashboard-blue?style=flat-square)
 ![License](https://img.shields.io/github/license/shuijiao1/Kulin?style=flat-square)
 
-> **Kulin** is a slim server probe dashboard forked from [Nezha](https://github.com/nezhahq/nezha). It targets lightweight self-hosting: common server monitoring, latency checks, alerts, and Telegram notifications are kept, complex ops entries are removed, and practical branding/theme options are added for personal dashboards.
+> **Kulin** is a lightweight server probe dashboard based on [Nezha](https://github.com/nezhahq/nezha). It keeps server monitoring, latency checks, alerts, and Telegram notifications, while removing heavier ops-platform features. It is designed for users who want a clean self-hosted monitoring panel.
 
 ---
 
 ## 🎯 Features
 
-- Server status: online state, CPU, memory, disk, load, uptime, OS, arch, virtualization, IP/region
-- Network speed, total traffic, and cycle transfer display
+- Server status: online state, CPU, memory, disk, load, OS, arch, virtualization, IP / region
+- Real-time network speed, total traffic, and cycle traffic display
+- **Built-in traffic progress bars**, configurable from the server edit page
 - ICMP Ping / TCPing latency monitoring
 - Offline, resource, and traffic alerts
 - Telegram notifications
-- Login, user management, server sorting, hiding, billing notes, and Agent install commands
-- Based on Nezha Agent/data model, suitable for migration or self-hosting
+- Server sorting, hiding, billing notes, and Agent install commands
+- Frontend theme, logo, background, mobile background, and custom code settings
+- Based on Nezha Agent / data model, making migration from Nezha straightforward
 
 ---
 
-## ➕ Added / Changed Compared with Upstream Nezha
+## ✨ What Kulin Changes Compared with Nezha
 
-Kulin is not just a rebrand. It is a lightweight self-hosting oriented fork of Nezha with project-level changes:
+### A lighter dashboard
 
-- Renamed the project to **Kulin**, with a dedicated Docker image `ghcr.io/shuijiao1/kulin-dashboard` and release workflow
-- Bundled frontend and admin build output, using `user-dist` / `admin-dist` by default for out-of-the-box deployment
-- Added a standalone `docker-compose.yml` and a minimal `data/config.example.yaml` example
-- Default site name changed to **哪吒探针**; the admin settings page keeps a dedicated site-name field
-- Logo/avatar URL can be configured in the admin panel; when empty, the frontend uses the bundled official default icon
-- Desktop background and mobile background URLs can be configured separately
-- Added frontend theme effect selector: default theme / Gaussian blur theme
-- Kept frontend custom code and dashboard custom code for lightweight visual customization
-- Simplified the homepage layout: core overview, server cards, map, and service monitors are kept while extra blocks are reduced
-- Moved cycle traffic bars from alert rules to per-server settings, making traffic quota/cycle configuration easier per server
-- Added migration logic for legacy cycle-transfer alert rules to preserve existing traffic quota settings where possible
-- Adjusted Agent install commands to use Kulin's own install script and default to `NZ_DISABLE_COMMAND_EXECUTE=true` to reduce accidental remote-command exposure
-- Fixed and bundled GeoIP data so region/IP display keeps working after slimming
-- Settings updates preserve existing theme, logo, and background values; they are cleared only when explicitly emptied in the admin panel
-- Docker image updates do not overwrite `data/config.yaml`, the database, or history files stored in the mounted data directory
-- Added Apache-2.0 attribution notice and standalone Chinese/English README documents
+Kulin turns Nezha into a cleaner “probe display + basic alerts” dashboard. The admin panel has fewer entries and avoids features that are unnecessary for a small personal monitoring panel.
+
+### Better for personal status pages
+
+- Cleaner homepage focused on server status, traffic, latency, and service monitors
+- Frontend theme effects, including a Gaussian blur style
+- Custom logo, desktop background, and mobile background
+- Frontend and dashboard custom code for small visual tweaks
+
+### Traffic progress bars built into server settings
+
+In upstream Nezha, cycle traffic display usually depends on alert-rule combinations. Kulin makes it a per-server setting:
+
+- Configure cycle start day, traffic quota, and related options directly from the server edit page
+- Show traffic progress bars directly on frontend server cards
+- Keep legacy cycle-traffic settings where possible during migration
+
+### Simpler notification and ops model
+
+Kulin mainly keeps Telegram notifications and common alert scenarios, while reducing complex notification channels, groups, and permission-related configuration. It is easier to run for single-user or small-scale self-hosted setups.
+
+### Independent releases and deployment
+
+- Docker image: `ghcr.io/shuijiao1/kulin-dashboard`
+- amd64 / arm64 release artifacts
+- Docker Compose example for quick deployment
 
 ---
 
-## 🧹 Removed / Slimmed Down Compared with Upstream Nezha
+## 🧹 What Kulin Removes Compared with Nezha
 
-Kulin removes many complex ops features from the source, admin routes, frontend entries, and build output to keep the dashboard lighter:
+Kulin removes features that are too heavy for a lightweight probe dashboard:
 
 - Web Terminal / online terminal
-- File Manager
-- Scheduled tasks / Cron management pages and related APIs
-- DDNS feature, models, service code, and webhook provider
-- NAT management pages and related APIs
+- File manager
+- Scheduled tasks / Cron
+- DDNS
+- NAT management
 - Complex ops entries from the server settings panel
-- Server group management pages and related APIs
-- Notification group management pages and related APIs
-- OAuth login / OAuth binding / OAuth config
-- Online user management logic
-- Server transfer related admin entries
-- Unused permission matrix, visibility, and stream tests after slimming
-- Extra upstream sync Actions such as AtomGit / Gitee sync workflows
+- Server groups
+- Notification groups
+- OAuth login / binding / config
+- Online user management
+- Server transfer admin entries
+- Complex notification channels
 - Theme marketplace and unnecessary external theme entries
-- Personal default branding such as the Shuijiao avatar and “水饺的探针” default name
-- Unused helpers and dead code no longer referenced by the slimmed dashboard
+- Extra sync workflows and dead code no longer used by the slimmed dashboard
 
 ---
 
@@ -118,28 +128,20 @@ When using a reverse proxy, keep `/proto.NezhaService/*` proxied to the dashboar
 
 ---
 
-## ⚙️ Settings
+## ⚙️ Common Settings
 
-- **Site name**: editable in the admin settings page; fresh or empty configs default to `哪吒探针`
-- **Avatar / Logo URL**: optional; when empty, the frontend displays the bundled official default icon
-- **Background URL**: desktop background image, optional
-- **Mobile background URL**: mobile background image, optional
+- **Site name**: editable in the admin settings page
+- **Logo / avatar**: optional image URL
+- **Background**: separate desktop and mobile background URLs
 - **Frontend theme effect**: default theme or Gaussian blur theme
+- **Traffic progress bars**: configure cycle and quota from the server edit page
 - **Custom code**: separate fields for frontend and dashboard custom code
-
-> Updating the image or recreating the container will not rewrite these settings as long as the `./data:/dashboard/data` mount is preserved.
 
 ---
 
 ## ⚙️ Agent
 
-Copy the Agent installation command from the panel. Keeping remote command execution disabled on the Agent side is recommended:
-
-```yaml
-server: example.com:443
-tls: true
-disable_command_execute: true
-```
+Copy the Agent installation command from the panel.
 
 When migrating from Nezha, keep the original server UUID to avoid duplicate server records.
 
