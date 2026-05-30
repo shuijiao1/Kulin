@@ -126,6 +126,7 @@ jobs:
 
       - name: Keep release zips and install script
         run: |
+          mkdir -p assets
           find assets -type f ! -name '*.zip' -delete
           cp scripts/install.sh assets/install.sh
 
