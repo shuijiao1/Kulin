@@ -3,7 +3,7 @@
 **中文** | [English](README.en.md)
 
 ![GitHub Release](https://img.shields.io/github/v/release/shuijiao1/Kulin?style=flat-square)
-![Docker](https://img.shields.io/badge/docker-ghcr.io%2Fshuijiao1%2Fkulin-dashboard-blue?style=flat-square)
+![Docker](https://img.shields.io/badge/docker-ghcr.io%2Fshuijiao1%2Fkulin--dashboard-blue?style=flat-square)
 ![License](https://img.shields.io/github/license/shuijiao1/Kulin?style=flat-square)
 
 > **Kulin** 是基于 [Nezha](https://github.com/nezhahq/nezha) 的轻量化服务器探针面板。它保留服务器监控、延迟监控、告警和 Telegram 通知，把原版里偏重运维平台的功能删掉，适合只想快速搭一个干净探针面板的自部署用户。

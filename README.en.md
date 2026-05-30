@@ -3,7 +3,7 @@
 [中文](README.md) | **English**
 
 ![GitHub Release](https://img.shields.io/github/v/release/shuijiao1/Kulin?style=flat-square)
-![Docker](https://img.shields.io/badge/docker-ghcr.io%2Fshuijiao1%2Fkulin-dashboard-blue?style=flat-square)
+![Docker](https://img.shields.io/badge/docker-ghcr.io%2Fshuijiao1%2Fkulin--dashboard-blue?style=flat-square)
 ![License](https://img.shields.io/github/license/shuijiao1/Kulin?style=flat-square)
 
 > **Kulin** is a lightweight server probe dashboard based on [Nezha](https://github.com/nezhahq/nezha). It keeps server monitoring, latency checks, alerts, and Telegram notifications, while removing heavier ops-platform features. It is designed for users who want a clean self-hosted monitoring panel.
