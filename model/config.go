@@ -24,6 +24,8 @@ import (
 const JWTSecretEnvKey = "NZ_JWTSECRETKEY" // #nosec G101 -- environment variable name, not a hardcoded secret value.
 
 const (
+	DefaultSiteName = "哪吒探针"
+
 	ConfigUsePeerIP                     = "NZ::Use-Peer-IP"
 	JWTSecretKeyRotationBaselineVersion = "v2.0.13"
 )
@@ -149,6 +151,9 @@ func (c *Config) Read(path string, frontendTemplates []FrontendTemplate) error {
 	}
 	if c.Language == "" {
 		c.Language = "en_US"
+	}
+	if c.SiteName == "" {
+		c.SiteName = DefaultSiteName
 	}
 	if c.Location == "" {
 		c.Location = "Asia/Shanghai"
