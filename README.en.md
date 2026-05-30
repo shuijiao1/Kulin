@@ -78,6 +78,28 @@ Kulin removes features that are too heavy for a lightweight probe dashboard:
 
 ---
 
+## 🔁 Migrating from Nezha
+
+Kulin provides a migration tool that keeps the core data still supported by Kulin: servers, users, service monitors, alerts, notifications, traffic history, and TSDB data.
+
+If your Nezha install used alert rules for cycle traffic, the tool converts them into Kulin's per-server traffic progress settings. You can then adjust the cycle and quota from the server edit page.
+
+```bash
+# Preview planned changes first
+docker run --rm --entrypoint /dashboard/kulin-migrate \
+  -v /opt/nezha/data:/data ghcr.io/shuijiao1/kulin-dashboard:latest \
+  -db /data/sqlite.db -dry-run
+
+# Run the migration after review. The tool creates a database backup automatically.
+docker run --rm --entrypoint /dashboard/kulin-migrate \
+  -v /opt/nezha/data:/data ghcr.io/shuijiao1/kulin-dashboard:latest \
+  -db /data/sqlite.db
+```
+
+> Features removed by Kulin, such as Web Terminal, file manager, Cron, DDNS, NAT, OAuth, groups, and complex notification channels, are not restored by migration. Their old tables are left in the database as historical data.
+
+---
+
 ## 🚀 Docker Compose
 
 > Docker Compose is recommended. Fresh installs create `admin / admin`; change the password immediately after deployment.

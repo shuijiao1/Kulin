@@ -45,17 +45,19 @@ jobs:
         run: |
           mkdir -p dist
           go build -trimpath -buildvcs=false -ldflags="-s -w -X github.com/nezhahq/nezha/service/singleton.Version=${GITHUB_REF_NAME}" -o "dist/kulin-dashboard-${GOOS}-${GOARCH}" ./cmd/dashboard
+          go build -trimpath -buildvcs=false -ldflags="-s -w" -o "dist/kulin-migrate-${GOOS}-${GOARCH}" ./cmd/migrate
 
       - name: Package binary
         run: |
           cd dist
-          zip "kulin-dashboard-${{ matrix.goos }}-${{ matrix.goarch }}.zip" "kulin-dashboard-${{ matrix.goos }}-${{ matrix.goarch }}"
+          zip "kulin-dashboard-${{ matrix.goos }}-${{ matrix.goarch }}.zip" "kulin-dashboard-${{ matrix.goos }}-${{ matrix.goarch }}" "kulin-migrate-${{ matrix.goos }}-${{ matrix.goarch }}"
 
       - uses: actions/upload-artifact@v4
         with:
           name: kulin-dashboard-${{ matrix.goos }}-${{ matrix.goarch }}
           path: |
             dist/kulin-dashboard-${{ matrix.goos }}-${{ matrix.goarch }}
+            dist/kulin-migrate-${{ matrix.goos }}-${{ matrix.goarch }}
             dist/kulin-dashboard-${{ matrix.goos }}-${{ matrix.goarch }}.zip
 
   docker:
@@ -75,7 +77,8 @@ jobs:
         run: |
           mkdir -p dist
           cp dist-artifacts/kulin-dashboard-linux-* dist/
-          chmod +x dist/kulin-dashboard-linux-*
+          cp dist-artifacts/kulin-migrate-linux-* dist/
+          chmod +x dist/kulin-dashboard-linux-* dist/kulin-migrate-linux-*
 
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3

@@ -11,6 +11,7 @@ WORKDIR /dashboard
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
 COPY dist/kulin-dashboard-${TARGETOS}-${TARGETARCH} ./app
+COPY dist/kulin-migrate-${TARGETOS}-${TARGETARCH} ./kulin-migrate
 
 VOLUME ["/dashboard/data"]
 EXPOSE 8008

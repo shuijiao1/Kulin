@@ -78,6 +78,28 @@ Kulin 移除了这些对轻量探针面板来说偏重的功能：
 
 ---
 
+## 🔁 从 Nezha 迁移
+
+Kulin 提供迁移工具，目标是尽量保留 Kulin 仍支持的核心数据：服务器、用户、服务监控、告警、通知、流量历史和 TSDB 数据。
+
+如果你之前在 Nezha 的告警规则里配置了周期流量，迁移工具会把它转换成 Kulin 的服务器流量进度条配置，之后可在“编辑服务器”里继续调整周期和额度。
+
+```bash
+# 先预览将要迁移的内容
+docker run --rm --entrypoint /dashboard/kulin-migrate \
+  -v /opt/nezha/data:/data ghcr.io/shuijiao1/kulin-dashboard:latest \
+  -db /data/sqlite.db -dry-run
+
+# 确认无误后执行，工具会自动备份数据库
+docker run --rm --entrypoint /dashboard/kulin-migrate \
+  -v /opt/nezha/data:/data ghcr.io/shuijiao1/kulin-dashboard:latest \
+  -db /data/sqlite.db
+```
+
+> Web Terminal、文件管理、Cron、DDNS、NAT、OAuth、分组和复杂通知渠道等已精简功能不会在 Kulin 中继续使用；相关旧表会留在数据库中作为历史数据。
+
+---
+
 ## 🚀 Docker Compose 部署
 
 > 推荐使用 Docker Compose。首次安装默认管理员为 `admin / admin`，上线后请立刻修改密码。
