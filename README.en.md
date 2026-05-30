@@ -82,7 +82,10 @@ Kulin removes features that are too heavy for a lightweight probe dashboard:
 
 Kulin provides a migration tool that keeps the core data still supported by Kulin: servers, users, service monitors, alerts, notifications, traffic history, and TSDB data.
 
-If your Nezha install used alert rules for cycle traffic, the tool converts them into Kulin's per-server traffic progress settings. You can then adjust the cycle and quota from the server edit page.
+The tool also handles common legacy customizations:
+
+- If your Nezha install used alert rules for cycle traffic, the tool converts them into Kulin's per-server traffic progress settings. You can then adjust the cycle and quota from the server edit page.
+- If your custom code defined a site title, logo, background image, or mobile background image, the tool tries to detect those values and move them into Kulin settings.
 
 ```bash
 # Preview planned changes first

@@ -3,8 +3,11 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"os"
 	"path/filepath"
 	"testing"
+
+	"sigs.k8s.io/yaml"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -31,7 +34,7 @@ INSERT INTO servers(id, name) VALUES (1, 'alpha'), (2, 'beta'), (3, 'gamma');`)
 		t.Fatal(err)
 	}
 
-	if err := run(dbPath, "", false, false); err != nil {
+	if err := run(dbPath, "", "", "", false, false); err != nil {
 		t.Fatal(err)
 	}
 
@@ -71,5 +74,62 @@ INSERT INTO servers(id, name) VALUES (1, 'alpha'), (2, 'beta'), (3, 'gamma');`)
 	}
 	if len(rules) != 1 || rules[0]["type"] != "cpu" {
 		t.Fatalf("legacy cycle rule not removed from alert rule: %s", rr)
+	}
+}
+
+func TestMigrateCustomCodeDisplayConfig(t *testing.T) {
+	dir := t.TempDir()
+	dbPath := filepath.Join(dir, "sqlite.db")
+	configPath := filepath.Join(dir, "config.yaml")
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = db.Exec(`
+CREATE TABLE servers(id integer primary key, name text);
+CREATE TABLE alert_rules(id integer primary key, name text, rules_raw text, updated_at datetime);`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Close(); err != nil {
+		t.Fatal(err)
+	}
+	config := `custom_code: |
+  <script>
+    document.title = "我的探针";
+    window.CustomLogo = "https://example.com/logo.png";
+    window.CustomBackgroundImage = "https://example.com/bg.webp";
+    window.CustomMobileBackgroundImage = "https://example.com/mobile.jpg";
+  </script>
+logo_url: ""
+background_url: ""
+mobile_background_url: ""
+`
+	if err := os.WriteFile(configPath, []byte(config), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := run(dbPath, configPath, "", "", false, false); err != nil {
+		t.Fatal(err)
+	}
+
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := map[string]any{}
+	if err := yaml.Unmarshal(data, &out); err != nil {
+		t.Fatal(err)
+	}
+	checks := map[string]string{
+		"site_name":             "我的探针",
+		"logo_url":              "https://example.com/logo.png",
+		"background_url":        "https://example.com/bg.webp",
+		"mobile_background_url": "https://example.com/mobile.jpg",
+	}
+	for key, want := range checks {
+		if got := out[key]; got != want {
+			t.Fatalf("%s = %v, want %s", key, got, want)
+		}
 	}
 }

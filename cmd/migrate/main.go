@@ -9,9 +9,12 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
+
+	"sigs.k8s.io/yaml"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -40,33 +43,45 @@ type server struct {
 }
 
 type summary struct {
-	DBPath                 string   `json:"db_path"`
-	DryRun                 bool     `json:"dry_run"`
-	BackupPath             string   `json:"backup_path,omitempty"`
-	ServersTotal           int      `json:"servers_total"`
-	CycleServersUpdated    int      `json:"cycle_servers_updated"`
-	AlertRulesUpdated      int      `json:"alert_rules_updated"`
-	AlertRulesDeleted      int      `json:"alert_rules_deleted"`
-	UnsupportedTablesFound []string `json:"unsupported_tables_found,omitempty"`
-	Notes                  []string `json:"notes,omitempty"`
+	DBPath                 string            `json:"db_path"`
+	ConfigPath             string            `json:"config_path,omitempty"`
+	DryRun                 bool              `json:"dry_run"`
+	BackupPath             string            `json:"backup_path,omitempty"`
+	ConfigBackupPath       string            `json:"config_backup_path,omitempty"`
+	ServersTotal           int               `json:"servers_total"`
+	CycleServersUpdated    int               `json:"cycle_servers_updated"`
+	AlertRulesUpdated      int               `json:"alert_rules_updated"`
+	AlertRulesDeleted      int               `json:"alert_rules_deleted"`
+	ConfigFieldsMigrated   map[string]string `json:"config_fields_migrated,omitempty"`
+	UnsupportedTablesFound []string          `json:"unsupported_tables_found,omitempty"`
+	Notes                  []string          `json:"notes,omitempty"`
+}
+
+type configMigration struct {
+	path    string
+	backup  string
+	raw     map[string]any
+	updates map[string]string
 }
 
 func main() {
-	var dbPath, backupPath string
+	var dbPath, configPath, backupPath, configBackupPath string
 	var dryRun, keepLegacy bool
 	flag.StringVar(&dbPath, "db", "data/sqlite.db", "SQLite database path from an existing Nezha/Kulin dashboard")
+	flag.StringVar(&configPath, "config", "", "config.yaml path; default: <db directory>/config.yaml when it exists")
 	flag.StringVar(&backupPath, "backup", "", "backup path; default: <db>.kulin-migrate-<timestamp>.bak")
+	flag.StringVar(&configBackupPath, "config-backup", "", "config backup path; default: <config>.kulin-migrate-<timestamp>.bak")
 	flag.BoolVar(&dryRun, "dry-run", false, "inspect and print planned changes without writing")
 	flag.BoolVar(&keepLegacy, "keep-legacy-cycle-alerts", false, "keep legacy cycle traffic rules in alert_rules instead of removing them after migration")
 	flag.Parse()
 
-	if err := run(dbPath, backupPath, dryRun, keepLegacy); err != nil {
+	if err := run(dbPath, configPath, backupPath, configBackupPath, dryRun, keepLegacy); err != nil {
 		fmt.Fprintf(os.Stderr, "kulin-migrate: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func run(dbPath, backupPath string, dryRun, keepLegacy bool) error {
+func run(dbPath, configPath, backupPath, configBackupPath string, dryRun, keepLegacy bool) error {
 	if dbPath == "" {
 		return errors.New("empty -db")
 	}
@@ -74,15 +89,32 @@ func run(dbPath, backupPath string, dryRun, keepLegacy bool) error {
 		return err
 	}
 
-	sum := summary{DBPath: dbPath, DryRun: dryRun}
+	if configPath == "" {
+		candidate := filepath.Join(filepath.Dir(dbPath), "config.yaml")
+		if _, err := os.Stat(candidate); err == nil {
+			configPath = candidate
+		}
+	}
+
+	sum := summary{DBPath: dbPath, ConfigPath: configPath, DryRun: dryRun}
+	stamp := time.Now().Format("20060102-150405")
 	if !dryRun {
 		if backupPath == "" {
-			backupPath = fmt.Sprintf("%s.kulin-migrate-%s.bak", dbPath, time.Now().Format("20060102-150405"))
+			backupPath = fmt.Sprintf("%s.kulin-migrate-%s.bak", dbPath, stamp)
 		}
 		if err := copyFile(dbPath, backupPath); err != nil {
 			return fmt.Errorf("backup database: %w", err)
 		}
 		sum.BackupPath = backupPath
+		if configPath != "" {
+			if configBackupPath == "" {
+				configBackupPath = fmt.Sprintf("%s.kulin-migrate-%s.bak", configPath, stamp)
+			}
+			if err := copyFile(configPath, configBackupPath); err != nil {
+				return fmt.Errorf("backup config: %w", err)
+			}
+			sum.ConfigBackupPath = configBackupPath
+		}
 	}
 
 	db, err := sql.Open("sqlite3", dbPath)
@@ -168,6 +200,14 @@ func run(dbPath, backupPath string, dryRun, keepLegacy bool) error {
 	sum.AlertRulesUpdated = len(updatedAlerts)
 	sum.AlertRulesDeleted = len(deleteAlerts)
 
+	configMigration, err := prepareConfigMigration(configPath)
+	if err != nil {
+		return err
+	}
+	if configMigration != nil {
+		sum.ConfigFieldsMigrated = configMigration.updates
+	}
+
 	if dryRun {
 		return printSummary(sum)
 	}
@@ -201,7 +241,117 @@ func run(dbPath, backupPath string, dryRun, keepLegacy bool) error {
 	if err := tx.Commit(); err != nil {
 		return err
 	}
+	if configMigration != nil && len(configMigration.updates) > 0 {
+		if err := writeConfigMigration(configMigration); err != nil {
+			return err
+		}
+	}
 	return printSummary(sum)
+}
+
+func prepareConfigMigration(configPath string) (*configMigration, error) {
+	if configPath == "" {
+		return nil, nil
+	}
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	raw := map[string]any{}
+	if len(data) > 0 {
+		if err := yaml.Unmarshal(data, &raw); err != nil {
+			return nil, fmt.Errorf("parse config %s: %w", configPath, err)
+		}
+	}
+	updates := inferDisplayConfig(raw)
+	return &configMigration{path: configPath, raw: raw, updates: updates}, nil
+}
+
+func writeConfigMigration(m *configMigration) error {
+	for key, value := range m.updates {
+		m.raw[key] = value
+	}
+	out, err := yaml.Marshal(m.raw)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(m.path, out, 0o600)
+}
+
+func inferDisplayConfig(raw map[string]any) map[string]string {
+	customCode := stringify(raw["custom_code"])
+	customDashboard := stringify(raw["custom_code_dashboard"])
+	combined := customCode + "\n" + customDashboard
+	updates := map[string]string{}
+	if strings.TrimSpace(stringify(raw["site_name"])) == "" {
+		if value := firstMatch(combined, []*regexp.Regexp{
+			regexp.MustCompile(`(?is)document\.title\s*=\s*['\"]([^'\"]{1,120})['\"]`),
+			regexp.MustCompile(`(?is)<title[^>]*>\s*([^<]{1,120})\s*</title>`),
+		}); value != "" {
+			updates["site_name"] = value
+		}
+	}
+	if strings.TrimSpace(stringify(raw["logo_url"])) == "" {
+		if value := firstMatch(combined, []*regexp.Regexp{
+			regexp.MustCompile(`(?is)window\.CustomLogo\s*=\s*['\"]([^'\"]+)['\"]`),
+			regexp.MustCompile(`(?is)--?custom-logo\s*:\s*url\(['\"]?([^)'\"]+)['\"]?\)`),
+		}); isImageURL(value) {
+			updates["logo_url"] = value
+		}
+	}
+	if strings.TrimSpace(stringify(raw["background_url"])) == "" {
+		if value := firstMatch(combined, []*regexp.Regexp{
+			regexp.MustCompile(`(?is)window\.CustomBackgroundImage\s*=\s*['\"]([^'\"]+)['\"]`),
+			regexp.MustCompile(`(?is)window\.CustomBackground\s*=\s*['\"]([^'\"]+)['\"]`),
+			regexp.MustCompile(`(?is)background(?:-image)?\s*:\s*url\(['\"]?([^)'\"]+)['\"]?\)`),
+		}); isImageURL(value) {
+			updates["background_url"] = value
+		}
+	}
+	if strings.TrimSpace(stringify(raw["mobile_background_url"])) == "" {
+		if value := firstMatch(combined, []*regexp.Regexp{
+			regexp.MustCompile(`(?is)window\.CustomMobileBackgroundImage\s*=\s*['\"]([^'\"]+)['\"]`),
+			regexp.MustCompile(`(?is)window\.CustomMobileBackground\s*=\s*['\"]([^'\"]+)['\"]`),
+		}); isImageURL(value) {
+			updates["mobile_background_url"] = value
+		}
+	}
+	return updates
+}
+
+func stringify(v any) string {
+	switch x := v.(type) {
+	case string:
+		return x
+	case fmt.Stringer:
+		return x.String()
+	case nil:
+		return ""
+	default:
+		return fmt.Sprint(x)
+	}
+}
+
+func firstMatch(text string, patterns []*regexp.Regexp) string {
+	for _, pattern := range patterns {
+		match := pattern.FindStringSubmatch(text)
+		if len(match) > 1 {
+			return strings.TrimSpace(match[1])
+		}
+	}
+	return ""
+}
+
+func isImageURL(value string) bool {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return false
+	}
+	lower := strings.ToLower(value)
+	return strings.HasPrefix(lower, "http://") || strings.HasPrefix(lower, "https://") || strings.HasPrefix(lower, "/") || strings.HasPrefix(lower, "data:image/")
 }
 
 func copyFile(src, dst string) error {
