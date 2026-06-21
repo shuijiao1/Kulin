@@ -12,21 +12,17 @@ import (
 	"net/http"
 	"os"
 	"runtime/debug"
-	"strings"
 	"time"
 	_ "time/tzdata"
 
-	"github.com/gin-gonic/gin"
 	"github.com/ory/graceful"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/shuijiao1/Kulin/cmd/dashboard/controller"
-	"github.com/shuijiao1/Kulin/cmd/dashboard/controller/waf"
 	"github.com/shuijiao1/Kulin/cmd/dashboard/rpc"
 	"github.com/shuijiao1/Kulin/model"
 	"github.com/shuijiao1/Kulin/pkg/idcodec"
 	"github.com/shuijiao1/Kulin/pkg/utils"
-	"github.com/shuijiao1/Kulin/proto"
 	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
@@ -41,6 +37,10 @@ var (
 	//go:embed *-dist
 	frontendDist embed.FS
 )
+
+func initIDCodec() error {
+	return idcodec.Init([]byte(singleton.Conf.JWTSecretKey))
+}
 
 func initSystem(bus chan<- *model.Service) error {
 	var usersCount int64
@@ -72,15 +72,7 @@ func initSystem(bus chan<- *model.Service) error {
 	if _, err := singleton.CronShared.AddFunc("0 0 * * * *", func() { singleton.RecordTransferHourlyUsage() }); err != nil {
 		return err
 	}
-
-	if err := singleton.StartJWTSessionGC(); err != nil {
-		return err
-	}
 	return nil
-}
-
-func initIDCodec() error {
-	return idcodec.Init([]byte(singleton.Conf.JWTSecretKey))
 }
 
 // @title           Kulin API
@@ -125,7 +117,6 @@ func main() {
 	serviceSentinelDispatchBus := make(chan *model.Service)
 	if err := utils.FirstError(singleton.InitFrontendTemplates,
 		func() error { return singleton.InitConfigFromPath(dashboardCliParam.ConfigFile) },
-		initIDCodec,
 		singleton.InitTimezoneAndCache,
 		func() error {
 			if singleton.Conf.Memory.GoMemLimitMB > 0 {
@@ -147,9 +138,6 @@ func main() {
 
 	singleton.CleanMonitorHistory()
 	rpc.DispatchKeepalive()
-	rpc.SetMCPKillSwitchObserver(func() bool {
-		return singleton.Conf == nil || !singleton.Conf.MCPEnabled()
-	})
 	go rpc.DispatchTask(serviceSentinelDispatchBus)
 	go singleton.AlertSentinelStart()
 
@@ -216,18 +204,7 @@ func main() {
 
 func newHTTPandGRPCMux(httpHandler http.Handler, grpcHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		natConfig := singleton.NATShared.GetNATConfigByDomain(r.Host)
-		if natConfig != nil {
-			if !natConfig.Enabled {
-				c, _ := gin.CreateTestContext(w)
-				waf.ShowBlockPage(c, fmt.Errorf("nat host %s is disabled", natConfig.Domain))
-				return
-			}
-			rpc.ServeNAT(w, r, natConfig)
-			return
-		}
-		if r.ProtoMajor == 2 && r.Header.Get("Content-Type") == "application/grpc" &&
-			strings.HasPrefix(r.URL.Path, "/"+proto.NezhaService_ServiceDesc.ServiceName) {
+		if r.ProtoMajor == 2 && r.Header.Get("Content-Type") == "application/grpc" {
 			grpcHandler.ServeHTTP(w, r)
 			return
 		}

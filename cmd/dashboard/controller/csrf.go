@@ -125,13 +125,6 @@ func csrfMiddleware() gin.HandlerFunc {
 			c.Next()
 			return
 		}
-		// A PAT request carries no ambient cookie, so CSRF cannot induce it.
-		// The exemption must check the authenticated PAT identity resolved by
-		// apiTokenAuthMiddleware, not a forgeable Authorization header value.
-		if APITokenFromContext(c) != nil {
-			c.Next()
-			return
-		}
 		header := c.GetHeader(csrfHeaderName)
 		cookie, err := c.Cookie(csrfCookieName)
 		// Both halves must be present, mirror each other, AND carry a valid

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/shuijiao1/Kulin/model"
-	"github.com/shuijiao1/Kulin/pkg/utils"
 )
 
 var Conf *ConfigClass
@@ -36,7 +35,6 @@ func InitConfigFromPath(path string) error {
 	}
 
 	Conf.updateIgnoredIPNotificationID()
-	Conf.Oauth2Providers = utils.MapKeysToSlice(Conf.Oauth2)
 	return nil
 }
 

@@ -2,13 +2,9 @@ package singleton
 
 import (
 	"cmp"
-	"context"
-	"log"
 	"slices"
-	"strings"
 
 	"github.com/shuijiao1/Kulin/model"
-	"github.com/shuijiao1/Kulin/pkg/ddns"
 	"github.com/shuijiao1/Kulin/pkg/utils"
 )
 
@@ -40,7 +36,6 @@ func NewServerClass() *ServerClass {
 
 	model.OwnerServerIDsLookup = sc.ownerServerIDs
 	model.AllServerIDsLookup = sc.allServerIDs
-	model.OwnerIsAdminLookup = ownerIsAdmin
 
 	return sc
 }
@@ -67,10 +62,6 @@ func (c *ServerClass) allServerIDs() []uint64 {
 	return ids
 }
 
-func ownerIsAdmin(ownerUID uint64) bool {
-	return userIsAdmin(ownerUID)
-}
-
 func (c *ServerClass) Update(s *model.Server, uuid string) {
 	c.listMu.Lock()
 
@@ -80,12 +71,6 @@ func (c *ServerClass) Update(s *model.Server, uuid string) {
 	}
 
 	c.listMu.Unlock()
-
-	if s.EnableDDNS {
-		if err := c.UpdateDDNS(s, nil); err != nil {
-			log.Printf("KULIN>> Failed to update DDNS for server %d: %v", err, s.ID)
-		}
-	}
 
 	c.sortList()
 }
@@ -120,25 +105,6 @@ func (c *ServerClass) UUIDToID(uuid string) (id uint64, ok bool) {
 
 	id, ok = c.uuidToID[uuid]
 	return
-}
-
-func (c *ServerClass) UpdateDDNS(server *model.Server, ip *model.IP) error {
-	confServers := strings.Split(Conf.DNSServers, ",")
-	ctx := context.WithValue(context.Background(), ddns.DNSServerKey{}, utils.IfOr(confServers[0] != "", confServers, utils.DNSServers))
-
-	providers, err := DDNSShared.GetDDNSProvidersFromProfiles(server.DDNSProfiles, utils.IfOr(ip != nil, ip, &server.GeoIP.IP), server.GetUserID())
-	if err != nil {
-		return err
-	}
-
-	for _, provider := range providers {
-		domains := server.OverrideDDNSDomains[provider.GetProfileID()]
-		go func(provider *ddns.Provider) {
-			provider.UpdateDomain(ctx, domains...)
-		}(provider)
-	}
-
-	return nil
 }
 
 func (c *ServerClass) sortList() {

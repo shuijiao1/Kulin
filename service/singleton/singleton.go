@@ -30,9 +30,7 @@ var (
 
 	ServerShared          *ServerClass
 	ServiceSentinelShared *ServiceSentinel
-	DDNSShared            *DDNSClass
 	NotificationShared    *NotificationClass
-	NATShared             *NATClass
 	CronShared            *CronClass
 	// ServerTransferShared is initialized in LoadSingleton AFTER ServerShared
 	// (so the in-memory pending index can write back into ServerShared.UserID
@@ -58,12 +56,9 @@ func InitTimezoneAndCache() error {
 func LoadSingleton(bus chan<- *model.Service) (err error) {
 	initI18n() // 加载本地化服务
 	initUser() // 加载用户ID绑定表
-	NATShared = NewNATClass()
-	DDNSShared = NewDDNSClass()
 	NotificationShared = NewNotificationClass()
 	ServerShared = NewServerClass()
 	CronShared = NewCronClass()
-	ServerTransferShared = NewServerTransferClass()
 	// 最后初始化 ServiceSentinel
 	ServiceSentinelShared, err = NewServiceSentinel(bus)
 	return
@@ -90,23 +85,9 @@ func InitDBFromPath(path string) error {
 	if Conf.Debug {
 		DB = DB.Debug()
 	}
-	err = DB.AutoMigrate(model.Server{}, model.User{}, model.ServerGroup{}, model.NotificationGroup{},
-		model.Notification{}, model.AlertRule{}, model.Service{}, model.NotificationGroupNotification{},
-		model.Cron{}, model.Transfer{}, model.ServerGroupServer{},
-		model.NAT{}, model.DDNSProfile{}, model.NotificationGroupNotification{},
-		model.WAF{}, model.Oauth2Bind{}, model.ServerTransfer{}, model.JWTSession{},
-		model.APIToken{}, model.MCPAuditLog{})
+	err = DB.AutoMigrate(model.Server{}, model.User{}, model.Notification{}, model.AlertRule{}, model.Service{}, model.Transfer{})
 	if err != nil {
 		return err
-	}
-
-	// 旧 mcp:* scope 与 nezha:* 并行了一段时间，HasScope 通过别名让 mcp:fs:write
-	// 静默扩到 REST nezha:server:write。统一命名后这里把残留旧 scope 一次性
-	// 归一化（或在仅剩危险旧 scope 时整张 PAT 删除），保证运行时不再依赖别名。
-	if rewritten, deleted, mErr := model.MigrateLegacyMCPScopes(DB); mErr != nil {
-		log.Printf("KULIN>> MigrateLegacyMCPScopes failed: %v", mErr)
-	} else if rewritten > 0 || deleted > 0 {
-		log.Printf("KULIN>> Migrated legacy mcp:* api token scopes: rewritten=%d deleted=%d", rewritten, deleted)
 	}
 
 	return nil

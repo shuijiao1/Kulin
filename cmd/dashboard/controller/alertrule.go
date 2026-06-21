@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"slices"
 	"strconv"
 	"time"
 
@@ -196,20 +195,6 @@ func validateRule(c *gin.Context, r *model.AlertRule) error {
 		}
 	} else {
 		return singleton.Localizer.ErrorT("need to configure at least a single rule")
-	}
-
-	if !singleton.CronShared.CheckPermission(c, slices.Values(r.FailTriggerTasks)) {
-		return singleton.Localizer.ErrorT("permission denied")
-	}
-	if !singleton.CronShared.CheckPermission(c, slices.Values(r.RecoverTriggerTasks)) {
-		return singleton.Localizer.ErrorT("permission denied")
-	}
-	if err := enforcePATTriggerTaskScope(c, r.FailTriggerTasks, r.RecoverTriggerTasks); err != nil {
-		return err
-	}
-
-	if err := assertOwnsNotificationGroup(c, r.NotificationGroupID); err != nil {
-		return err
 	}
 
 	return nil

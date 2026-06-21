@@ -6,7 +6,6 @@ import (
 
 	"github.com/shuijiao1/Kulin/model"
 	"github.com/shuijiao1/Kulin/pkg/utils"
-	"gorm.io/gorm"
 )
 
 var (
@@ -87,86 +86,14 @@ func OnUserUpdate(u *model.User) {
 }
 
 func OnUserDelete(id []uint64, errorFunc func(string, ...any) error) error {
-	UserLock.Lock()
-	defer UserLock.Unlock()
-
 	if len(id) < 1 {
 		return Localizer.ErrorT("user id not specified")
 	}
+	return errorFunc("Kulin only supports one administrator account")
+}
 
-	if ServerTransferShared != nil {
-		ServerTransferShared.OnUsersDeleted(id)
-	}
-
-	var (
-		cron, server   bool
-		crons, servers []uint64
-	)
-
-	slist := ServerShared.GetSortedList()
-	clist := CronShared.GetSortedList()
-	for _, uid := range id {
-		err := DB.Transaction(func(tx *gorm.DB) error {
-			crons = model.FindByUserID(clist, uid)
-			cron = len(crons) > 0
-			if cron {
-				if err := tx.Unscoped().Delete(&model.Cron{}, "id in (?)", crons).Error; err != nil {
-					return err
-				}
-			}
-
-			servers = model.FindByUserID(slist, uid)
-			server = len(servers) > 0
-			if server {
-				if err := tx.Unscoped().Delete(&model.Server{}, "id in (?)", servers).Error; err != nil {
-					return err
-				}
-				if err := tx.Unscoped().Delete(&model.ServerGroupServer{}, "server_id in (?)", servers).Error; err != nil {
-					return err
-				}
-			}
-
-			if err := tx.Unscoped().Delete(&model.Transfer{}, "server_id in (?)", servers).Error; err != nil {
-				return err
-			}
-
-			if err := tx.Where("id = ?", uid).Delete(&model.User{}).Error; err != nil {
-				return err
-			}
-			return nil
-		})
-
-		if err != nil {
-			return errorFunc("%v", err)
-		}
-
-		if cron {
-			CronShared.Delete(crons)
-		}
-
-		if server {
-			AlertsLock.Lock()
-			for _, sid := range servers {
-				for _, alert := range Alerts {
-					if AlertsCycleTransferStatsStore[alert.ID] != nil {
-						delete(AlertsCycleTransferStatsStore[alert.ID].ServerName, sid)
-						delete(AlertsCycleTransferStatsStore[alert.ID].Transfer, sid)
-						delete(AlertsCycleTransferStatsStore[alert.ID].NextUpdate, sid)
-					}
-				}
-			}
-			AlertsLock.Unlock()
-			// Cancel pending transfers before ServerShared drops the
-			// in-memory entry: same ordering rationale as batchDeleteServer.
-			if ServerTransferShared != nil {
-				ServerTransferShared.OnServersDeleted(servers)
-			}
-			ServerShared.Delete(servers)
-		}
-
-		secret := UserInfoMap[uid].AgentSecret
-		delete(AgentSecretToUserId, secret)
-		delete(UserInfoMap, uid)
-	}
-	return nil
+func userIsAdmin(uid uint64) bool {
+	UserLock.RLock()
+	defer UserLock.RUnlock()
+	return UserInfoMap[uid].Role.IsAdmin()
 }

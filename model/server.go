@@ -2,7 +2,6 @@ package model
 
 import (
 	"errors"
-	"log"
 	"slices"
 	"sync"
 	"sync/atomic"
@@ -15,26 +14,29 @@ import (
 	pb "github.com/shuijiao1/Kulin/proto"
 )
 
+const (
+	TrafficProgressModeOut  = "out"
+	TrafficProgressModeIn   = "in"
+	TrafficProgressModeMax  = "max"
+	TrafficProgressModeDual = "dual"
+)
+
 type Server struct {
 	Common
 
-	Name                   string `json:"name"`
-	UUID                   string `json:"uuid,omitempty" gorm:"unique"`
-	Note                   string `json:"note,omitempty"`           // 管理员可见备注
-	PublicNote             string `json:"public_note,omitempty"`    // 公开备注
-	DisplayIndex           int    `json:"display_index"`            // 展示排序，越大越靠前
-	HideForGuest           bool   `json:"hide_for_guest,omitempty"` // 对游客隐藏
-	EnableDDNS             bool   `json:"enable_ddns,omitempty"`    // 启用DDNS
-	DDNSProfilesRaw        string `gorm:"default:'[]';column:ddns_profiles_raw" json:"-"`
-	OverrideDDNSDomainsRaw string `gorm:"default:'{}';column:override_ddns_domains_raw" json:"-"`
-
-	DDNSProfiles        []uint64            `gorm:"-" json:"ddns_profiles,omitempty" validate:"optional"` // DDNS配置
-	OverrideDDNSDomains map[uint64][]string `gorm:"-" json:"override_ddns_domains,omitempty" validate:"optional"`
-
-	Host       *Host      `gorm:"-" json:"host,omitempty"`
-	State      *HostState `gorm:"-" json:"state,omitempty"`
-	GeoIP      *GeoIP     `gorm:"-" json:"geoip,omitempty"`
-	LastActive time.Time  `gorm:"-" json:"last_active,omitempty"`
+	Name                   string     `json:"name"`
+	UUID                   string     `json:"uuid,omitempty" gorm:"unique"`
+	Note                   string     `json:"note,omitempty"`           // 管理员可见备注
+	PublicNote             string     `json:"public_note,omitempty"`    // 公开备注
+	DisplayIndex           int        `json:"display_index"`            // 展示排序，越大越靠前
+	HideForGuest           bool       `json:"hide_for_guest,omitempty"` // 对游客隐藏
+	TrafficProgressEnabled bool       `json:"traffic_progress_enabled,omitempty"`
+	TrafficProgressMode    string     `gorm:"default:'out'" json:"traffic_progress_mode,omitempty"`
+	TrafficProgressLimit   uint64     `json:"traffic_progress_limit,omitempty"`
+	Host                   *Host      `gorm:"-" json:"host,omitempty"`
+	State                  *HostState `gorm:"-" json:"state,omitempty"`
+	GeoIP                  *GeoIP     `gorm:"-" json:"geoip,omitempty"`
+	LastActive             time.Time  `gorm:"-" json:"last_active,omitempty"`
 
 	// taskStream MUST be accessed only via SetTaskStream / GetTaskStream. Direct
 	// field access from outside this file races with the gRPC RequestTask
@@ -165,17 +167,8 @@ func (s *Server) CopyFromRunningServer(old *Server) {
 }
 
 func (s *Server) AfterFind(tx *gorm.DB) error {
-	if s.DDNSProfilesRaw != "" {
-		if err := json.Unmarshal([]byte(s.DDNSProfilesRaw), &s.DDNSProfiles); err != nil {
-			log.Println("KULIN>> Server.AfterFind:", err)
-			return nil
-		}
-	}
-	if s.OverrideDDNSDomainsRaw != "" {
-		if err := json.Unmarshal([]byte(s.OverrideDDNSDomainsRaw), &s.OverrideDDNSDomains); err != nil {
-			log.Println("KULIN>> Server.AfterFind:", err)
-			return nil
-		}
+	if s.TrafficProgressMode == "" {
+		s.TrafficProgressMode = TrafficProgressModeOut
 	}
 	return nil
 }

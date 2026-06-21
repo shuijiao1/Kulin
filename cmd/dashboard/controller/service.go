@@ -71,36 +71,7 @@ func serviceResponseCacheKey(c *gin.Context) string {
 	if !ok || user == nil {
 		return "list-service::guest"
 	}
-	base := fmt.Sprintf("list-service::%t::%d", user.Role.IsAdmin(), user.ID)
-	tok := APITokenFromContext(c)
-	if tok == nil {
-		return base + "::jwt"
-	}
-	ids := tok.ServerIDs()
-	slices.Sort(ids)
-	parts := make([]string, 0, len(ids))
-	for _, id := range ids {
-		parts = append(parts, strconv.FormatUint(id, 10))
-	}
-	return fmt.Sprintf("%s::pat:%d::servers:%s", base, tok.ID, strings.Join(parts, ","))
-}
-
-func filterCycleTransferStatsForViewer(c *gin.Context, stats map[uint64]model.CycleTransferStats) map[uint64]model.CycleTransferStats {
-	if len(stats) == 0 {
-		return stats
-	}
-	servers := singleton.ServerShared.GetList()
-	filteredStats := make(map[uint64]model.CycleTransferStats, len(stats))
-	for id, cycleStats := range stats {
-		cycleStats.ServerName = filterServerMapForViewer(c, cycleStats.ServerName, servers)
-		cycleStats.Transfer = filterServerMapForViewer(c, cycleStats.Transfer, servers)
-		cycleStats.NextUpdate = filterServerMapForViewer(c, cycleStats.NextUpdate, servers)
-		if len(cycleStats.ServerName) == 0 && len(cycleStats.Transfer) == 0 && len(cycleStats.NextUpdate) == 0 {
-			continue
-		}
-		filteredStats[id] = cycleStats
-	}
-	return filteredStats
+	return fmt.Sprintf("list-service::%t::%d", user.Role.IsAdmin(), user.ID)
 }
 
 func filterServerMapForViewer[T any](c *gin.Context, values map[uint64]T, servers map[uint64]*model.Server) map[uint64]T {

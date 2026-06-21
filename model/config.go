@@ -42,27 +42,19 @@ type ConfigForGuests struct {
 }
 
 type ConfigDashboard struct {
-	InstallHost string `koanf:"install_host" json:"install_host,omitempty"`
-	AgentTLS    bool   `koanf:"tls" json:"tls,omitempty"` // 用于前端判断生成的安装命令是否启用 TLS
-
-	// DashboardHost 是 dashboard 对外访问的主机名，专用于 OAuth2 回调地址。
-	// 它与 InstallHost（agent 连接用主机名）解耦：两者可以是不同域名。
-	// 为空时，OAuth2 回调放行请求 Host（信任请求头），不做强制重写。
+	InstallHost   string `koanf:"install_host" json:"install_host,omitempty"`
 	DashboardHost string `koanf:"dashboard_host" json:"dashboard_host,omitempty"`
+	ReservedHosts string `koanf:"reserved_hosts" json:"reserved_hosts,omitempty"`
+	AgentTLS      bool   `koanf:"tls" json:"tls,omitempty"` // 用于前端判断生成的安装命令是否启用 TLS
 
 	WebRealIPHeader   string `koanf:"web_real_ip_header" json:"web_real_ip_header,omitempty"`     // 前端真实IP
 	AgentRealIPHeader string `koanf:"agent_real_ip_header" json:"agent_real_ip_header,omitempty"` // Agent真实IP
 	UserTemplate      string `koanf:"user_template" json:"user_template,omitempty"`
 	AdminTemplate     string `koanf:"admin_template" json:"admin_template,omitempty"`
 
-	EnablePlainIPInNotification bool `koanf:"enable_plain_ip_in_notification" json:"enable_plain_ip_in_notification,omitempty"` // 通知信息IP不打码
-
-	EnableMCP bool `koanf:"enable_mcp" json:"enable_mcp,omitempty"` // 是否启用 MCP 入口（默认关闭；启用前请审视 PAT scope/whitelist）
-
-	// GHSA-x6fg-52vr-hj4w：反代部署下 dashboard 的对外域名进程自身看不到，
-	// InstallHost/ListenHost 无法覆盖。运维在此用逗号分隔声明这些对外 host，
-	// 成员便无法注册与之冲突的 NAT 域名抢占路由。
-	ReservedHosts string `koanf:"reserved_hosts" json:"reserved_hosts,omitempty"`
+	EnablePlainIPInNotification bool   `koanf:"enable_plain_ip_in_notification" json:"enable_plain_ip_in_notification,omitempty"` // 通知信息IP不打码
+	EnableMCP                   bool   `koanf:"enable_mcp" json:"enable_mcp,omitempty"`
+	DNSServers                  string `koanf:"dns_servers" json:"dns_servers,omitempty"`
 
 	// IP变更提醒
 	EnableIPChangeNotification  bool   `koanf:"enable_ip_change_notification" json:"enable_ip_change_notification,omitempty"`
@@ -70,7 +62,6 @@ type ConfigDashboard struct {
 	Cover                       uint8  `koanf:"cover" json:"cover"`                                               // 覆盖范围（0:提醒未被 IgnoredIPNotification 包含的所有服务器; 1:仅提醒被 IgnoredIPNotification 包含的服务器;）
 	IgnoredIPNotification       string `koanf:"ignored_ip_notification" json:"ignored_ip_notification,omitempty"` // 特定服务器IP（多个服务器用逗号分隔）
 
-	DNSServers string `koanf:"dns_servers" json:"dns_servers,omitempty"`
 }
 
 type Config struct {
@@ -90,16 +81,9 @@ type Config struct {
 	ListenPort                     uint16 `koanf:"listen_port" json:"listen_port,omitempty"`
 	ListenHost                     string `koanf:"listen_host" json:"listen_host,omitempty"`
 
-	jwtSecretFromEnv  bool `koanf:"-" json:"-" yaml:"-"`
-	jwtSecretFromYAML bool `koanf:"-" json:"-" yaml:"-"`
-
-	// mcpEnabled：EnableMCP 的并发安全镜像，kill switch 跨 goroutine 读写走
-	// MCPEnabled()/SetMCPEnabled()。放外层 Config 而非 ConfigDashboard，避免
-	// SettingResponse 按值拷贝 ConfigDashboard 触发 copylocks。
-	mcpEnabled atomic.Bool `koanf:"-" json:"-" yaml:"-"`
-
-	// oauth2 配置
-	Oauth2 map[string]*Oauth2Config `koanf:"oauth2" json:"oauth2,omitempty"`
+	jwtSecretFromEnv  bool        `koanf:"-" json:"-" yaml:"-"`
+	jwtSecretFromYAML bool        `koanf:"-" json:"-" yaml:"-"`
+	mcpEnabled        atomic.Bool `koanf:"-" json:"-" yaml:"-"`
 
 	// HTTPS 配置
 	HTTPS HTTPSConf `koanf:"https" json:"https"`
@@ -231,21 +215,14 @@ func (c *Config) Read(path string, frontendTemplates []FrontendTemplate) error {
 	}
 
 	c.mcpEnabled.Store(c.EnableMCP)
-
 	return nil
 }
 
 // MCPEnabled 并发安全地读取 MCP kill switch 状态。
-func (c *Config) MCPEnabled() bool {
-	return c.mcpEnabled.Load()
-}
+func (c *Config) MCPEnabled() bool { return c.mcpEnabled.Load() }
 
-// SetMCPEnabled 并发安全地更新 MCP kill switch 状态。只写 atomic 镜像，不直接
-// 写 EnableMCP 明文字段——后者会与 listConfig 的 *singleton.Conf 整体拷贝读发生
-// 数据竞争。持久化由 save() 在 marshal 前从 atomic 同步明文字段完成。
-func (c *Config) SetMCPEnabled(v bool) {
-	c.mcpEnabled.Store(v)
-}
+// SetMCPEnabled 并发安全地更新 MCP kill switch 状态。
+func (c *Config) SetMCPEnabled(v bool) { c.mcpEnabled.Store(v); c.EnableMCP = v }
 
 // Save 保存配置文件
 func (c *Config) Save() error {
@@ -314,7 +291,6 @@ func (c *Config) patchYAMLField(key string, value any) error {
 }
 
 func (c *Config) save() error {
-	c.EnableMCP = c.mcpEnabled.Load()
 	data, err := yaml.Marshal(c)
 	if err != nil {
 		return err

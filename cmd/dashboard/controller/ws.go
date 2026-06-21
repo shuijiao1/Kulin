@@ -5,16 +5,12 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"slices"
-	"strconv"
-	"strings"
 	"time"
 	"unicode/utf8"
 
 	"github.com/gin-gonic/gin"
 	"github.com/goccy/go-json"
 	"github.com/gorilla/websocket"
-	"github.com/hashicorp/go-uuid"
 	"golang.org/x/sync/singleflight"
 
 	"github.com/shuijiao1/Kulin/model"
@@ -107,19 +103,11 @@ func checkSameOrigin(r *http.Request) bool {
 // @Success 200 {object} model.StreamServerData
 // @Router /ws/server [get]
 func serverStream(c *gin.Context) (any, error) {
-	connId, err := uuid.GenerateUUID()
-	if err != nil {
-		return nil, newWsError("%v", err)
-	}
-
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		return nil, newWsError("%v", err)
 	}
 	defer conn.Close()
-
-	deregisterPAT := registerPATConnection(c, func() { _ = conn.Close() })
-	defer deregisterPAT()
 
 	userIp := c.GetString(model.CtxKeyRealIPStr)
 	if userIp == "" {
@@ -137,14 +125,6 @@ func serverStream(c *gin.Context) (any, error) {
 		isAdmin = user.Role.IsAdmin()
 	}
 	patAccessor, patCacheKey := patStreamContext(c)
-
-	singleton.AddOnlineUser(connId, &model.OnlineUser{
-		UserID:      userId,
-		IP:          userIp,
-		ConnectedAt: time.Now(),
-		Conn:        conn,
-	})
-	defer singleton.RemoveOnlineUser(connId)
 
 	count := 0
 	for {
@@ -186,7 +166,7 @@ func getServerStat(withPublicNote bool, viewerUserID uint64, viewerIsAdmin bool,
 		)
 		return json.Marshal(model.StreamServerData{
 			Now:     time.Now().Unix() * 1000,
-			Online:  singleton.GetOnlineUserCount(),
+			Online:  0,
 			Servers: servers,
 		})
 	})
@@ -197,19 +177,7 @@ func getServerStat(withPublicNote bool, viewerUserID uint64, viewerIsAdmin bool,
 // patStreamContext extracts the PAT accessor + a deterministic cache key
 // fragment for the singleflight projection. Returns (nil, "jwt") for JWT
 // requests so two callers from the same user collapse onto one frame.
-func patStreamContext(c *gin.Context) (model.APITokenAccessor, string) {
-	tok := APITokenFromContext(c)
-	if tok == nil {
-		return nil, "jwt"
-	}
-	ids := tok.ServerIDs()
-	slices.Sort(ids)
-	parts := make([]string, 0, len(ids))
-	for _, id := range ids {
-		parts = append(parts, strconv.FormatUint(id, 10))
-	}
-	return tok, fmt.Sprintf("pat:%d:%s", tok.ID, strings.Join(parts, ","))
-}
+func patStreamContext(c *gin.Context) (model.APITokenAccessor, string) { return nil, "jwt" }
 
 // filterServersForViewer projects the global server list down to what a single
 // viewer is allowed to see. The rules are:
