@@ -9,9 +9,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/nezhahq/nezha/model"
-	pb "github.com/nezhahq/nezha/proto"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/model"
+	pb "github.com/shuijiao1/Kulin/proto"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 // MCP 的"调用-响应"模式复用了 RequestTask 双向流：
@@ -331,7 +331,7 @@ func deliverMCPResultFromReporter(res *pb.TaskResult, reporterID uint64) {
 		return
 	}
 	if reporterID == 0 || entry.serverID != reporterID {
-		log.Printf("NEZHA>> MCP result ignored: taskID=%d targetServerID=%d reporterID=%d",
+		log.Printf("KULIN>> MCP result ignored: taskID=%d targetServerID=%d reporterID=%d",
 			res.GetId(), entry.serverID, reporterID)
 		return
 	}

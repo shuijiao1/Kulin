@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 // StreamPurpose tags every IOStream with the feature that opened it so

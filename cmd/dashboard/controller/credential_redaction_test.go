@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 func TestListDDNS_RedactsCredentials(t *testing.T) {

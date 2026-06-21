@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/nezhahq/nezha/model"
+	"github.com/shuijiao1/Kulin/model"
 )
 
 func newServiceVisibilityCtx(viewer *model.User) *gin.Context {

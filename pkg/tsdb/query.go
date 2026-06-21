@@ -9,7 +9,7 @@ import (
 
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/storage"
 
-	"github.com/nezhahq/nezha/model"
+	"github.com/shuijiao1/Kulin/model"
 )
 
 // QueryPeriod 查询时间段
@@ -254,7 +254,7 @@ func (db *TSDB) queryMetricByServiceID(metric MetricType, serviceID string, tr s
 
 		mn := storage.GetMetricName()
 		if err := mn.Unmarshal(mbr.MetricName); err != nil {
-			log.Printf("NEZHA>> TSDB: failed to unmarshal metric name: %v", err)
+			log.Printf("KULIN>> TSDB: failed to unmarshal metric name: %v", err)
 			storage.PutMetricName(mn)
 			continue
 		}
@@ -267,14 +267,14 @@ func (db *TSDB) queryMetricByServiceID(metric MetricType, serviceID string, tr s
 
 		serverID, err := strconv.ParseUint(string(serverIDBytes), 10, 64)
 		if err != nil {
-			log.Printf("NEZHA>> TSDB: failed to parse server_id %q: %v", string(serverIDBytes), err)
+			log.Printf("KULIN>> TSDB: failed to parse server_id %q: %v", string(serverIDBytes), err)
 			storage.PutMetricName(mn)
 			continue
 		}
 		storage.PutMetricName(mn)
 
 		if err := block.UnmarshalData(); err != nil {
-			log.Printf("NEZHA>> TSDB: failed to unmarshal block data: %v", err)
+			log.Printf("KULIN>> TSDB: failed to unmarshal block data: %v", err)
 			continue
 		}
 
@@ -493,7 +493,7 @@ func (db *TSDB) QueryServerMetrics(serverID uint64, metric MetricType, period Qu
 		mbr.BlockRef.MustReadBlock(&block)
 
 		if err := block.UnmarshalData(); err != nil {
-			log.Printf("NEZHA>> TSDB: failed to unmarshal block data: %v", err)
+			log.Printf("KULIN>> TSDB: failed to unmarshal block data: %v", err)
 			continue
 		}
 
@@ -620,7 +620,7 @@ func (db *TSDB) queryMetricByServerID(metric MetricType, serverID string, tr sto
 
 		mn := storage.GetMetricName()
 		if err := mn.Unmarshal(mbr.MetricName); err != nil {
-			log.Printf("NEZHA>> TSDB: failed to unmarshal metric name: %v", err)
+			log.Printf("KULIN>> TSDB: failed to unmarshal metric name: %v", err)
 			storage.PutMetricName(mn)
 			continue
 		}
@@ -633,14 +633,14 @@ func (db *TSDB) queryMetricByServerID(metric MetricType, serverID string, tr sto
 
 		serviceID, err := strconv.ParseUint(string(serviceIDBytes), 10, 64)
 		if err != nil {
-			log.Printf("NEZHA>> TSDB: failed to parse service_id %q: %v", string(serviceIDBytes), err)
+			log.Printf("KULIN>> TSDB: failed to parse service_id %q: %v", string(serviceIDBytes), err)
 			storage.PutMetricName(mn)
 			continue
 		}
 		storage.PutMetricName(mn)
 
 		if err := block.UnmarshalData(); err != nil {
-			log.Printf("NEZHA>> TSDB: failed to unmarshal block data: %v", err)
+			log.Printf("KULIN>> TSDB: failed to unmarshal block data: %v", err)
 			continue
 		}
 

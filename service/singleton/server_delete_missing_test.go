@@ -3,7 +3,7 @@ package singleton
 import (
 	"testing"
 
-	"github.com/nezhahq/nezha/model"
+	"github.com/shuijiao1/Kulin/model"
 )
 
 func TestServerClassDeleteMissingIDNoPanic(t *testing.T) {

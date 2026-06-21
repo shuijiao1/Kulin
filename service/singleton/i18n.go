@@ -4,7 +4,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/nezhahq/nezha/pkg/i18n"
+	"github.com/shuijiao1/Kulin/pkg/i18n"
 )
 
 const domain = "nezha"
@@ -13,7 +13,7 @@ var Localizer *i18n.Localizer
 
 func initI18n() {
 	if err := loadTranslation(); err != nil {
-		log.Printf("NEZHA>> init i18n failed: %v", err)
+		log.Printf("KULIN>> init i18n failed: %v", err)
 	}
 }
 

@@ -10,11 +10,11 @@ import (
 	"github.com/libdns/he"
 	tencentcloud "github.com/nezhahq/libdns-tencentcloud"
 
-	"github.com/nezhahq/nezha/model"
-	ddns2 "github.com/nezhahq/nezha/pkg/ddns"
-	"github.com/nezhahq/nezha/pkg/ddns/dummy"
-	"github.com/nezhahq/nezha/pkg/ddns/webhook"
-	"github.com/nezhahq/nezha/pkg/utils"
+	"github.com/shuijiao1/Kulin/model"
+	ddns2 "github.com/shuijiao1/Kulin/pkg/ddns"
+	"github.com/shuijiao1/Kulin/pkg/ddns/dummy"
+	"github.com/shuijiao1/Kulin/pkg/ddns/webhook"
+	"github.com/shuijiao1/Kulin/pkg/utils"
 )
 
 type DDNSClass struct {
@@ -78,7 +78,7 @@ func (c *DDNSClass) GetDDNSProvidersFromProfiles(profileId []uint64, ip *model.I
 			if profile.UserID != ownerUID && !profileOwnedByRealAdmin(profile.UserID) {
 				// Fail-closed skip: an admin may bind a member-owned profile,
 				// but worker-time only runs same-owner or real-admin profiles.
-				log.Printf("NEZHA>> Skipping DDNS profile %d (owner %d) for server owner %d: not owned by server owner or a real admin", profile.ID, profile.UserID, ownerUID)
+				log.Printf("KULIN>> Skipping DDNS profile %d (owner %d) for server owner %d: not owned by server owner or a real admin", profile.ID, profile.UserID, ownerUID)
 				continue
 			}
 			profiles = append(profiles, profile)

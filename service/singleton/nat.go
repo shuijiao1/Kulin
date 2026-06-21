@@ -7,8 +7,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/pkg/utils"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/pkg/utils"
 )
 
 // GHSA-x6fg-52vr-hj4w: NAT 是 commonHandler，任意认证成员可创建。newHTTPandGRPCMux

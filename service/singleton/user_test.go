@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/pkg/i18n"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/pkg/i18n"
 )
 
 func setupOnUserDeleteFixture(t *testing.T) (*ServerTransferClass, func()) {

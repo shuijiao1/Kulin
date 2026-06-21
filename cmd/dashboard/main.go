@@ -20,14 +20,14 @@ import (
 	"github.com/ory/graceful"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/nezhahq/nezha/cmd/dashboard/controller"
-	"github.com/nezhahq/nezha/cmd/dashboard/controller/waf"
-	"github.com/nezhahq/nezha/cmd/dashboard/rpc"
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/pkg/idcodec"
-	"github.com/nezhahq/nezha/pkg/utils"
-	"github.com/nezhahq/nezha/proto"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/cmd/dashboard/controller"
+	"github.com/shuijiao1/Kulin/cmd/dashboard/controller/waf"
+	"github.com/shuijiao1/Kulin/cmd/dashboard/rpc"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/pkg/idcodec"
+	"github.com/shuijiao1/Kulin/pkg/utils"
+	"github.com/shuijiao1/Kulin/proto"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 type DashboardCliParam struct {
@@ -83,9 +83,9 @@ func initIDCodec() error {
 	return idcodec.Init([]byte(singleton.Conf.JWTSecretKey))
 }
 
-// @title           Nezha Monitoring API
+// @title           Kulin API
 // @version         1.0
-// @description     Nezha Monitoring API
+// @description     Kulin API
 // @termsOfService  http://nezhahq.github.io
 
 // @contact.name   API Support
@@ -130,7 +130,7 @@ func main() {
 		func() error {
 			if singleton.Conf.Memory.GoMemLimitMB > 0 {
 				debug.SetMemoryLimit(singleton.Conf.Memory.GoMemLimitMB * 1024 * 1024)
-				log.Printf("NEZHA>> Go memory limit set to %d MB", singleton.Conf.Memory.GoMemLimitMB)
+				log.Printf("KULIN>> Go memory limit set to %d MB", singleton.Conf.Memory.GoMemLimitMB)
 			}
 			return nil
 		},
@@ -182,32 +182,32 @@ func main() {
 	errHTTPS := errors.New("error from https server")
 
 	if err := graceful.Graceful(func() error {
-		log.Printf("NEZHA>> Dashboard::START ON %s:%d", singleton.Conf.ListenHost, singleton.Conf.ListenPort)
+		log.Printf("KULIN>> Dashboard::START ON %s:%d", singleton.Conf.ListenHost, singleton.Conf.ListenPort)
 		if singleton.Conf.HTTPS.ListenPort != 0 {
 			go func() {
 				errChan <- muxServerHTTPS.ListenAndServeTLS(singleton.Conf.HTTPS.TLSCertPath, singleton.Conf.HTTPS.TLSKeyPath)
 			}()
-			log.Printf("NEZHA>> Dashboard::START ON %s:%d", singleton.Conf.ListenHost, singleton.Conf.HTTPS.ListenPort)
+			log.Printf("KULIN>> Dashboard::START ON %s:%d", singleton.Conf.ListenHost, singleton.Conf.HTTPS.ListenPort)
 		}
 		go func() {
 			errChan <- muxServerHTTP.Serve(l)
 		}()
 		return <-errChan
 	}, func(c context.Context) error {
-		log.Println("NEZHA>> Graceful::START")
+		log.Println("KULIN>> Graceful::START")
 		singleton.RecordTransferHourlyUsage()
 		singleton.CloseTSDB()
-		log.Println("NEZHA>> Graceful::END")
+		log.Println("KULIN>> Graceful::END")
 		var err error
 		if muxServerHTTPS != nil {
 			err = muxServerHTTPS.Shutdown(c)
 		}
 		return errors.Join(muxServerHTTP.Shutdown(c), utils.IfOr(err != nil, utils.NewWrapError(errHTTPS, err), nil))
 	}); err != nil {
-		log.Printf("NEZHA>> ERROR: %v", err)
+		log.Printf("KULIN>> ERROR: %v", err)
 		var wrapError *utils.WrapError
 		if errors.As(err, &wrapError) {
-			log.Printf("NEZHA>> ERROR HTTPS: %v", wrapError.Unwrap())
+			log.Printf("KULIN>> ERROR HTTPS: %v", wrapError.Unwrap())
 		}
 	}
 

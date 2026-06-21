@@ -15,9 +15,9 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/pkg/idcodec"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/pkg/idcodec"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 const jwtSessionTestMasterKey = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"

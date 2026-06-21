@@ -10,9 +10,9 @@ import (
 
 	"google.golang.org/grpc/metadata"
 
-	"github.com/nezhahq/nezha/model"
-	pb "github.com/nezhahq/nezha/proto"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/model"
+	pb "github.com/shuijiao1/Kulin/proto"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 type fakeTaskStream struct {
@@ -24,14 +24,14 @@ func newFakeStream() *fakeTaskStream {
 	return &fakeTaskStream{sent: make(chan *pb.Task, 4)}
 }
 
-func (s *fakeTaskStream) Send(t *pb.Task) error            { s.sent <- t; return nil }
-func (s *fakeTaskStream) Recv() (*pb.TaskResult, error)    { return nil, context.Canceled }
-func (s *fakeTaskStream) SetHeader(metadata.MD) error      { return nil }
-func (s *fakeTaskStream) SendHeader(metadata.MD) error     { return nil }
-func (s *fakeTaskStream) SetTrailer(metadata.MD)           {}
-func (s *fakeTaskStream) Context() context.Context         { return context.Background() }
-func (s *fakeTaskStream) SendMsg(any) error                { return nil }
-func (s *fakeTaskStream) RecvMsg(any) error                { return context.Canceled }
+func (s *fakeTaskStream) Send(t *pb.Task) error         { s.sent <- t; return nil }
+func (s *fakeTaskStream) Recv() (*pb.TaskResult, error) { return nil, context.Canceled }
+func (s *fakeTaskStream) SetHeader(metadata.MD) error   { return nil }
+func (s *fakeTaskStream) SendHeader(metadata.MD) error  { return nil }
+func (s *fakeTaskStream) SetTrailer(metadata.MD)        {}
+func (s *fakeTaskStream) Context() context.Context      { return context.Background() }
+func (s *fakeTaskStream) SendMsg(any) error             { return nil }
+func (s *fakeTaskStream) RecvMsg(any) error             { return context.Canceled }
 
 func installFakeServer(t *testing.T, id uint64, stream pb.NezhaService_RequestTaskServer) func() {
 	t.Helper()

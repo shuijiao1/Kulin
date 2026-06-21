@@ -21,10 +21,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/nezhahq/nezha/model"
-	pb "github.com/nezhahq/nezha/proto"
-	"github.com/nezhahq/nezha/service/rpc"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/model"
+	pb "github.com/shuijiao1/Kulin/proto"
+	"github.com/shuijiao1/Kulin/service/rpc"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 type e2eStream struct {

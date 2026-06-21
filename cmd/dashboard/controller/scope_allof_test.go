@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/nezhahq/nezha/model"
+	"github.com/shuijiao1/Kulin/model"
 )
 
 // H3 regression: file-manager sessions read/write/delete files, but the route

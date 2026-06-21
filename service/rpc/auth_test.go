@@ -9,9 +9,9 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/pkg/utils"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/pkg/utils"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 // authCheckWithSecret drives (*authHandler).check end-to-end via the same

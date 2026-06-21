@@ -1,4 +1,4 @@
-module github.com/nezhahq/nezha
+module github.com/shuijiao1/Kulin
 
 go 1.26.3
 

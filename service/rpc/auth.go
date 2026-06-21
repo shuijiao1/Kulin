@@ -12,8 +12,8 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 type authHandler struct {
@@ -83,7 +83,7 @@ func (a *authHandler) check(ctx context.Context) (uint64, error) {
 			// is rejected.
 			verified, _, err := singleton.ServerTransferShared.MarkVerified(t.ServerID, t.ID)
 			if err != nil {
-				log.Printf("NEZHA>> ServerTransfer MarkVerified(cid=%d) via handshake secret failed: %v", t.ServerID, err)
+				log.Printf("KULIN>> ServerTransfer MarkVerified(cid=%d) via handshake secret failed: %v", t.ServerID, err)
 				return 0, status.Error(codes.Unauthenticated, "transfer handshake verification failed")
 			}
 			if verified {
@@ -121,7 +121,7 @@ func (a *authHandler) check(ctx context.Context) (uint64, error) {
 			model.UnblockIP(singleton.DB, ip, model.BlockIDgRPC)
 			if kind == singleton.TerminalRecoveryRevert {
 				if err := singleton.ServerTransferShared.MarkRevertDelivered(t.ServerID, t.ID); err != nil {
-					log.Printf("NEZHA>> ServerTransfer MarkRevertDelivered(server=%d transfer=%d) failed: %v", t.ServerID, t.ID, err)
+					log.Printf("KULIN>> ServerTransfer MarkRevertDelivered(server=%d transfer=%d) failed: %v", t.ServerID, t.ID, err)
 				}
 			}
 			return t.ServerID, nil

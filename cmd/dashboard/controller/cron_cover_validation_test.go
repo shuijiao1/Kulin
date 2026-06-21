@@ -3,7 +3,7 @@ package controller
 import (
 	"testing"
 
-	"github.com/nezhahq/nezha/model"
+	"github.com/shuijiao1/Kulin/model"
 )
 
 // C2 regression: writes must reject unknown Cover values so dirty configs

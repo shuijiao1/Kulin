@@ -10,8 +10,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 // issueCSRFToken mints a signed double-submit token (nonce.HMAC-SHA256 keyed

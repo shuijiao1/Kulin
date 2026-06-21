@@ -18,11 +18,11 @@ import (
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	"github.com/nezhahq/nezha/cmd/dashboard/controller/waf"
-	docs "github.com/nezhahq/nezha/cmd/dashboard/docs"
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/pkg/utils"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/cmd/dashboard/controller/waf"
+	docs "github.com/shuijiao1/Kulin/cmd/dashboard/docs"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/pkg/utils"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 func ServeWeb(frontendDist fs.FS) http.Handler {
@@ -34,7 +34,7 @@ func ServeWeb(frontendDist fs.FS) http.Handler {
 		pprof.Register(r)
 	}
 	if singleton.Conf.Debug {
-		log.Printf("NEZHA>> Swagger(%s) UI available at http://localhost:%d/swagger/index.html", docs.SwaggerInfo.Version, singleton.Conf.ListenPort)
+		log.Printf("KULIN>> Swagger(%s) UI available at http://localhost:%d/swagger/index.html", docs.SwaggerInfo.Version, singleton.Conf.ListenPort)
 		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	}
 
@@ -279,13 +279,13 @@ func handle[T any](c *gin.Context, handler handlerFunc[T]) {
 	}
 	switch err.(type) {
 	case *gormError:
-		log.Printf("NEZHA>> gorm error: %v", err)
+		log.Printf("KULIN>> gorm error: %v", err)
 		c.JSON(http.StatusOK, newErrorResponse(singleton.Localizer.ErrorT("database error")))
 		return
 	case *wsError:
 		// Connection is upgraded to WebSocket, so c.Writer is no longer usable
 		if msg := err.Error(); msg != "" {
-			log.Printf("NEZHA>> websocket error: %v", err)
+			log.Printf("KULIN>> websocket error: %v", err)
 		}
 		return
 	default:

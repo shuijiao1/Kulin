@@ -8,8 +8,8 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/gorilla/websocket"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 // List server transfers

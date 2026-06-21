@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/nezhahq/nezha/model"
+	"github.com/shuijiao1/Kulin/model"
 )
 
 const (
@@ -30,13 +30,13 @@ func RunJWTSessionGC() {
 	if err := DB.
 		Where("expires_at < ?", now.Add(-JWTSessionExpiredGrace)).
 		Delete(&model.JWTSession{}).Error; err != nil {
-		log.Printf("NEZHA>> JWTSession GC delete expired failed: %v", err)
+		log.Printf("KULIN>> JWTSession GC delete expired failed: %v", err)
 	}
 
 	if err := DB.
 		Where("revoked_at IS NOT NULL AND revoked_at < ?", now.Add(-JWTSessionRevokedRetention)).
 		Delete(&model.JWTSession{}).Error; err != nil {
-		log.Printf("NEZHA>> JWTSession GC delete revoked failed: %v", err)
+		log.Printf("KULIN>> JWTSession GC delete revoked failed: %v", err)
 	}
 }
 

@@ -15,8 +15,8 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"github.com/nezhahq/nezha/model"
-	pb "github.com/nezhahq/nezha/proto"
+	"github.com/shuijiao1/Kulin/model"
+	pb "github.com/shuijiao1/Kulin/proto"
 )
 
 // fakeTaskStream is the smallest stub of pb.NezhaService_RequestTaskServer
@@ -1006,7 +1006,7 @@ func TestNewServerTransferClassLogsDBLoadError(t *testing.T) {
 
 	logged := buf.String()
 	require.True(t,
-		strings.Contains(logged, "NEZHA") && strings.Contains(logged, "transfer"),
+		strings.Contains(logged, "KULIN") && strings.Contains(logged, "transfer"),
 		"NewServerTransferClass must log DB load failures so operators notice; got %q", logged)
 }
 

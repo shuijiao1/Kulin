@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/pkg/utils"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/pkg/utils"
 )
 
 var Conf *ConfigClass
@@ -32,7 +32,7 @@ func InitConfigFromPath(path string) error {
 		return err
 	}
 	if rotated {
-		log.Printf("NEZHA>> Rotated jwt_secret_key for dashboard version %s", Version)
+		log.Printf("KULIN>> Rotated jwt_secret_key for dashboard version %s", Version)
 	}
 
 	Conf.updateIgnoredIPNotificationID()

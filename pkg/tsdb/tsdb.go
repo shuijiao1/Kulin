@@ -66,7 +66,7 @@ func Open(config *Config) (*TSDB, error) {
 
 	db.writer = newBufferedWriter(db, config.WriteBufferSize, config.WriteBufferFlushInterval)
 
-	log.Printf("NEZHA>> TSDB opened at %s, retention: %d days, min free disk: %.1f GB, max memory: %d MB",
+	log.Printf("KULIN>> TSDB opened at %s, retention: %d days, min free disk: %.1f GB, max memory: %d MB",
 		dataPath, config.RetentionDays, config.MinFreeDiskSpaceGB, config.MaxMemoryMB)
 
 	return db, nil
@@ -87,7 +87,7 @@ func (db *TSDB) Close() error {
 
 	db.storage.MustClose()
 	db.closed = true
-	log.Println("NEZHA>> TSDB closed")
+	log.Println("KULIN>> TSDB closed")
 	return nil
 }
 

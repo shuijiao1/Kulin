@@ -9,7 +9,7 @@ import (
 	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 
-	pb "github.com/nezhahq/nezha/proto"
+	pb "github.com/shuijiao1/Kulin/proto"
 )
 
 const (
@@ -321,7 +321,7 @@ func (m *Service) BeforeSave(tx *gorm.DB) error {
 func (m *Service) AfterFind(tx *gorm.DB) error {
 	m.SkipServers = make(map[uint64]bool)
 	if err := json.Unmarshal([]byte(m.SkipServersRaw), &m.SkipServers); err != nil {
-		log.Println("NEZHA>> Service.AfterFind:", err)
+		log.Println("KULIN>> Service.AfterFind:", err)
 		return nil
 	}
 

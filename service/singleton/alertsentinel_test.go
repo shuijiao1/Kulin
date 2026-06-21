@@ -3,7 +3,7 @@ package singleton
 import (
 	"testing"
 
-	"github.com/nezhahq/nezha/model"
+	"github.com/shuijiao1/Kulin/model"
 )
 
 // notifyDecision replays the exact send-gate from checkStatus (lines 164-186)

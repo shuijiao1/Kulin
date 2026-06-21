@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 func TestValidateTransferPathRejectsOversizedPath(t *testing.T) {

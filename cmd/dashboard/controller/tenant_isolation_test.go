@@ -11,9 +11,9 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/pkg/i18n"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/pkg/i18n"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 // 通用租户隔离测试夹具：在 in-memory DB 上挂载所需 model 并塞两个用户，
@@ -118,16 +118,16 @@ func TestTenancy_CreateDDNS_InjectedUserIDIgnored(t *testing.T) {
 	defer setupTenancyTest(t)()
 
 	body := map[string]any{
-		"name":            "evil-ddns",
-		"provider":        "webhook",
-		"access_id":       "x",
-		"access_secret":   "y",
-		"webhook_url":     "http://127.0.0.1/",
-		"webhook_method":  "GET",
+		"name":                 "evil-ddns",
+		"provider":             "webhook",
+		"access_id":            "x",
+		"access_secret":        "y",
+		"webhook_url":          "http://127.0.0.1/",
+		"webhook_method":       "GET",
 		"webhook_request_type": "json",
 		"webhook_request_body": "",
-		"webhook_headers": "",
-		"user_id":         999, // attacker
+		"webhook_headers":      "",
+		"user_id":              999, // attacker
 	}
 	c := ctxAsMemberWithBody(10, body)
 	_, err := createDDNS(c)
@@ -155,12 +155,12 @@ func TestTenancy_UpdateDDNS_ForeignOwnerRejected(t *testing.T) {
 	require.NoError(t, singleton.DB.Create(&foreign).Error)
 
 	c := ctxAsMemberWithBody(10, map[string]any{
-		"name":          "hijacked",
-		"provider":      "webhook",
-		"access_id":     "x",
-		"access_secret": "y",
-		"webhook_url":   "http://attacker/",
-		"webhook_method": "GET",
+		"name":                 "hijacked",
+		"provider":             "webhook",
+		"access_id":            "x",
+		"access_secret":        "y",
+		"webhook_url":          "http://attacker/",
+		"webhook_method":       "GET",
 		"webhook_request_type": "json",
 	})
 	c.Params = gin.Params{{Key: "id", Value: itoa(foreign.ID)}}
@@ -237,7 +237,7 @@ func TestTenancy_UpdateNotificationGroup_ForeignOwnerRejected(t *testing.T) {
 	require.NoError(t, singleton.DB.Create(&foreign).Error)
 
 	c := ctxAsMemberWithBody(10, map[string]any{
-		"name":         "hijacked",
+		"name":          "hijacked",
 		"notifications": []uint64{},
 	})
 	c.Params = gin.Params{{Key: "id", Value: itoa(foreign.ID)}}

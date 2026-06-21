@@ -14,9 +14,9 @@ import (
 	"golang.org/x/mod/semver"
 	"gorm.io/gorm"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/pkg/utils"
-	pb "github.com/nezhahq/nezha/proto"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/pkg/utils"
+	pb "github.com/shuijiao1/Kulin/proto"
 )
 
 // transferHandshakeSecretLength matches model.DefaultAgentSecretLength so
@@ -79,9 +79,9 @@ const defaultRevertDeliveryRecoveryWindow = defaultServerTransferTimeout
 // subscribers. All mutating operations go through methods so DB and in-memory
 // state stay in sync.
 type ServerTransferClass struct {
-	mu                     sync.RWMutex
-	pending                map[uint64]*model.ServerTransfer
-	revertDeliveries       map[uint64]*model.ServerTransfer
+	mu               sync.RWMutex
+	pending          map[uint64]*model.ServerTransfer
+	revertDeliveries map[uint64]*model.ServerTransfer
 	// revertRecovery holds RevertHandshakeSecrets the dashboard has pushed
 	// but the agent has not yet acknowledged, in the window between Cancel/
 	// Fail/Timeout and either the agent's reconnect (which MarkRevertDelivered
@@ -215,9 +215,9 @@ func NewServerTransferClass() *ServerTransferClass {
 	// res.Error，schema 损坏 / 表丢失 / DB 锁等情况下 pending 会被静默
 	// 留空，所有进行中的 transfer 在 dashboard 重启后就丢失了 auth 容忍窗口，
 	// 对应 agent 会在重连时被拒绝。GORM 默认 logger 也会打这条 SQL，但混在
-	// SQL 日志里很难被注意到；这里显式发一条 NEZHA>> 前缀让运维能立刻看到。
+	// SQL 日志里很难被注意到；这里显式发一条 KULIN>> 前缀让运维能立刻看到。
 	if res := DB.Where("status = ?", model.ServerTransferStatusPending).Find(&pending); res.Error != nil {
-		log.Printf("NEZHA>> ServerTransferClass: failed to load pending transfers from DB: %v", res.Error)
+		log.Printf("KULIN>> ServerTransferClass: failed to load pending transfers from DB: %v", res.Error)
 	}
 	for i := range pending {
 		t := pending[i]
@@ -227,7 +227,7 @@ func NewServerTransferClass() *ServerTransferClass {
 		// timeout sweeper from looping forever on a row whose server
 		// row no longer exists.
 		if server, ok := ServerShared.Get(t.ServerID); !ok || server == nil {
-			log.Printf("NEZHA>> ServerTransferClass: dropping pending transfer %d for missing server %d", t.ID, t.ServerID)
+			log.Printf("KULIN>> ServerTransferClass: dropping pending transfer %d for missing server %d", t.ID, t.ServerID)
 			continue
 		}
 		c.pending[t.ServerID] = &t
@@ -255,7 +255,7 @@ func NewServerTransferClass() *ServerTransferClass {
 		}, time.Now().Add(-defaultRevertDeliveryRecoveryWindow)).
 		Order("updated_at ASC").
 		Find(&reverted); res.Error != nil {
-		log.Printf("NEZHA>> ServerTransferClass: failed to load reverted transfer deliveries from DB: %v", res.Error)
+		log.Printf("KULIN>> ServerTransferClass: failed to load reverted transfer deliveries from DB: %v", res.Error)
 	}
 	for i := range reverted {
 		t := reverted[i]
@@ -278,7 +278,7 @@ func NewServerTransferClass() *ServerTransferClass {
 	if res := DB.
 		Where("status = ? AND acked_at IS NOT NULL", model.ServerTransferStatusVerified).
 		Find(&verified); res.Error != nil {
-		log.Printf("NEZHA>> ServerTransferClass: failed to load verified transfers from DB: %v", res.Error)
+		log.Printf("KULIN>> ServerTransferClass: failed to load verified transfers from DB: %v", res.Error)
 	}
 	var rollbackAcked []model.ServerTransfer
 	if res := DB.
@@ -288,7 +288,7 @@ func NewServerTransferClass() *ServerTransferClass {
 			model.ServerTransferStatusCancelled,
 		}).
 		Find(&rollbackAcked); res.Error != nil {
-		log.Printf("NEZHA>> ServerTransferClass: failed to load acked rollback transfers from DB: %v", res.Error)
+		log.Printf("KULIN>> ServerTransferClass: failed to load acked rollback transfers from DB: %v", res.Error)
 	}
 
 	type credCandidate struct {
@@ -780,7 +780,7 @@ func (c *ServerTransferClass) PushIfOnline(t *model.ServerTransfer) {
 
 	if !agentSupportsTransfer(s) {
 		if _, err := c.MarkFailed(t.ID, ErrAgentTooOldForTransfer.Error()); err != nil {
-			log.Printf("NEZHA>> ServerTransfer PushIfOnline: MarkFailed for too-old agent %d failed: %v", t.ServerID, err)
+			log.Printf("KULIN>> ServerTransfer PushIfOnline: MarkFailed for too-old agent %d failed: %v", t.ServerID, err)
 		}
 		return
 	}
@@ -793,7 +793,7 @@ func (c *ServerTransferClass) PushIfOnline(t *model.ServerTransfer) {
 		// Defence against a legacy Pending row loaded from a pre-fix DB
 		// snapshot. Without a handshake secret we have nothing safe to send;
 		// the operator must cancel and re-initiate the transfer.
-		log.Printf("NEZHA>> ServerTransfer PushIfOnline: transfer %d has empty HandshakeSecret; refusing to fall back to user-global AgentSecret", t.ID)
+		log.Printf("KULIN>> ServerTransfer PushIfOnline: transfer %d has empty HandshakeSecret; refusing to fall back to user-global AgentSecret", t.ID)
 		return
 	}
 
@@ -865,7 +865,7 @@ func (c *ServerTransferClass) pushRevertIfOnline(t *model.ServerTransfer) {
 	}
 
 	if t.RevertHandshakeSecret == "" {
-		log.Printf("NEZHA>> ServerTransfer pushRevertIfOnline: transfer %d has empty RevertHandshakeSecret; refusing to fall back to user-global AgentSecret", t.ID)
+		log.Printf("KULIN>> ServerTransfer pushRevertIfOnline: transfer %d has empty RevertHandshakeSecret; refusing to fall back to user-global AgentSecret", t.ID)
 		return
 	}
 
@@ -921,7 +921,7 @@ func (c *ServerTransferClass) sendApplyConfigTask(s *model.Server, stream pb.Nez
 	// ClearTaskStreamIfCurrent so a reconnect mid-Send cannot wipe a newer
 	// published stream when Send fails on the stale one.
 	if err := s.SendTask(task); err != nil {
-		log.Printf("NEZHA>> ServerTransfer ApplyConfig send failed: serverID=%d transferID=%d: %v", s.ID, task.Id, err)
+		log.Printf("KULIN>> ServerTransfer ApplyConfig send failed: serverID=%d transferID=%d: %v", s.ID, task.Id, err)
 		s.ClearTaskStreamIfCurrent(stream)
 		return err
 	}
@@ -1103,7 +1103,7 @@ func (c *ServerTransferClass) revertTransition(transferID uint64, newStatus mode
 	// back to a possibly-deleted FromUserID (regression pinned by
 	// TestOnUserDeleteCancelsPendingTransfersAwayFromDeletedUser).
 	var transitionedByThisCall bool
-		err := DB.Transaction(func(tx *gorm.DB) error {
+	err := DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.First(&t, transferID).Error; err != nil {
 			return err
 		}
@@ -1234,7 +1234,7 @@ func (c *ServerTransferClass) OnServersDeleted(serverIDs []uint64) {
 	for _, sid := range serverIDs {
 		var pending []model.ServerTransfer
 		if err := DB.Where("server_id = ? AND status = ?", sid, model.ServerTransferStatusPending).Find(&pending).Error; err != nil {
-			log.Printf("NEZHA>> ServerTransfer OnServersDeleted: list pending for server %d: %v", sid, err)
+			log.Printf("KULIN>> ServerTransfer OnServersDeleted: list pending for server %d: %v", sid, err)
 			continue
 		}
 		now := time.Now()
@@ -1248,7 +1248,7 @@ func (c *ServerTransferClass) OnServersDeleted(serverIDs []uint64) {
 					"last_error": reason,
 				})
 			if res.Error != nil {
-				log.Printf("NEZHA>> ServerTransfer OnServersDeleted: cancel transfer %d: %v", t.ID, res.Error)
+				log.Printf("KULIN>> ServerTransfer OnServersDeleted: cancel transfer %d: %v", t.ID, res.Error)
 				continue
 			}
 			if res.RowsAffected == 0 {
@@ -1313,7 +1313,7 @@ func (c *ServerTransferClass) OnUsersDeleted(userIDs []uint64) {
 	var pending []model.ServerTransfer
 	if err := DB.Where("status = ? AND (from_user_id IN ? OR to_user_id IN ?)",
 		model.ServerTransferStatusPending, userIDs, userIDs).Find(&pending).Error; err != nil {
-		log.Printf("NEZHA>> ServerTransfer OnUsersDeleted: list pending for users %v: %v", userIDs, err)
+		log.Printf("KULIN>> ServerTransfer OnUsersDeleted: list pending for users %v: %v", userIDs, err)
 		return
 	}
 	now := time.Now()
@@ -1327,7 +1327,7 @@ func (c *ServerTransferClass) OnUsersDeleted(userIDs []uint64) {
 				"last_error": reason,
 			})
 		if res.Error != nil {
-			log.Printf("NEZHA>> ServerTransfer OnUsersDeleted: cancel transfer %d: %v", t.ID, res.Error)
+			log.Printf("KULIN>> ServerTransfer OnUsersDeleted: cancel transfer %d: %v", t.ID, res.Error)
 			continue
 		}
 		if res.RowsAffected == 0 {

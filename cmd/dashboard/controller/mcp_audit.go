@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 // mcpAuditWrite 异步写一条 MCP 审计日志。失败仅 log，不阻塞业务。
@@ -34,7 +34,7 @@ func mcpAuditWrite(entry model.MCPAuditLog, argsBytes []byte) {
 			return
 		}
 		if err := db.Create(&e).Error; err != nil {
-			log.Printf("NEZHA>> mcp audit write failed: %v", err)
+			log.Printf("KULIN>> mcp audit write failed: %v", err)
 		}
 	}
 	if mcpAuditSync {

@@ -21,11 +21,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/go-uuid"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/pkg/utils"
-	pb "github.com/nezhahq/nezha/proto"
-	"github.com/nezhahq/nezha/service/rpc"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/pkg/utils"
+	pb "github.com/shuijiao1/Kulin/proto"
+	"github.com/shuijiao1/Kulin/service/rpc"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 // fs.download_url / fs.upload_url 旁路通道。

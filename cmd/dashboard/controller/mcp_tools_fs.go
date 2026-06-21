@@ -8,8 +8,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/service/rpc"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/service/rpc"
 )
 
 const fsCallTimeout = 30 * time.Second

@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 func callBatchMoveWithPAT(t *testing.T, callerID uint64, role model.Role, tok *model.APIToken, body string) ([]model.BatchMoveServerResult, bool, string) {
@@ -27,9 +27,9 @@ func callBatchMoveWithPAT(t *testing.T, callerID uint64, role model.Role, tok *m
 	r.ServeHTTP(w, req)
 
 	var resp struct {
-		Success bool                           `json:"success"`
-		Error   string                         `json:"error"`
-		Data    []model.BatchMoveServerResult  `json:"data"`
+		Success bool                          `json:"success"`
+		Error   string                        `json:"error"`
+		Data    []model.BatchMoveServerResult `json:"data"`
 	}
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	return resp.Data, resp.Success, resp.Error

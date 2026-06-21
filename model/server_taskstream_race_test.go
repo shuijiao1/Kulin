@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	pb "github.com/nezhahq/nezha/proto"
+	pb "github.com/shuijiao1/Kulin/proto"
 )
 
 // raceProbeStream is the smallest fake of pb.NezhaService_RequestTaskServer

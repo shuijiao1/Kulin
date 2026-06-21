@@ -7,9 +7,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/pkg/ddns"
-	"github.com/nezhahq/nezha/pkg/utils"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/pkg/ddns"
+	"github.com/shuijiao1/Kulin/pkg/utils"
 )
 
 type ServerClass struct {
@@ -83,7 +83,7 @@ func (c *ServerClass) Update(s *model.Server, uuid string) {
 
 	if s.EnableDDNS {
 		if err := c.UpdateDDNS(s, nil); err != nil {
-			log.Printf("NEZHA>> Failed to update DDNS for server %d: %v", err, s.ID)
+			log.Printf("KULIN>> Failed to update DDNS for server %d: %v", err, s.ID)
 		}
 	}
 

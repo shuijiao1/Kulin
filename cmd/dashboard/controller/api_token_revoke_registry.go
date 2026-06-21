@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/nezhahq/nezha/model"
+	"github.com/shuijiao1/Kulin/model"
 )
 
 // revokeTombstoneTTL bounds how long a revoked token id is remembered to

@@ -11,7 +11,7 @@ body:
       required: true
   - type: input
     attributes:
-      label: Nezha Version
+      label: Kulin Version
       description: Input the version of your copy of nezha here.
     validations:
       required: true
@@ -49,7 +49,7 @@ body:
     attributes:
       label: Validation
       options:
-        - label: I confirm this is a bug about nezha (Nezha Dashboard).
+        - label: I confirm this is a bug about nezha (Kulin Dashboard).
           required: true
         - label: I have searched Issues and confirm this bug has been reported before.
           required: true

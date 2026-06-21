@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nezhahq/nezha/proto"
+	"github.com/shuijiao1/Kulin/proto"
 )
 
 type fakeStream struct {

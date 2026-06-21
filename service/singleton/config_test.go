@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/nezhahq/nezha/model"
+	"github.com/shuijiao1/Kulin/model"
 )
 
 func TestInitConfigFromPathRotatesJWTSecretKey(t *testing.T) {

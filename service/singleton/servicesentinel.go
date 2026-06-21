@@ -15,10 +15,10 @@ import (
 	"github.com/jinzhu/copier"
 	"golang.org/x/exp/constraints"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/pkg/tsdb"
-	"github.com/nezhahq/nezha/pkg/utils"
-	pb "github.com/nezhahq/nezha/proto"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/pkg/tsdb"
+	"github.com/shuijiao1/Kulin/pkg/utils"
+	pb "github.com/shuijiao1/Kulin/proto"
 )
 
 const (
@@ -138,7 +138,7 @@ func NewServiceSentinel(serviceSentinelDispatchBus chan<- *model.Service) (*Serv
 	// 每周日凌晨 4:00 执行系统存储维护
 	_, err = CronShared.AddFunc("0 0 4 * * 0", PerformMaintenance)
 	if err != nil {
-		log.Printf("NEZHA>> Warning: failed to schedule maintenance task: %v", err)
+		log.Printf("KULIN>> Warning: failed to schedule maintenance task: %v", err)
 	}
 
 	return ss, nil
@@ -250,7 +250,7 @@ func (ss *ServiceSentinel) loadMonthlyStatusFromTSDB(services []*model.Service, 
 	for _, service := range services {
 		dailyStats, err := TSDBShared.QueryServiceDailyStats(service.ID, today, 30)
 		if err != nil {
-			log.Printf("NEZHA>> Failed to load TSDB history for service %d: %v", service.ID, err)
+			log.Printf("KULIN>> Failed to load TSDB history for service %d: %v", service.ID, err)
 			continue
 		}
 		ms := ss.monthlyStatus[service.ID]
@@ -294,7 +294,7 @@ func (ss *ServiceSentinel) loadTodayStats(today time.Time) {
 		for serviceID, ms := range ss.monthlyStatus {
 			result, err := TSDBShared.QueryServiceHistory(serviceID, tsdb.Period1Day)
 			if err != nil {
-				log.Printf("NEZHA>> Failed to load TSDB today stats for service %d: %v", serviceID, err)
+				log.Printf("KULIN>> Failed to load TSDB today stats for service %d: %v", serviceID, err)
 				continue
 			}
 			var totalUp, totalDown uint64
@@ -533,7 +533,7 @@ func (ss *ServiceSentinel) worker() {
 		reporter, _ := ServerShared.Get(r.Reporter)
 		// 入站结果必须匹配出站任务派发边界，避免 agent 伪造其他服务 ID 写入监控状态。
 		if !canReportServiceResult(cs, reporter, r.Data.GetType()) {
-			log.Printf("NEZHA>> Incorrect service monitor report %+v", r)
+			log.Printf("KULIN>> Incorrect service monitor report %+v", r)
 			continue
 		}
 
@@ -563,7 +563,7 @@ func (ss *ServiceSentinel) worker() {
 						Delay:      ts.ping,
 						Successful: ts.successCount*2 >= ts.count,
 					}); err != nil {
-						log.Printf("NEZHA>> Failed to save service monitor metrics to TSDB: %v", err)
+						log.Printf("KULIN>> Failed to save service monitor metrics to TSDB: %v", err)
 					}
 				} else {
 					if err := DB.Create(&model.ServiceHistory{
@@ -572,7 +572,7 @@ func (ss *ServiceSentinel) worker() {
 						Data:      mh.Data,
 						ServerID:  r.Reporter,
 					}).Error; err != nil {
-						log.Printf("NEZHA>> Failed to save service monitor metrics: %v", err)
+						log.Printf("KULIN>> Failed to save service monitor metrics: %v", err)
 					}
 				}
 				ts.count = 0
@@ -589,7 +589,7 @@ func (ss *ServiceSentinel) worker() {
 					Delay:      float64(mh.Delay),
 					Successful: mh.Successful,
 				}); err != nil {
-					log.Printf("NEZHA>> Failed to save service monitor metrics to TSDB: %v", err)
+					log.Printf("KULIN>> Failed to save service monitor metrics to TSDB: %v", err)
 				}
 			}
 		}
@@ -655,7 +655,7 @@ func (ss *ServiceSentinel) worker() {
 					Up:        rd.Up,
 					Down:      rd.Down,
 				}).Error; err != nil {
-					log.Printf("NEZHA>> Failed to save service monitor metrics: %v", err)
+					log.Printf("KULIN>> Failed to save service monitor metrics: %v", err)
 				}
 			}
 			ss.serviceCurrentStatusData[mh.GetId()].result = ss.serviceCurrentStatusData[mh.GetId()].result[:0]

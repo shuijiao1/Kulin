@@ -12,11 +12,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
-	"github.com/nezhahq/nezha/cmd/dashboard/controller/waf"
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/pkg/idcodec"
-	"github.com/nezhahq/nezha/pkg/utils"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/cmd/dashboard/controller/waf"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/pkg/idcodec"
+	"github.com/shuijiao1/Kulin/pkg/utils"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 const (
@@ -64,10 +64,10 @@ func issueJWTSession(c *gin.Context, user *model.User, jwtTimeoutHours int) (map
 
 func initParams() *jwt.GinJWTMiddleware {
 	return &jwt.GinJWTMiddleware{
-		Realm:       singleton.Conf.SiteName,
-		Key:         []byte(singleton.Conf.JWTSecretKey),
-		CookieName:  "nz-jwt",
-		SendCookie:  true,
+		Realm:      singleton.Conf.SiteName,
+		Key:        []byte(singleton.Conf.JWTSecretKey),
+		CookieName: "nz-jwt",
+		SendCookie: true,
 		// Pin the signing algorithm so a future library default change (or an
 		// `alg: none` confusion attempt) cannot weaken token validation.
 		SigningAlgorithm: "HS256",

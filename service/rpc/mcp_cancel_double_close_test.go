@@ -5,7 +5,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	pb "github.com/nezhahq/nezha/proto"
+	pb "github.com/shuijiao1/Kulin/proto"
 )
 
 // updateConfig has no serialization, so two concurrent admin PATCH /setting

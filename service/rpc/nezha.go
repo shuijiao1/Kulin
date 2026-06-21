@@ -10,13 +10,13 @@ import (
 	"time"
 
 	"github.com/jinzhu/copier"
-	geoipx "github.com/nezhahq/nezha/pkg/geoip"
-	"github.com/nezhahq/nezha/pkg/grpcx"
-	"github.com/nezhahq/nezha/pkg/tsdb"
+	geoipx "github.com/shuijiao1/Kulin/pkg/geoip"
+	"github.com/shuijiao1/Kulin/pkg/grpcx"
+	"github.com/shuijiao1/Kulin/pkg/tsdb"
 
-	"github.com/nezhahq/nezha/model"
-	pb "github.com/nezhahq/nezha/proto"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/model"
+	pb "github.com/shuijiao1/Kulin/proto"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 var _ pb.NezhaServiceServer = (*NezhaHandler)(nil)
@@ -87,7 +87,7 @@ func (s *NezhaHandler) RequestTask(stream pb.NezhaService_RequestTaskServer) err
 	for {
 		result, err = stream.Recv()
 		if err != nil {
-			log.Printf("NEZHA>> RequestTask error: %v, clientID: %d\n", err, clientID)
+			log.Printf("KULIN>> RequestTask error: %v, clientID: %d\n", err, clientID)
 			return err
 		}
 		switch result.GetType() {
@@ -132,14 +132,14 @@ func (s *NezhaHandler) RequestTask(stream pb.NezhaService_RequestTaskServer) err
 			}
 			pending, ok := singleton.ServerTransferShared.LookupPending(clientID)
 			if !ok || pending.ID != result.GetId() {
-				log.Printf("NEZHA>> ServerTransferApply result ignored: clientID=%d reported transferID=%d but no matching pending transfer", clientID, result.GetId())
+				log.Printf("KULIN>> ServerTransferApply result ignored: clientID=%d reported transferID=%d but no matching pending transfer", clientID, result.GetId())
 				continue
 			}
 			if result.GetSuccessful() {
 				continue
 			}
 			if _, err := singleton.ServerTransferShared.MarkFailed(result.GetId(), result.GetData()); err != nil {
-				log.Printf("NEZHA>> ServerTransfer MarkFailed(%d) failed: %v", result.GetId(), err)
+				log.Printf("KULIN>> ServerTransfer MarkFailed(%d) failed: %v", result.GetId(), err)
 			}
 		default:
 			if model.IsMCPRPCResult(result.GetType()) {
@@ -165,7 +165,7 @@ func (s *NezhaHandler) ReportSystemState(stream pb.NezhaService_ReportSystemStat
 	for {
 		state, err = stream.Recv()
 		if err != nil {
-			log.Printf("NEZHA>> ReportSystemState error: %v, clientID: %d\n", err, clientID)
+			log.Printf("KULIN>> ReportSystemState error: %v, clientID: %d\n", err, clientID)
 			return err
 		}
 		innerState := model.PB2State(state)
@@ -212,7 +212,7 @@ func (s *NezhaHandler) ReportSystemState(stream pb.NezhaService_ReportSystemStat
 				Uptime:         innerState.Uptime,
 				GPU:            maxGPU,
 			}); err != nil {
-				log.Printf("NEZHA>> Failed to write server metrics to TSDB: %v", err)
+				log.Printf("KULIN>> Failed to write server metrics to TSDB: %v", err)
 			}
 		}
 
@@ -324,7 +324,7 @@ func (s *NezhaHandler) IOStream(stream pb.NezhaService_IOStreamServer) error {
 				return
 			case <-ticker.C:
 				if err := iw.SendKeepalive(); err != nil {
-					log.Printf("NEZHA>> IOStream keepAlive error: %v\n", err)
+					log.Printf("KULIN>> IOStream keepAlive error: %v\n", err)
 					return
 				}
 			}
@@ -371,7 +371,7 @@ func (s *NezhaHandler) ReportGeoIP(c context.Context, r *pb.GeoIP) (*pb.GeoIP, e
 		ipv6 := geoip.IP.IPv6Addr
 
 		if err := singleton.ServerShared.UpdateDDNS(server, &model.IP{IPv4Addr: ipv4, IPv6Addr: ipv6}); err != nil {
-			log.Printf("NEZHA>> Failed to update DDNS for server %d: %v", err, server.ID)
+			log.Printf("KULIN>> Failed to update DDNS for server %d: %v", err, server.ID)
 		}
 	}
 
@@ -404,7 +404,7 @@ func (s *NezhaHandler) ReportGeoIP(c context.Context, r *pb.GeoIP) (*pb.GeoIP, e
 	netIP := net.ParseIP(ip)
 	location, err := geoipx.Lookup(netIP)
 	if err != nil {
-		log.Printf("NEZHA>> geoip.Lookup: %v", err)
+		log.Printf("KULIN>> geoip.Lookup: %v", err)
 	}
 	geoip.CountryCode = location
 

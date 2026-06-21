@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 // When a server is edited mid-session, updateServer swaps a new *Server into

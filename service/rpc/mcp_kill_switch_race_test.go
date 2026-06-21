@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nezhahq/nezha/model"
+	"github.com/shuijiao1/Kulin/model"
 )
 
 // H9 regression: CallAgent must consult mcpKillSwitchObserved before any

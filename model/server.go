@@ -12,7 +12,7 @@ import (
 	"github.com/goccy/go-json"
 	"gorm.io/gorm"
 
-	pb "github.com/nezhahq/nezha/proto"
+	pb "github.com/shuijiao1/Kulin/proto"
 )
 
 type Server struct {
@@ -167,13 +167,13 @@ func (s *Server) CopyFromRunningServer(old *Server) {
 func (s *Server) AfterFind(tx *gorm.DB) error {
 	if s.DDNSProfilesRaw != "" {
 		if err := json.Unmarshal([]byte(s.DDNSProfilesRaw), &s.DDNSProfiles); err != nil {
-			log.Println("NEZHA>> Server.AfterFind:", err)
+			log.Println("KULIN>> Server.AfterFind:", err)
 			return nil
 		}
 	}
 	if s.OverrideDDNSDomainsRaw != "" {
 		if err := json.Unmarshal([]byte(s.OverrideDDNSDomainsRaw), &s.OverrideDDNSDomains); err != nil {
-			log.Println("NEZHA>> Server.AfterFind:", err)
+			log.Println("KULIN>> Server.AfterFind:", err)
 			return nil
 		}
 	}

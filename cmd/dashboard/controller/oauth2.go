@@ -14,9 +14,9 @@ import (
 	"golang.org/x/oauth2"
 	"gorm.io/gorm"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/pkg/utils"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/pkg/utils"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 // GHSA-9rc6-8cjv-rcvx: the OAuth2 callback URL is sent to the identity

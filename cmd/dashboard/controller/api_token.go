@@ -11,15 +11,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/pkg/utils"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/pkg/utils"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 const (
-	apiTokenSecretLength    = 32                          // 明文 token 随机部分长度（hex 编码前）
-	apiTokenCtxKey          = "nz_api_token"              // #nosec G101 -- gin context key name, not a credential
-	apiTokenLastUsedCtxKey  = "nz_api_token_used_marker"  // #nosec G101 -- gin context key name, not a credential
+	apiTokenSecretLength     = 32                         // 明文 token 随机部分长度（hex 编码前）
+	apiTokenCtxKey           = "nz_api_token"             // #nosec G101 -- gin context key name, not a credential
+	apiTokenLastUsedCtxKey   = "nz_api_token_used_marker" // #nosec G101 -- gin context key name, not a credential
 	apiTokenAuthSchemePrefix = "Bearer "
 )
 

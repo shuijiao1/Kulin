@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nezhahq/nezha/model"
+	"github.com/shuijiao1/Kulin/model"
 )
 
 // Registration-after-sweep race (review issue #1): CancelAllMCPInflight only
@@ -17,11 +17,11 @@ import (
 // a fresh exec/fs task to the agent AFTER EnableMCP=false.
 //
 // This test drives the worst-case interleaving deterministically:
-//   1. CallAgent passes the upfront observer check (observer still false).
-//   2. The operator flips the observer to "disabled" and runs the cancel sweep
-//      while CallAgent is paused between the check and Store.
-//   3. CallAgent resumes; it MUST observe the kill switch on the post-Store
-//      re-check and return ErrMCPDisabled WITHOUT sending the task.
+//  1. CallAgent passes the upfront observer check (observer still false).
+//  2. The operator flips the observer to "disabled" and runs the cancel sweep
+//     while CallAgent is paused between the check and Store.
+//  3. CallAgent resumes; it MUST observe the kill switch on the post-Store
+//     re-check and return ErrMCPDisabled WITHOUT sending the task.
 //
 // With the race present, CallAgent sends the task and blocks until timeout
 // (ErrAgentTimeout) — the agent received a fresh task past the kill switch.

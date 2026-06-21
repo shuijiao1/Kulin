@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/nezhahq/nezha/model"
+	"github.com/shuijiao1/Kulin/model"
 )
 
 func newCacheKeyCtx(t *testing.T, user *model.User, tok *model.APIToken) *gin.Context {

@@ -8,7 +8,7 @@ import (
 
 	"github.com/jinzhu/copier"
 
-	"github.com/nezhahq/nezha/model"
+	"github.com/shuijiao1/Kulin/model"
 )
 
 const (
@@ -82,7 +82,7 @@ func AlertSentinelStart() {
 		checkCount++
 		if lastPrint.Before(startedAt.Add(-1 * time.Hour)) {
 			if Conf.Debug {
-				log.Printf("NEZHA>> Checking alert rules %d times each hour %v %v", checkCount, startedAt, time.Now())
+				log.Printf("KULIN>> Checking alert rules %d times each hour %v %v", checkCount, startedAt, time.Now())
 			}
 			checkCount = 0
 			lastPrint = startedAt

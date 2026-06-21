@@ -16,10 +16,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/nezhahq/nezha/model"
-	pb "github.com/nezhahq/nezha/proto"
-	"github.com/nezhahq/nezha/service/rpc"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/model"
+	pb "github.com/shuijiao1/Kulin/proto"
+	"github.com/shuijiao1/Kulin/service/rpc"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 // xferAgentSim 模拟 agent 在收到 TaskTypeFsTransfer 后的整个 IOStream 行为：
@@ -586,5 +586,3 @@ func (b *bigReader) Read(p []byte) (int, error) {
 	b.remaining -= int64(n)
 	return n, nil
 }
-
-

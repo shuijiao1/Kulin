@@ -15,11 +15,11 @@ import (
 	"google.golang.org/grpc/peer"
 
 	"github.com/hashicorp/go-uuid"
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/pkg/utils"
-	"github.com/nezhahq/nezha/proto"
-	rpcService "github.com/nezhahq/nezha/service/rpc"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/pkg/utils"
+	"github.com/shuijiao1/Kulin/proto"
+	rpcService "github.com/shuijiao1/Kulin/service/rpc"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 // SetMCPKillSwitchObserver re-exports the service/rpc hook so cmd/dashboard
@@ -82,7 +82,7 @@ func ctxWithRealIP(ctx context.Context) (context.Context, error) {
 	}
 
 	if singleton.Conf.Debug {
-		log.Printf("NEZHA>> gRPC Agent Real IP: %s, connecting IP: %s\n", ip, connectingIp)
+		log.Printf("KULIN>> gRPC Agent Real IP: %s, connecting IP: %s\n", ip, connectingIp)
 	}
 
 	return context.WithValue(ctx, model.CtxKeyRealIP{}, ip), nil
@@ -154,7 +154,7 @@ func DispatchTask(serviceSentinelDispatchBus <-chan *model.Service) {
 				// SendMsg 同一 RequestTask stream。
 				if err := server.SendTask(task.PB()); err != nil &&
 					!errors.Is(err, model.ErrTaskStreamOffline) {
-					log.Printf("NEZHA>> DispatchTask send error (server=%d): %v", id, err)
+					log.Printf("KULIN>> DispatchTask send error (server=%d): %v", id, err)
 				}
 			}
 		case model.ServiceCoverAll:
@@ -169,7 +169,7 @@ func DispatchTask(serviceSentinelDispatchBus <-chan *model.Service) {
 				}
 				if err := server.SendTask(task.PB()); err != nil &&
 					!errors.Is(err, model.ErrTaskStreamOffline) {
-					log.Printf("NEZHA>> DispatchTask send error (server=%d): %v", id, err)
+					log.Printf("KULIN>> DispatchTask send error (server=%d): %v", id, err)
 				}
 			}
 		}
@@ -185,7 +185,7 @@ func DispatchKeepalive() {
 			}
 			if err := s.SendTask(&proto.Task{Type: model.TaskTypeKeepalive}); err != nil &&
 				!errors.Is(err, model.ErrTaskStreamOffline) {
-				log.Printf("NEZHA>> Keepalive send error (server=%d): %v", s.ID, err)
+				log.Printf("KULIN>> Keepalive send error (server=%d): %v", s.ID, err)
 			}
 		}
 	})

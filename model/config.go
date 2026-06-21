@@ -15,7 +15,7 @@ import (
 	"github.com/knadh/koanf/v2"
 	"sigs.k8s.io/yaml"
 
-	"github.com/nezhahq/nezha/pkg/utils"
+	"github.com/shuijiao1/Kulin/pkg/utils"
 )
 
 // JWTSecretEnvKey is the canonical environment variable that injects the JWT
@@ -199,7 +199,7 @@ func (c *Config) Read(path string, frontendTemplates []FrontendTemplate) error {
 		c.jwtSecretFromEnv = true
 	} else if c.JWTSecretKey != "" {
 		c.jwtSecretFromYAML = true
-		log.Printf("NEZHA>> jwt_secret_key loaded from config.yaml; recommend injecting via env %s to keep it off disk", JWTSecretEnvKey)
+		log.Printf("KULIN>> jwt_secret_key loaded from config.yaml; recommend injecting via env %s to keep it off disk", JWTSecretEnvKey)
 	}
 
 	if c.JWTSecretKey == "" {
@@ -209,7 +209,7 @@ func (c *Config) Read(path string, frontendTemplates []FrontendTemplate) error {
 		}
 		c.JWTSecretKey = generated
 		c.jwtSecretFromYAML = true
-		log.Printf("NEZHA>> generated new jwt_secret_key; wrote to config.yaml. For production, inject via env %s and remove the field from config.yaml.", JWTSecretEnvKey)
+		log.Printf("KULIN>> generated new jwt_secret_key; wrote to config.yaml. For production, inject via env %s and remove the field from config.yaml.", JWTSecretEnvKey)
 		if err := c.patchYAMLField("jwt_secret_key", generated); err != nil {
 			return err
 		}

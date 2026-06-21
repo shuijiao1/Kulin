@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/nezhahq/nezha/proto"
+	"github.com/shuijiao1/Kulin/proto"
 )
 
 // sendObservingStream records the maximum number of goroutines that are

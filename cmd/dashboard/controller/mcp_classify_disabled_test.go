@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/service/rpc"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/service/rpc"
 )
 
 // classifyToolError 必须把 rpc.ErrMCPDisabled 归类成 forbidden 类 outcome，而不是

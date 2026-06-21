@@ -3,8 +3,8 @@ package rpc
 import (
 	"testing"
 
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
 func TestAttachRequestTaskStream_MissingServerDoesNotPanic(t *testing.T) {

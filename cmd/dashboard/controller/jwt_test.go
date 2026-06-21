@@ -7,9 +7,9 @@ import (
 
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
-	"github.com/nezhahq/nezha/model"
-	"github.com/nezhahq/nezha/pkg/i18n"
-	"github.com/nezhahq/nezha/service/singleton"
+	"github.com/shuijiao1/Kulin/model"
+	"github.com/shuijiao1/Kulin/pkg/i18n"
+	"github.com/shuijiao1/Kulin/service/singleton"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

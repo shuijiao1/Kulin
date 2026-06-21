@@ -3,7 +3,7 @@ package controller
 import (
 	"strings"
 
-	"github.com/nezhahq/nezha/model"
+	"github.com/shuijiao1/Kulin/model"
 )
 
 // MCPMinAgentVersion 是支持 MCP 的最低 agent 版本。
