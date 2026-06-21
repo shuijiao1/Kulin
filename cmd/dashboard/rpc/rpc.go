@@ -19,13 +19,9 @@ import (
 )
 
 func ServeRPC() *grpc.Server {
-	// Streaming RPCs (RequestTask, IOStream) need the same real-IP + WAF
-	// gate as unary calls; without the stream interceptors authHandler.check
-	// sees an empty real IP, so brute-force BlockIP counters never key on a
-	// source and the WAF block table is bypassed at the stream entrypoint.
 	server := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(getRealIp, waf),
-		grpc.ChainStreamInterceptor(getRealIpStream, wafStream),
+		grpc.ChainUnaryInterceptor(getRealIp),
+		grpc.ChainStreamInterceptor(getRealIpStream),
 	)
 	rpcService.NezhaHandlerSingleton = rpcService.NewNezhaHandler()
 	proto.RegisterNezhaServiceServer(server, rpcService.NezhaHandlerSingleton)
@@ -52,7 +48,7 @@ func ctxWithRealIP(ctx context.Context) (context.Context, error) {
 			return ctx, fmt.Errorf("connecting ip not found")
 		}
 		// Peer-IP mode: peer IP is the real IP. Leaving ip="" makes
-		// CheckIP/BlockIP short-circuit on empty IP, disabling the WAF.
+		// CheckIP/BlockIP short-circuit on empty IP, disabling the auth gate.
 		ip = connectingIp
 	} else {
 		vals := metadata.ValueFromIncomingContext(ctx, singleton.Conf.AgentRealIPHeader)
@@ -71,14 +67,6 @@ func ctxWithRealIP(ctx context.Context) (context.Context, error) {
 	}
 
 	return context.WithValue(ctx, model.CtxKeyRealIP{}, ip), nil
-}
-
-func waf(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
-	realip, _ := ctx.Value(model.CtxKeyRealIP{}).(string)
-	if err := model.CheckIP(singleton.DB, realip); err != nil {
-		return nil, err
-	}
-	return handler(ctx, req)
 }
 
 func getRealIp(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
@@ -106,14 +94,6 @@ func getRealIpStream(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo,
 	return handler(srv, &realIPServerStream{ServerStream: ss, ctx: ctx})
 }
 
-func wafStream(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-	realip, _ := ss.Context().Value(model.CtxKeyRealIP{}).(string)
-	if err := model.CheckIP(singleton.DB, realip); err != nil {
-		return err
-	}
-	return handler(srv, ss)
-}
-
 func DispatchTask(serviceSentinelDispatchBus <-chan *model.Service) {
 	for task := range serviceSentinelDispatchBus {
 		if task == nil {
@@ -134,9 +114,7 @@ func DispatchTask(serviceSentinelDispatchBus <-chan *model.Service) {
 				if !canSendTaskToServer(task, server) {
 					continue
 				}
-				// SendTask 走 holder-scoped send mutex，避免与 cron /
-				// server-transfer / MCP CallAgent / fs.transfer 等并发
-				// SendMsg 同一 RequestTask stream。
+				// SendTask 走 holder-scoped send mutex，避免多个调度器并发 SendMsg 同一 RequestTask stream。
 				if err := server.SendTask(task.PB()); err != nil &&
 					!errors.Is(err, model.ErrTaskStreamOffline) {
 					log.Printf("KULIN>> DispatchTask send error (server=%d): %v", id, err)

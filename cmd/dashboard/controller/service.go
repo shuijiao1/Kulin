@@ -587,19 +587,6 @@ func batchDeleteService(c *gin.Context) (any, error) {
 		return nil, singleton.Localizer.ErrorT("permission denied")
 	}
 
-	// 与 batchDeleteCron 对称：DispatchTask 没有 PAT 上下文，这里是阻止
-	// 受限 PAT 通过删除 ServiceCoverAll + 不充分 SkipServers 间接影响
-	// 白名单外 owner servers 探测状态的唯一同步入口。
-	for _, id := range ids {
-		existing, ok := singleton.ServiceSentinelShared.Get(id)
-		if !ok || existing == nil {
-			continue
-		}
-		if err := enforcePATServiceDispatchScope(c, existing); err != nil {
-			return nil, err
-		}
-	}
-
 	err := singleton.DB.Transaction(func(tx *gorm.DB) error {
 		return tx.Unscoped().Delete(&model.Service{}, "id in (?)", ids).Error
 	})
@@ -612,27 +599,5 @@ func batchDeleteService(c *gin.Context) (any, error) {
 }
 
 func validateServers(c *gin.Context, ss *model.Service) error {
-	if err := checkServiceSkipServerPermission(c, ss.Cover, ss.SkipServers, ss.GetUserID()); err != nil {
-		return err
-	}
-
-	if err := rejectImplicitServiceCoverForLimitedPAT(c, ss.Cover, ss.SkipServers, ss.GetUserID()); err != nil {
-		return err
-	}
-
-	if !singleton.CronShared.CheckPermission(c, slices.Values(ss.FailTriggerTasks)) {
-		return singleton.Localizer.ErrorT("permission denied")
-	}
-	if !singleton.CronShared.CheckPermission(c, slices.Values(ss.RecoverTriggerTasks)) {
-		return singleton.Localizer.ErrorT("permission denied")
-	}
-	if err := enforcePATTriggerTaskScope(c, ss.FailTriggerTasks, ss.RecoverTriggerTasks); err != nil {
-		return err
-	}
-
-	if err := assertOwnsNotificationGroup(c, ss.NotificationGroupID); err != nil {
-		return err
-	}
-
-	return nil
+	return checkServiceSkipServerPermission(c, ss.Cover, ss.SkipServers, ss.GetUserID())
 }

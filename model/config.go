@@ -52,9 +52,7 @@ type ConfigDashboard struct {
 	UserTemplate      string `koanf:"user_template" json:"user_template,omitempty"`
 	AdminTemplate     string `koanf:"admin_template" json:"admin_template,omitempty"`
 
-	EnablePlainIPInNotification bool   `koanf:"enable_plain_ip_in_notification" json:"enable_plain_ip_in_notification,omitempty"` // 通知信息IP不打码
-	EnableMCP                   bool   `koanf:"enable_mcp" json:"enable_mcp,omitempty"`
-	DNSServers                  string `koanf:"dns_servers" json:"dns_servers,omitempty"`
+	EnablePlainIPInNotification bool `koanf:"enable_plain_ip_in_notification" json:"enable_plain_ip_in_notification,omitempty"` // 通知信息IP不打码
 
 	// IP变更提醒
 	EnableIPChangeNotification  bool   `koanf:"enable_ip_change_notification" json:"enable_ip_change_notification,omitempty"`
@@ -213,16 +211,8 @@ func (c *Config) Read(path string, frontendTemplates []FrontendTemplate) error {
 			return err
 		}
 	}
-
-	c.mcpEnabled.Store(c.EnableMCP)
 	return nil
 }
-
-// MCPEnabled 并发安全地读取 MCP kill switch 状态。
-func (c *Config) MCPEnabled() bool { return c.mcpEnabled.Load() }
-
-// SetMCPEnabled 并发安全地更新 MCP kill switch 状态。
-func (c *Config) SetMCPEnabled(v bool) { c.mcpEnabled.Store(v); c.EnableMCP = v }
 
 // Save 保存配置文件
 func (c *Config) Save() error {

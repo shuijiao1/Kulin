@@ -78,49 +78,8 @@ func (r *AlertRule) Enabled() bool {
 // guard. createAlertRule / updateAlertRule should also reject unknown
 // covers at write time; this method is the runtime safety net.
 func (r *AlertRule) HasPermission(ctx *gin.Context) bool {
-	if !r.Common.HasPermission(ctx) {
-		return false
-	}
-	v, ok := ctx.Get(CtxKeyAPIToken)
-	if !ok {
-		return true
-	}
-	tok, _ := v.(APITokenAccessor)
-	if tok == nil {
-		return true
-	}
-	if wl, ok := tok.(APITokenWhitelistView); ok && len(wl.ServerIDs()) == 0 {
-		return true
-	}
-	for _, rule := range r.Rules {
-		if rule == nil {
-			continue
-		}
-		switch rule.Cover {
-		case RuleCoverAll:
-			denyIDs := make([]uint64, 0, len(rule.Ignore))
-			for id, ignored := range rule.Ignore {
-				if ignored {
-					denyIDs = append(denyIDs, id)
-				}
-			}
-			if !DenyListSafeForLimitedPAT(tok, r.GetUserID(), denyIDs) {
-				return false
-			}
-		case RuleCoverIgnoreAll:
-			for id, monitored := range rule.Ignore {
-				if monitored && !tok.CanAccessServer(id) {
-					return false
-				}
-			}
-		default:
-			return false
-		}
-	}
-	return true
+	return r.Common.HasPermission(ctx)
 }
-
-// Snapshot 对传入的Server进行该报警规则下所有type的检查 返回每项检查结果
 func (r *AlertRule) Snapshot(cycleTransferStats *CycleTransferStats, server *Server, db *gorm.DB) []bool {
 	point := make([]bool, len(r.Rules))
 

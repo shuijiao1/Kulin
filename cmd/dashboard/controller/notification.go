@@ -186,9 +186,6 @@ func batchDeleteNotification(c *gin.Context) (any, error) {
 		if err := tx.Unscoped().Delete(&model.Notification{}, "id in (?)", n).Error; err != nil {
 			return err
 		}
-		if err := tx.Unscoped().Delete(&model.NotificationGroupNotification{}, "notification_id in (?)", n).Error; err != nil {
-			return err
-		}
 		return nil
 	})
 

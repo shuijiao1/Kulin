@@ -1,7 +1,6 @@
 package model
 
 type SettingForm struct {
-	DNSServers                  string `json:"dns_servers,omitempty" validate:"optional"`
 	IgnoredIPNotification       string `json:"ignored_ip_notification,omitempty" validate:"optional"`
 	IPChangeNotificationGroupID uint64 `json:"ip_change_notification_group_id,omitempty"` // IP变更提醒的通知组
 	Cover                       uint8  `json:"cover,omitempty"`
@@ -16,10 +15,9 @@ type SettingForm struct {
 	AgentRealIPHeader           string `json:"agent_real_ip_header,omitempty" validate:"optional"` // Agent真实IP
 	UserTemplate                string `json:"user_template,omitempty" validate:"optional"`
 
-	AgentTLS                    bool  `json:"tls,omitempty" validate:"optional"`
-	EnableIPChangeNotification  bool  `json:"enable_ip_change_notification,omitempty" validate:"optional"`
-	EnablePlainIPInNotification bool  `json:"enable_plain_ip_in_notification,omitempty" validate:"optional"`
-	EnableMCP                   *bool `json:"enable_mcp,omitempty" validate:"optional"`
+	AgentTLS                    bool `json:"tls,omitempty" validate:"optional"`
+	EnableIPChangeNotification  bool `json:"enable_ip_change_notification,omitempty" validate:"optional"`
+	EnablePlainIPInNotification bool `json:"enable_plain_ip_in_notification,omitempty" validate:"optional"`
 }
 
 type Setting struct {
@@ -27,7 +25,6 @@ type Setting struct {
 	ConfigDashboard
 
 	IgnoredIPNotificationServerIDs map[uint64]bool `json:"ignored_ip_notification_server_ids,omitempty"`
-	Oauth2Providers                []string        `json:"oauth2_providers,omitempty"`
 }
 
 type FrontendTemplate struct {

@@ -317,7 +317,6 @@ func fallbackToFrontend(frontendDist fs.FS) func(*gin.Context) {
 		// 直接刷新该页面变成 404（HTTP 状态码层面，body 仍是 index.html，所以
 		// 浏览器内 SPA 看起来正常，但 monitoring / 链接预览会以为站点挂了）。
 		// 新增前端路由时必须在 admin-frontend/src/main.tsx 与这里同步加。
-		regexp.MustCompile(`^/dashboard/transfer$`),
 	}
 
 	getFallbackStatusCode := func(path string) int {

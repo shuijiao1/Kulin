@@ -28,8 +28,7 @@ func initParams() *jwt.GinJWTMiddleware {
 		// Pin the signing algorithm so a future library default change (or an
 		// `alg: none` confusion attempt) cannot weaken token validation.
 		SigningAlgorithm: "HS256",
-		// Lax keeps OAuth callback redirects (top-level GET navigations from
-		// the provider domain) working while blocking cross-site POST CSRF.
+		// Lax blocks cross-site POST CSRF while keeping normal dashboard navigation working.
 		// HttpOnly/Secure are intentionally left default: the frontend reads
 		// `!!document.cookie` for login-state display and many deployments
 		// terminate TLS at a proxy upstream — both warrant a separate change.

@@ -73,7 +73,7 @@ func setCSRFCookie(c *gin.Context) {
 		return
 	}
 	// Secure is set only when the request arrives over HTTPS, mirroring
-	// writeOauth2StateCookie. On plain HTTP (e.g. intranet deployments) a
+	// the login flow. On plain HTTP (e.g. intranet deployments) a
 	// Secure cookie would be dropped by the browser, breaking the
 	// double-submit pair, so we must not force it unconditionally.
 	secure := c.Request.URL.Scheme == "https" || c.Request.TLS != nil

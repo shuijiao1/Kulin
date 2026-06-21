@@ -32,10 +32,6 @@ var (
 	ServiceSentinelShared *ServiceSentinel
 	NotificationShared    *NotificationClass
 	CronShared            *CronClass
-	// ServerTransferShared is initialized in LoadSingleton AFTER ServerShared
-	// (so the in-memory pending index can write back into ServerShared.UserID
-	// on transitions) and AFTER initUser (so PushIfOnline can read secrets
-	// from UserInfoMap).
 )
 
 //go:embed frontend-templates.yaml

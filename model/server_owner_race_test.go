@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Server.UserID 在 server-transfer rotation 流程里会被 ServerTransfer 的
+// Server.UserID 在 owner rotation 流程里会被 owner update 的
 // Register/revertTransition 改写以反映新所有者，同时 authorizeAgentForUUID
 // 在每次 agent RPC 里读取它。原实现两处都是裸字段访问，race detector 会
 // 报告 data race；这是 review 评分 75 的真实问题。
@@ -46,8 +46,8 @@ func TestServerUserIDConcurrentAccessIsRaceFree(t *testing.T) {
 	wg.Wait()
 }
 
-// Common.HasPermission 是 server-transfer 旋转下与 SetUserID 并发的主要读者
-// 之一：dashboard 各 controller 的 listHandler post-filter 在 transfer 窗口
+// Common.HasPermission 是 owner 旋转下与 SetUserID 并发的主要读者
+// 之一：dashboard 各 controller 的 listHandler post-filter 在 owner update 窗口
 // 内不断对同一 *Server 调用 HasPermission，而 Register/revertTransition 同
 // 时通过 SetUserID 改写所属用户。原实现的 `user.ID == c.UserID` 是裸读，会
 // 与 atomic.StoreUint64 形成 data race（go test -race 必爆）。修复后改成走

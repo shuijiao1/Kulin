@@ -6,18 +6,7 @@ import (
 	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
-type liteAPIToken struct{}
-
-func (*liteAPIToken) ServerIDs() []uint64         { return nil }
-func (*liteAPIToken) CanAccessServer(uint64) bool { return true }
-
-func APITokenFromContext(*gin.Context) *liteAPIToken                    { return nil }
-func registerPATConnection(*gin.Context, func()) func()                 { return func() {} }
-func enforcePATTriggerTaskScope(*gin.Context, ...[]uint64) error        { return nil }
-func enforcePATServiceDispatchScope(*gin.Context, *model.Service) error { return nil }
-func rejectImplicitServiceCoverForLimitedPAT(*gin.Context, uint8, map[uint64]bool, uint64) error {
-	return nil
-}
+func registerPATConnection(*gin.Context, func()) func()                                   { return func() {} }
 func assertOwnsNotificationGroup(*gin.Context, uint64) error                              { return nil }
 func PurgeTransferEntries() int                                                           { return 0 }
 func checkServiceSkipServerPermission(*gin.Context, uint8, map[uint64]bool, uint64) error { return nil }
@@ -37,7 +26,6 @@ func callerIsAdmin(c *gin.Context) bool {
 	user, _ := u.(*model.User)
 	return user != nil && user.Role.IsAdmin()
 }
-func patAllowsServer(*gin.Context, uint64) bool { return true }
 func userCanViewServer(c *gin.Context, server *model.Server) bool {
 	if server == nil {
 		return false

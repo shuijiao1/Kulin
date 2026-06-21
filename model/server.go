@@ -45,7 +45,7 @@ type Server struct {
 	// atomic.Pointer + holder struct lets us swap the stream lock-free while
 	// every reader observes a single, consistent value. The holder also carries
 	// the send mutex so CopyFromRunningServer can share it across the old/new
-	// *Server objects that briefly co-exist during edit/transfer rotations —
+	// *Server objects that briefly co-exist during edit rotations —
 	// otherwise two *Server pointers would hold the same gRPC stream behind
 	// two independent mutexes, defeating the "one SendMsg goroutine per stream"
 	// invariant grpc-go requires.
@@ -65,7 +65,7 @@ type Server struct {
 // sendMu lives on the holder (not on *Server) so it is bound to the stream
 // itself: CopyFromRunningServer shares the same holder pointer with the new
 // *Server, and SendTask locks via the holder, guaranteeing serialized SendMsg
-// even when old/new *Server objects briefly co-exist during edit/transfer.
+// even when old/new *Server objects briefly co-exist during edit.
 type taskStreamHolder struct {
 	s      pb.NezhaService_RequestTaskServer
 	sendMu sync.Mutex
@@ -119,14 +119,13 @@ func (s *Server) GetTaskStream() pb.NezhaService_RequestTaskServer {
 }
 
 // SendTask dispatches a task on the agent's RequestTask stream under the
-// holder's sendMu so concurrent dispatchers (cron, server-transfer
-// ApplyConfig, MCP CallAgent, MCP fs.transfer, force-update, report-config)
+// holder's sendMu so concurrent dispatchers (service monitor, keepalive, report-config)
 // cannot violate grpc-go's "one SendMsg goroutine per stream" rule. Returns
 // ErrTaskStreamOffline if the agent has not published a stream yet; callers
 // that need to distinguish offline from send failure should branch on that.
 //
 // The mutex is keyed by holder (= by stream) rather than by *Server so that
-// edit/transfer rotations replacing *Server in the singleton map still share
+// edit rotations replacing *Server in the singleton map still share
 // a single lock across the old and new objects pointing at the same stream.
 func (s *Server) SendTask(task *pb.Task) error {
 	h := s.taskStream.Load()
@@ -159,7 +158,7 @@ func (s *Server) CopyFromRunningServer(old *Server) {
 	// mutex AND the stream identity with the old *Server; constructing a fresh
 	// holder via SetTaskStream(GetTaskStream()) would give the new object its
 	// own mutex, letting two *Server pointers race SendMsg on the same stream
-	// during the edit/transfer rotation window.
+	// during the edit rotation window.
 	s.adoptTaskStreamHolder(old.taskStream.Load())
 	s.ConfigCache = old.ConfigCache
 	s.PrevTransferInSnapshot = old.PrevTransferInSnapshot
@@ -191,16 +190,7 @@ var ServerOwnerLookup func(uid uint64) (ServerOwnerInfo, bool)
 
 // OwnerServerIDsLookup is installed by singleton at startup to enumerate the
 // IDs of every in-memory Server whose UserID == ownerUID. It exists so that
-// Cron.HasPermission / Service.HasPermission can faithfully replay the
-// dispatch-side "CoverAll deny-list must cover every PAT-whitelisted-out
-// owner server" rule without depending on controller helpers (model must
-// not import service/singleton — cycle).
-//
-// Left nil in tests / headless contexts; callers MUST treat a nil hook as
-// "unknown owner topology" and fall back to a conservative decision (the
-// existing model.Cron / model.Service code rejects non-trivial CoverAll
-// configs for limited PATs when the hook is nil, matching the historical
-// behaviour for empty deny-lists).
+// OwnerServerIDsLookup is retained for owner-aware service filtering.
 var OwnerServerIDsLookup func(ownerUID uint64) []uint64
 
 // OwnerIsAdminLookup reports whether ownerUID is an admin user. When the
@@ -251,86 +241,8 @@ func (s *Server) MarshalJSON() ([]byte, error) {
 }
 
 func (s *Server) HasPermission(ctx *gin.Context) bool {
-	if !s.Common.HasPermission(ctx) {
-		return false
-	}
-	v, ok := ctx.Get(CtxKeyAPIToken)
-	if !ok {
-		return true
-	}
-	tok, ok := v.(APITokenAccessor)
-	if !ok || tok == nil {
-		return true
-	}
-	return tok.CanAccessServer(s.GetID())
+	return s.Common.HasPermission(ctx)
 }
-
-// APITokenWhitelistView is the optional shape an APITokenAccessor can
-// implement so DenyListSafeForLimitedPAT can tell unscoped PATs (no
-// whitelist → not limited) apart from server-limited ones. Accessors that
-// do NOT expose ServerIDs() are treated as potentially limited; the safe
-// dispatch path then requires denyList to cover every owner-visible server
-// outside what the PAT can reach.
-type APITokenWhitelistView interface {
-	ServerIDs() []uint64
-}
-
-// DenyListSafeForLimitedPAT reports whether a CoverAll/SkipServers deny-list
-// keeps a server-limited PAT inside its server_ids whitelist. The runtime
-// dispatch path (CronTrigger, DispatchTask) iterates every owner-visible
-// server minus denyList; for the PAT to stay contained, every owner server
-// outside its whitelist must already appear in denyList. JWT requests and
-// PATs with no whitelist are unaffected. Nil OwnerServerIDsLookup forces
-// the conservative "reject" branch instead of silently allowing a config
-// the runtime would dispatch outside the whitelist.
-func DenyListSafeForLimitedPAT(tok APITokenAccessor, ownerUID uint64, denyServers []uint64) bool {
-	if tok == nil {
-		return true
-	}
-	if wl, ok := tok.(APITokenWhitelistView); ok && len(wl.ServerIDs()) == 0 {
-		return true
-	}
-	fanout := ownerEffectiveFanoutServerIDs(ownerUID)
-	if fanout == nil {
-		return false
-	}
-	denySet := make(map[uint64]struct{}, len(denyServers))
-	for _, id := range denyServers {
-		denySet[id] = struct{}{}
-	}
-	for _, id := range fanout {
-		if tok.CanAccessServer(id) {
-			continue
-		}
-		if _, denied := denySet[id]; !denied {
-			return false
-		}
-	}
-	return true
-}
-
-// ownerEffectiveFanoutServerIDs returns the server set the runtime dispatch
-// will actually fan out to for a resource owned by ownerUID. Admin owners
-// short-circuit cronCanSendToServer / canSendServiceTask via userIsAdmin,
-// so the safe containment set is the WHOLE system, not just the admin's
-// own servers. Member owners stay bounded to their own server set.
-//
-// Returns nil to signal "topology unknown" — callers (DenyListSafeForLimitedPAT)
-// fall back to fail-closed in that case, matching the historical conservative
-// branch when OwnerServerIDsLookup was nil.
-func ownerEffectiveFanoutServerIDs(ownerUID uint64) []uint64 {
-	if OwnerIsAdminLookup != nil && OwnerIsAdminLookup(ownerUID) {
-		if AllServerIDsLookup == nil {
-			return nil
-		}
-		return AllServerIDsLookup()
-	}
-	if OwnerServerIDsLookup == nil {
-		return nil
-	}
-	return OwnerServerIDsLookup(ownerUID)
-}
-
 func (s *Server) SplitList(x []*Server) ([]*Server, []*Server) {
 	pri := func(s *Server) bool {
 		return s.DisplayIndex == 0

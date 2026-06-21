@@ -406,27 +406,6 @@ func setServerConfig(c *gin.Context) (*model.ServerTaskResponse, error) {
 	return &resp, nil
 }
 
-// Batch move servers to other user
-// @Summary Batch move servers to other user
-// @Security BearerAuth
-// @Schemes
-// @Description Initiates one ServerTransfer per requested server and returns a
-// @Description per-server result. The old behaviour flipped Server.UserID in
-// @Description a single SQL UPDATE without telling the agent, so the agent
-// @Description kept presenting its old AgentSecret — which now belonged to a
-// @Description different user — and authorizeAgentForUUID dropped it. The
-// @Description current flow writes a Pending ServerTransfer row and flips
-// @Description Server.UserID to the target owner immediately; that row keeps
-// @Description the old owner's AgentSecret acceptable for this UUID until the
-// @Description agent reconnects under the new secret (MarkVerified clears the
-// @Description pending window) or the transfer Cancel/Fail/Timeout-out and
-// @Description reverts Server.UserID to the source owner.
-// @Tags auth required
-// @Accept json
-// @Param request body model.BatchMoveServerForm true "BatchMoveServerForm"
-// @Produce json
-// @Success 200 {object} model.CommonResponse[[]model.BatchMoveServerResult]
-// @Router /batch-move/server [post]
 func getServerMetrics(c *gin.Context) (*model.ServerMetricsResponse, error) {
 	idStr := c.Param("id")
 	serverID, err := strconv.ParseUint(idStr, 10, 64)

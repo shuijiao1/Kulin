@@ -14,7 +14,6 @@ type ConfigClass struct {
 	*model.Config
 
 	IgnoredIPNotificationServerIDs map[uint64]bool `json:"ignored_ip_notification_server_ids,omitempty"`
-	Oauth2Providers                []string        `json:"oauth2_providers,omitempty"`
 }
 
 // InitConfigFromPath 从给出的文件路径中加载配置

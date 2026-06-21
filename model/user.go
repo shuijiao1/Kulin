@@ -53,8 +53,7 @@ func (u *User) BeforeSave(tx *gorm.DB) error {
 
 type Profile struct {
 	User
-	LoginIP    string            `json:"login_ip,omitempty"`
-	Oauth2Bind map[string]string `json:"oauth2_bind,omitempty"`
+	LoginIP string `json:"login_ip,omitempty"`
 }
 
 type OnlineUser struct {

@@ -124,11 +124,11 @@ func serverStream(c *gin.Context) (any, error) {
 		userId = user.ID
 		isAdmin = user.Role.IsAdmin()
 	}
-	patAccessor, patCacheKey := patStreamContext(c)
+	patCacheKey := patStreamContext(c)
 
 	count := 0
 	for {
-		stat, err := getServerStat(count == 0, userId, isAdmin, patAccessor, patCacheKey)
+		stat, err := getServerStat(count == 0, userId, isAdmin, patCacheKey)
 		if err != nil {
 			continue
 		}
@@ -157,12 +157,12 @@ var requestGroup singleflight.Group
 //
 // patCacheKey distinguishes PATs with disjoint server_ids whitelists so two
 // limited tokens for the same user do not share a singleflight projection.
-func getServerStat(withPublicNote bool, viewerUserID uint64, viewerIsAdmin bool, pat model.APITokenAccessor, patCacheKey string) ([]byte, error) {
+func getServerStat(withPublicNote bool, viewerUserID uint64, viewerIsAdmin bool, patCacheKey string) ([]byte, error) {
 	cacheKey := fmt.Sprintf("serverStats::%t::%t::%d::%s", withPublicNote, viewerIsAdmin, viewerUserID, patCacheKey)
 	v, err, _ := requestGroup.Do(cacheKey, func() (any, error) {
 		servers := filterServersForViewer(
 			singleton.ServerShared.GetSortedList(),
-			viewerUserID, viewerIsAdmin, withPublicNote, pat,
+			viewerUserID, viewerIsAdmin, withPublicNote,
 		)
 		return json.Marshal(model.StreamServerData{
 			Now:     time.Now().Unix() * 1000,
@@ -177,7 +177,7 @@ func getServerStat(withPublicNote bool, viewerUserID uint64, viewerIsAdmin bool,
 // patStreamContext extracts the PAT accessor + a deterministic cache key
 // fragment for the singleflight projection. Returns (nil, "jwt") for JWT
 // requests so two callers from the same user collapse onto one frame.
-func patStreamContext(c *gin.Context) (model.APITokenAccessor, string) { return nil, "jwt" }
+func patStreamContext(c *gin.Context) string { return "jwt" }
 
 // filterServersForViewer projects the global server list down to what a single
 // viewer is allowed to see. The rules are:
@@ -190,12 +190,9 @@ func patStreamContext(c *gin.Context) (model.APITokenAccessor, string) { return 
 //     subset must never widen via its caller's role).
 //
 // viewerUserID == 0 represents an unauthenticated guest.
-func filterServersForViewer(servers []*model.Server, viewerUserID uint64, viewerIsAdmin bool, withPublicNote bool, pat model.APITokenAccessor) []model.StreamServer {
+func filterServersForViewer(servers []*model.Server, viewerUserID uint64, viewerIsAdmin bool, withPublicNote bool) []model.StreamServer {
 	out := make([]model.StreamServer, 0, len(servers))
 	for _, server := range servers {
-		if pat != nil && !pat.CanAccessServer(server.ID) {
-			continue
-		}
 		isOwnerOrAdmin := viewerIsAdmin || (viewerUserID != 0 && server.GetUserID() == viewerUserID)
 		if server.HideForGuest && !isOwnerOrAdmin {
 			continue

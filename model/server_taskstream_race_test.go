@@ -20,7 +20,7 @@ func (raceProbeStream) Send(*pb.Task) error      { return nil }
 func (raceProbeStream) Context() context.Context { return context.Background() }
 
 // model.Server.TaskStream is read from many goroutines (singleton cron pushes,
-// transfer ApplyConfig pushes, terminal/fm proxies, dashboard rpc keepalives,
+// owner update ApplyConfig pushes, dashboard rpc keepalives,
 // per-server batch pushes) and written from exactly one (the gRPC RequestTask
 // goroutine on every fresh agent connection). The bare-field access pattern
 // `if s.TaskStream != nil { s.TaskStream.Send(...) }` is a data race on the
