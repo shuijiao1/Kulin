@@ -1,101 +1,17 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <script>
-      ;(() => {
-        const storageKey = "vite-ui-theme"
-        const root = document.documentElement
-        const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="shortcut icon" type="image/svg+xml" href="/dashboard/logo.svg" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>哪吒监控 Nezha Monitoring</title>
+      <script type="module" crossorigin src="/dashboard/assets/index-B4WLgtZ-.js"></script>
+      <link rel="modulepreload" crossorigin href="/dashboard/assets/rolldown-runtime-Cyuzqnbw.js">
+      <link rel="modulepreload" crossorigin href="/dashboard/assets/vendor-BlH-fWJb.js">
+      <link rel="stylesheet" crossorigin href="/dashboard/assets/index-Bw_ULBN2.css">
+    </head>
 
-        const resolveTheme = (theme) =>
-          theme === "system" ? (mediaQuery.matches ? "dark" : "light") : theme
-
-        function updateThemeColor(nextTheme) {
-          const themeColor = nextTheme === "dark" ? "hsl(30 15% 8%)" : "hsl(0 0% 98%)"
-          let meta = document.querySelector('meta[name="theme-color"]')
-
-          if (!meta) {
-            meta = document.createElement("meta")
-            meta.setAttribute("name", "theme-color")
-            document.head.appendChild(meta)
-          }
-
-          meta.setAttribute("content", themeColor)
-        }
-
-        function applyResolvedTheme(resolvedTheme) {
-          root.classList.remove("light", "dark")
-          root.classList.add(resolvedTheme)
-          root.style.colorScheme = resolvedTheme
-          root.style.backgroundColor =
-            resolvedTheme === "dark" ? "hsl(30 15% 8%)" : "hsl(0 0% 98%)"
-          updateThemeColor(resolvedTheme)
-        }
-
-        let theme = "system"
-
-        try {
-          const storedTheme = localStorage.getItem(storageKey)
-          if (storedTheme === "light" || storedTheme === "dark" || storedTheme === "system") {
-            theme = storedTheme
-          }
-        } catch (_e) {
-          theme = "system"
-        }
-
-        applyResolvedTheme(resolveTheme(theme))
-
-        // Add loaded class after React has mounted
-        window.addEventListener("load", () => {
-          const root = document.getElementById("root")
-          if (root) {
-            // 使用 RAF 确保在下一帧渲染
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                root.classList.add("loaded")
-              })
-            })
-          }
-        })
-      })()
-    </script>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/apple-touch-icon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Kulin</title>
-
-    <!-- PWA -->
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="hsl(0 0% 98%)" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="Kulin" />
-    <link rel="apple-touch-icon" href="/android-chrome-192x192.png" />
-
-    <link rel="stylesheet" href="https://fastly.jsdelivr.net/gh/lipis/flag-icons@7.0.0/css/flag-icons.min.css" />
-    <link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/font-logos@1/assets/font-logos.css" />
-    <script type="module" crossorigin src="/assets/index.DV_bbC6L.js"></script>
-    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime.QTnfLwEv.js">
-    <link rel="modulepreload" crossorigin href="/assets/@floating-ui.DG1NPT5w.js">
-    <link rel="modulepreload" crossorigin href="/assets/react-router.xURYSEgN.js">
-    <link rel="modulepreload" crossorigin href="/assets/@heroicons.BIQf_fGK.js">
-    <link rel="modulepreload" crossorigin href="/assets/@numeric-text.DxRRlpJl.js">
-    <link rel="modulepreload" crossorigin href="/assets/@radix-ui.-ng-LFIN.js">
-    <link rel="modulepreload" crossorigin href="/assets/@tanstack.2F2P5xxJ.js">
-    <link rel="modulepreload" crossorigin href="/assets/class-variance-authority.BLUaYARZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/country-flag-icons.RGeqALFX.js">
-    <link rel="modulepreload" crossorigin href="/assets/d3-array.C3aIW1U3.js">
-    <link rel="modulepreload" crossorigin href="/assets/d3-geo.DQhAwR9_.js">
-    <link rel="modulepreload" crossorigin href="/assets/lucide-react.CbfjN9-C.js">
-    <link rel="modulepreload" crossorigin href="/assets/react-dom.D3HCct2_.js">
-    <link rel="modulepreload" crossorigin href="/assets/sonner.BbDEEBic.js">
-    <link rel="modulepreload" crossorigin href="/assets/dayjs.eHg5CoVh.js">
-    <link rel="modulepreload" crossorigin href="/assets/tailwind-merge.DxdGK6Xj.js">
-    <link rel="modulepreload" crossorigin href="/assets/utils.txUf84HV.js">
-    <link rel="stylesheet" crossorigin href="/assets/@numeric-text.I_BOt-4z.css">
-    <link rel="stylesheet" crossorigin href="/assets/index.C-OaSmZB.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+    <body>
+        <div id="root"></div>
+    </body>
 </html>
