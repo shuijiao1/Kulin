@@ -103,22 +103,31 @@ func authenticator() func(c *gin.Context) (any, error) {
 			return "", jwt.ErrMissingLoginValues
 		}
 
+		if loginLimiter.Blocked(c.ClientIP(), loginVals.Username) {
+			return nil, jwt.ErrFailedAuthentication
+		}
+
 		var user model.User
 		if err := singleton.DB.Select("id", "password", "reject_password", "token_version").Where("username = ?", loginVals.Username).First(&user).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
+				loginLimiter.RecordFailure(c.ClientIP(), loginVals.Username)
 				return nil, jwt.ErrFailedAuthentication
 			}
+			loginLimiter.RecordFailure(c.ClientIP(), loginVals.Username)
 			return nil, jwt.ErrFailedAuthentication
 		}
 
 		if user.RejectPassword {
+			loginLimiter.RecordFailure(c.ClientIP(), loginVals.Username)
 			return nil, jwt.ErrFailedAuthentication
 		}
 
 		if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginVals.Password)); err != nil {
+			loginLimiter.RecordFailure(c.ClientIP(), loginVals.Username)
 			return nil, jwt.ErrFailedAuthentication
 		}
 
+		loginLimiter.RecordSuccess(c.ClientIP(), loginVals.Username)
 		return issueJWTSession(c, &user, singleton.Conf.JWTTimeout)
 	}
 }

@@ -18,11 +18,8 @@ const (
 	TaskTypeICMPPing
 	TaskTypeTCPPing
 	TaskTypeCommand
-	TaskTypeUpgrade
 	TaskTypeKeepalive
 	TaskTypeReportHostInfoDeprecated
-	TaskTypeReportConfig
-	TaskTypeApplyConfig
 )
 
 const (
@@ -141,7 +138,7 @@ func (m *Service) AfterFind(tx *gorm.DB) error {
 // IsServiceSentinelNeeded 判断该任务类型是否需要进行服务监控 需要则返回true
 func IsServiceSentinelNeeded(t uint64) bool {
 	switch t {
-	case TaskTypeCommand, TaskTypeUpgrade, TaskTypeKeepalive, TaskTypeReportConfig, TaskTypeApplyConfig:
+	case TaskTypeCommand, TaskTypeKeepalive:
 		return false
 	default:
 		return true

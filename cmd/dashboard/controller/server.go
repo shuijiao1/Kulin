@@ -2,11 +2,8 @@ package controller
 
 import (
 	"encoding/json"
-	"errors"
 	"slices"
 	"strconv"
-	"sync"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
@@ -14,7 +11,6 @@ import (
 
 	"github.com/shuijiao1/Kulin/model"
 	"github.com/shuijiao1/Kulin/pkg/tsdb"
-	pb "github.com/shuijiao1/Kulin/proto"
 	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
@@ -275,184 +271,6 @@ func batchDeleteServer(c *gin.Context) (any, error) {
 	// belt and braces.
 	singleton.ServerShared.Delete(servers)
 	return nil, nil
-}
-
-// Force update Agent
-// @Summary Force update Agent
-// @Security BearerAuth
-// @Schemes
-// @Description Force update Agent
-// @Tags auth required
-// @Accept json
-// @param request body []uint64 true "id list"
-// @Produce json
-// @Success 200 {object} model.CommonResponse[model.ServerTaskResponse]
-// @Router /force-update/server [post]
-func forceUpdateServer(c *gin.Context) (*model.ServerTaskResponse, error) {
-	var forceUpdateServers []uint64
-	if err := c.ShouldBindJSON(&forceUpdateServers); err != nil {
-		return nil, err
-	}
-
-	forceUpdateResp := new(model.ServerTaskResponse)
-
-	for _, sid := range forceUpdateServers {
-		server, _ := singleton.ServerShared.Get(sid)
-		// Per-ID ownership check. Foreign servers (online or offline) and
-		// unknown IDs MUST be indistinguishable in the response — otherwise the
-		// response shape leaks server-ID existence/online-state, letting a
-		// RoleMember enumerate other users' machines. We drop them into the
-		// Offline bucket without actually dispatching the upgrade task.
-		if server == nil || !server.HasPermission(c) {
-			forceUpdateResp.Offline = append(forceUpdateResp.Offline, sid)
-			continue
-		}
-		if server.GetTaskStream() != nil {
-			if err := server.SendTask(&pb.Task{
-				Type: model.TaskTypeUpgrade,
-			}); err != nil {
-				if errors.Is(err, model.ErrTaskStreamOffline) {
-					forceUpdateResp.Offline = append(forceUpdateResp.Offline, sid)
-				} else {
-					forceUpdateResp.Failure = append(forceUpdateResp.Failure, sid)
-				}
-			} else {
-				forceUpdateResp.Success = append(forceUpdateResp.Success, sid)
-			}
-		} else {
-			forceUpdateResp.Offline = append(forceUpdateResp.Offline, sid)
-		}
-	}
-
-	return forceUpdateResp, nil
-}
-
-// Get server config
-// @Summary Get server config
-// @Security BearerAuth
-// @Schemes
-// @Description Get server config
-// @Tags auth required
-// @Produce json
-// @Success 200 {object} model.CommonResponse[string]
-// @Router /server/config/{id} [get]
-func getServerConfig(c *gin.Context) (string, error) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 64)
-	if err != nil {
-		return "", err
-	}
-
-	s, ok := singleton.ServerShared.Get(id)
-	if !ok {
-		return "", nil
-	}
-	if !s.HasPermission(c) {
-		return "", singleton.Localizer.ErrorT("permission denied")
-	}
-	if s.GetTaskStream() == nil {
-		return "", nil
-	}
-
-	if err := s.SendTask(&pb.Task{
-		Type: model.TaskTypeReportConfig,
-	}); err != nil {
-		if errors.Is(err, model.ErrTaskStreamOffline) {
-			return "", nil
-		}
-		return "", err
-	}
-
-	timeout := time.NewTimer(time.Second * 10)
-	select {
-	case <-timeout.C:
-		return "", singleton.Localizer.ErrorT("operation timeout")
-	case data := <-s.ConfigCache:
-		timeout.Stop()
-		switch data := data.(type) {
-		case string:
-			return data, nil
-		case error:
-			return "", singleton.Localizer.ErrorT("get server config failed: %v", data)
-		}
-	}
-
-	return "", singleton.Localizer.ErrorT("get server config failed")
-}
-
-// Set server config
-// @Summary Set server config
-// @Security BearerAuth
-// @Schemes
-// @Description Set server config
-// @Tags auth required
-// @Accept json
-// @Param body body model.ServerConfigForm true "ServerConfigForm"
-// @Produce json
-// @Success 200 {object} model.CommonResponse[model.ServerTaskResponse]
-// @Router /server/config [post]
-func setServerConfig(c *gin.Context) (*model.ServerTaskResponse, error) {
-	var configForm model.ServerConfigForm
-	if err := c.ShouldBindJSON(&configForm); err != nil {
-		return nil, err
-	}
-
-	var resp model.ServerTaskResponse
-	slist := singleton.ServerShared.GetList()
-	servers := make([]*model.Server, 0, len(configForm.Servers))
-	for _, sid := range configForm.Servers {
-		if s, ok := slist[sid]; ok {
-			if !s.HasPermission(c) {
-				return nil, singleton.Localizer.ErrorT("permission denied")
-			}
-			if s.GetTaskStream() == nil {
-				resp.Offline = append(resp.Offline, s.ID)
-				continue
-			}
-			servers = append(servers, s)
-		}
-	}
-
-	var wg sync.WaitGroup
-	var respMu sync.Mutex
-
-	for i := 0; i < len(servers); i += 10 {
-		end := min(i+10, len(servers))
-		group := servers[i:end]
-
-		wg.Add(1)
-		go func(srvGroup []*model.Server) {
-			defer wg.Done()
-			for _, s := range srvGroup {
-				task := &pb.Task{
-					Type: model.TaskTypeApplyConfig,
-					Data: configForm.Config,
-				}
-				if s.GetTaskStream() == nil {
-					respMu.Lock()
-					resp.Offline = append(resp.Offline, s.ID)
-					respMu.Unlock()
-					continue
-				}
-				if err := s.SendTask(task); err != nil {
-					respMu.Lock()
-					if errors.Is(err, model.ErrTaskStreamOffline) {
-						resp.Offline = append(resp.Offline, s.ID)
-					} else {
-						resp.Failure = append(resp.Failure, s.ID)
-					}
-					respMu.Unlock()
-					continue
-				}
-				respMu.Lock()
-				resp.Success = append(resp.Success, s.ID)
-				respMu.Unlock()
-			}
-		}(group)
-	}
-
-	wg.Wait()
-	return &resp, nil
 }
 
 func getServerMetrics(c *gin.Context) (*model.ServerMetricsResponse, error) {

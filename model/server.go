@@ -50,8 +50,7 @@ type Server struct {
 	// otherwise two *Server pointers would hold the same gRPC stream behind
 	// two independent mutexes, defeating the "one SendMsg goroutine per stream"
 	// invariant grpc-go requires.
-	taskStream  atomic.Pointer[taskStreamHolder]
-	ConfigCache chan any `gorm:"-" json:"-"`
+	taskStream atomic.Pointer[taskStreamHolder]
 
 	PrevTransferInSnapshot  uint64 `gorm:"-" json:"-"` // 上次数据点时的入站使用量
 	PrevTransferOutSnapshot uint64 `gorm:"-" json:"-"` // 上次数据点时的出站使用量
@@ -147,7 +146,6 @@ func InitServer(s *Server) {
 	s.Host = &Host{}
 	s.State = &HostState{}
 	s.GeoIP = &GeoIP{}
-	s.ConfigCache = make(chan any, 1)
 }
 
 func (s *Server) CopyFromRunningServer(old *Server) {
@@ -161,7 +159,6 @@ func (s *Server) CopyFromRunningServer(old *Server) {
 	// own mutex, letting two *Server pointers race SendMsg on the same stream
 	// during the edit rotation window.
 	s.adoptTaskStreamHolder(old.taskStream.Load())
-	s.ConfigCache = old.ConfigCache
 	s.PrevTransferInSnapshot = old.PrevTransferInSnapshot
 	s.PrevTransferOutSnapshot = old.PrevTransferOutSnapshot
 }

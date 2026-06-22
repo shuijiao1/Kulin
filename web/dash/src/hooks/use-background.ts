@@ -14,9 +14,9 @@ declare global {
 
 const BACKGROUND_CHANGE_EVENT = "backgroundChange";
 
-export function useBackground() {
+export function useBackground(defaultBackgroundImage?: string) {
 	const [backgroundImage, setBackgroundImage] = useState<string | undefined>(
-		undefined,
+		defaultBackgroundImage || undefined,
 	);
 
 	useEffect(() => {
@@ -29,6 +29,9 @@ export function useBackground() {
 		const checkInitialBackground = () => {
 			if (window.CustomBackgroundImage) {
 				setBackgroundImage(window.CustomBackgroundImage);
+			} else if (defaultBackgroundImage) {
+				window.CustomBackgroundImage = defaultBackgroundImage;
+				setBackgroundImage(defaultBackgroundImage);
 			} else {
 				const savedImage = sessionStorage.getItem("savedBackgroundImage");
 				if (savedImage) {
@@ -42,6 +45,7 @@ export function useBackground() {
 		const intervalId = setInterval(() => {
 			if (
 				window.CustomBackgroundImage ||
+				defaultBackgroundImage ||
 				sessionStorage.getItem("savedBackgroundImage")
 			) {
 				checkInitialBackground();
@@ -58,10 +62,13 @@ export function useBackground() {
 			);
 			clearInterval(intervalId);
 		};
-	}, []);
+	}, [defaultBackgroundImage]);
 
 	const updateBackground = (newBackground: string | undefined) => {
 		window.CustomBackgroundImage = newBackground || "";
+		if (newBackground) {
+			sessionStorage.setItem("savedBackgroundImage", newBackground);
+		}
 		window.dispatchEvent(new Event(BACKGROUND_CHANGE_EVENT));
 	};
 

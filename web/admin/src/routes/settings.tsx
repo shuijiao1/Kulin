@@ -12,6 +12,13 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/hooks/useAuth"
 import useSetting from "@/hooks/useSetting"
@@ -29,6 +36,9 @@ const settingFormSchema = z.object({
     install_host: asOptionalField(z.string()),
     custom_code: asOptionalField(z.string()),
     avatar_url: z.string().optional(),
+    theme_mode: z.enum(["default", "glass"]).optional(),
+    background_image: z.string().optional(),
+    mobile_background_image: z.string().optional(),
 
     tls: asOptionalField(z.boolean()),
     enable_plain_ip_in_notification: asOptionalField(z.boolean()),
@@ -51,11 +61,17 @@ export default function SettingsPage() {
                       Object.keys(config.frontend_templates?.filter((t) => !t.is_admin) || {})[0] ||
                       "user-dist",
                   avatar_url: config.config?.avatar_url || "",
+                  theme_mode: config.config?.theme_mode === "glass" ? "glass" : "default",
+                  background_image: config.config?.background_image || "",
+                  mobile_background_image: config.config?.mobile_background_image || "",
               }
             : {
                   site_name: "",
                   user_template: "user-dist",
                   avatar_url: "",
+                  theme_mode: "default",
+                  background_image: "",
+                  mobile_background_image: "",
               },
         resetOptions: {
             keepDefaultValues: false,
@@ -71,6 +87,9 @@ export default function SettingsPage() {
                     Object.keys(config.frontend_templates?.filter((t) => !t.is_admin) || {})[0] ||
                     "user-dist",
                 avatar_url: config.config?.avatar_url || "",
+                theme_mode: config.config?.theme_mode === "glass" ? "glass" : "default",
+                background_image: config.config?.background_image || "",
+                mobile_background_image: config.config?.mobile_background_image || "",
             })
         }
     }, [config?.config, form])
@@ -84,7 +103,13 @@ export default function SettingsPage() {
 
     const onSubmit = async (values: any) => {
         try {
-            const settingsValues = { ...values, avatar_url: values.avatar_url || "" }
+            const settingsValues = {
+                ...values,
+                avatar_url: values.avatar_url || "",
+                theme_mode: values.theme_mode || "default",
+                background_image: values.background_image || "",
+                mobile_background_image: values.mobile_background_image || "",
+            }
             await updateSettings({
                 ...settingsValues,
                 user_template:
@@ -147,6 +172,62 @@ export default function SettingsPage() {
                                     <FormControl>
                                         <Input
                                             placeholder="https://example.com/avatar.png"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="theme_mode"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>首页主题</FormLabel>
+                                    <Select
+                                        onValueChange={field.onChange}
+                                        value={field.value || "default"}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="选择首页主题" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="default">默认主题</SelectItem>
+                                            <SelectItem value="glass">高斯模糊主题</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="background_image"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>电脑端背景图链接</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="https://example.com/desktop-bg.jpg"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="mobile_background_image"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>手机端背景图链接</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="https://example.com/mobile-bg.jpg"
                                             {...field}
                                         />
                                     </FormControl>

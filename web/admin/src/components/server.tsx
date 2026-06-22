@@ -60,6 +60,21 @@ interface ServerCardProps {
     mutate: KeyedMutator<ModelServer[]>
 }
 
+const formatTrafficLimitForForm = (limit?: number) => {
+    if (!limit) {
+        return {
+            traffic_progress_limit_input: undefined,
+            traffic_progress_limit_unit: "GB" as const,
+        }
+    }
+
+    const isTB = limit >= 1024 ** 4
+    return {
+        traffic_progress_limit_input: limit / (isTB ? 1024 ** 4 : 1024 ** 3),
+        traffic_progress_limit_unit: isTB ? ("TB" as const) : ("GB" as const),
+    }
+}
+
 const serverFormSchema = z.object({
     name: z.string().min(1),
     traffic_progress_enabled: asOptionalField(z.boolean()),
@@ -75,13 +90,7 @@ export const ServerCard: React.FC<ServerCardProps> = ({ data, mutate }) => {
         resolver: zodResolver(serverFormSchema) as any,
         defaultValues: {
             ...data,
-            traffic_progress_limit_input: data.traffic_progress_limit
-                ? data.traffic_progress_limit / 1024 / 1024 / 1024
-                : undefined,
-            traffic_progress_limit_unit:
-                data.traffic_progress_limit && data.traffic_progress_limit >= 1024 ** 4
-                    ? "TB"
-                    : "GB",
+            ...formatTrafficLimitForForm(data.traffic_progress_limit),
             traffic_progress_start_day: data.traffic_progress_start_day ?? 1,
             home_monitor_id: data.home_monitor_id ?? 0,
         },
@@ -469,7 +478,8 @@ export const ServerCard: React.FC<ServerCardProps> = ({ data, mutate }) => {
                                                     >
                                                         {publicNoteObj.billingDataMod?.startDate
                                                             ? new Date(
-                                                                  publicNoteObj.billingDataMod!.startDate!,
+                                                                  publicNoteObj.billingDataMod!
+                                                                      .startDate!,
                                                               ).toLocaleDateString()
                                                             : "YYYY-MM-DD"}
                                                     </Button>
@@ -489,7 +499,9 @@ export const ServerCard: React.FC<ServerCardProps> = ({ data, mutate }) => {
                                                                 publicNoteObj.billingDataMod
                                                                     ?.startDate
                                                                     ? new Date(
-                                                                          publicNoteObj.billingDataMod!.startDate!,
+                                                                          publicNoteObj
+                                                                              .billingDataMod!
+                                                                              .startDate!,
                                                                       )
                                                                     : undefined
                                                             }
@@ -733,7 +745,8 @@ export const ServerCard: React.FC<ServerCardProps> = ({ data, mutate }) => {
                                                 ))}
                                             </div>
                                             <div className="text-xs text-muted-foreground">
-                                                {publicNoteObj.billingDataMod?.renewalNotifyDays?.length
+                                                {publicNoteObj.billingDataMod?.renewalNotifyDays
+                                                    ?.length
                                                     ? ""
                                                     : t("PublicNote.RenewalNotifyOff")}
                                             </div>

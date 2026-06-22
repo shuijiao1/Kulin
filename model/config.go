@@ -35,11 +35,14 @@ const (
 )
 
 type ConfigForGuests struct {
-	Language            string `koanf:"language" json:"language"` // 系统语言，默认 zh_CN
-	SiteName            string `koanf:"site_name" json:"site_name"`
-	AvatarURL           string `koanf:"avatar_url" json:"avatar_url,omitempty"`
-	CustomCode          string `koanf:"custom_code" json:"custom_code,omitempty"`
-	CustomCodeDashboard string `koanf:"custom_code_dashboard" json:"custom_code_dashboard,omitempty"`
+	Language              string `koanf:"language" json:"language"` // 系统语言，默认 zh_CN
+	SiteName              string `koanf:"site_name" json:"site_name"`
+	AvatarURL             string `koanf:"avatar_url" json:"avatar_url,omitempty"`
+	ThemeMode             string `koanf:"theme_mode" json:"theme_mode,omitempty"`
+	BackgroundImage       string `koanf:"background_image" json:"background_image,omitempty"`
+	MobileBackgroundImage string `koanf:"mobile_background_image" json:"mobile_background_image,omitempty"`
+	CustomCode            string `koanf:"custom_code" json:"custom_code,omitempty"`
+	CustomCodeDashboard   string `koanf:"custom_code_dashboard" json:"custom_code_dashboard,omitempty"`
 }
 
 type ConfigDashboard struct {

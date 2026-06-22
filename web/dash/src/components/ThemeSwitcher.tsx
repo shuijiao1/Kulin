@@ -1,7 +1,7 @@
 import { CheckCircleIcon } from "@heroicons/react/20/solid";
 import { Moon, Sun } from "lucide-react";
 import { t } from "@/lib/labels";
-import type { Theme } from "@/components/ThemeProvider";
+import type { Theme, ThemeMode } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "../hooks/use-theme";
 
 export function ModeToggle() {
-	const { setTheme, theme } = useTheme();
+	const { setTheme, theme, setThemeMode, themeMode } = useTheme();
 
 	const customBackgroundImage =
 		(window.CustomBackgroundImage as string) !== ""
@@ -24,6 +24,11 @@ export function ModeToggle() {
 	const handleSelect = (e: Event, newTheme: Theme) => {
 		e.preventDefault();
 		setTheme(newTheme);
+	};
+
+	const handleThemeModeSelect = (e: Event, newThemeMode: ThemeMode) => {
+		e.preventDefault();
+		setThemeMode(newThemeMode);
 	};
 
 	return (
@@ -42,6 +47,24 @@ export function ModeToggle() {
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent className="flex flex-col gap-0.5" align="end">
+				<DropdownMenuItem
+					className={cn("rounded-[5px] text-xs", {
+						"gap-3 bg-muted font-semibold": themeMode === "default",
+					})}
+					onSelect={(e) => handleThemeModeSelect(e, "default")}
+				>
+					默认主题
+					{themeMode === "default" && <CheckCircleIcon className="size-4" />}
+				</DropdownMenuItem>
+				<DropdownMenuItem
+					className={cn("rounded-[5px] text-xs", {
+						"gap-3 bg-muted font-semibold": themeMode === "glass",
+					})}
+					onSelect={(e) => handleThemeModeSelect(e, "glass")}
+				>
+					高斯模糊主题
+					{themeMode === "glass" && <CheckCircleIcon className="size-4" />}
+				</DropdownMenuItem>
 				<DropdownMenuItem
 					className={cn("rounded-b-[5px] text-xs", {
 						"gap-3 bg-muted font-semibold": theme === "light",

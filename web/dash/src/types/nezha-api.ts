@@ -155,6 +155,9 @@ type SettingConfig = {
 	language: string;
 	site_name: string;
 	avatar_url?: string;
+	theme_mode?: "default" | "glass" | string;
+	background_image?: string;
+	mobile_background_image?: string;
 	user_template: string;
 	admin_template: string;
 	custom_code: string;

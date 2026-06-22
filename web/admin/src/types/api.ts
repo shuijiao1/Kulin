@@ -91,19 +91,6 @@ export interface ModelServer {
 
 export interface ModelServerForm extends Partial<ModelServer> {}
 
-export interface ModelServerConfigForm {
-    id?: number
-    ids?: number[]
-    servers?: number[]
-    config?: string
-}
-
-export interface ModelServerTaskResponse {
-    success?: string[]
-    failure?: string[]
-    offline?: string[]
-}
-
 export interface ModelService {
     id: number
     name: string
@@ -184,6 +171,9 @@ export interface FrontendTemplate {
 export interface ModelSetting {
     site_name?: string
     avatar_url?: string
+    theme_mode?: "default" | "glass" | string
+    background_image?: string
+    mobile_background_image?: string
     user_template?: string
     install_host?: string
     dashboard_host?: string

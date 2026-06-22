@@ -48,7 +48,19 @@ func initSystem(bus chan<- *model.Service) error {
 		return err
 	}
 	if usersCount == 0 {
-		hash, err := bcrypt.GenerateFromPassword([]byte("admin"), bcrypt.DefaultCost)
+		initialPassword := os.Getenv("KULIN_INITIAL_ADMIN_PASSWORD")
+		if initialPassword == "" {
+			generatedPassword, err := utils.GenerateRandomString(24)
+			if err != nil {
+				return err
+			}
+			initialPassword = generatedPassword
+			log.Printf("KULIN>> created initial admin user: username=admin password=%s", initialPassword)
+		} else {
+			log.Println("KULIN>> created initial admin user: username=admin password loaded from KULIN_INITIAL_ADMIN_PASSWORD")
+		}
+
+		hash, err := bcrypt.GenerateFromPassword([]byte(initialPassword), bcrypt.DefaultCost)
 		if err != nil {
 			return err
 		}

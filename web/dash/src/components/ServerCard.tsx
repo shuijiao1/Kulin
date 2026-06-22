@@ -1,9 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import {
 	Activity,
-	ArrowDownToLine,
-	ArrowUpFromLine,
-	CircleAlert,
+	Cpu,
+	Download,
+	HardDrive,
+	MemoryStick,
+	TriangleAlert,
+	Upload,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
@@ -246,10 +249,10 @@ export default function ServerCard({
 				<img
 					src={getOSImage(platform)}
 					alt={platform || "Linux"}
-					className="absolute left-0 top-0 size-6 object-contain"
+					className="absolute left-0 top-0 size-7 object-contain"
 					loading="lazy"
 				/>
-				<div className="flex min-w-0 items-center justify-center gap-2">
+				<div className="flex min-w-0 items-center justify-center gap-2.5">
 					<span
 						className={cn("h-2.5 w-2.5 shrink-0 rounded-full", {
 							"bg-green-500": online,
@@ -258,10 +261,10 @@ export default function ServerCard({
 					/>
 					<ServerFlag
 						country_code={country_code}
-						className="-mt-0.5 shrink-0 text-[14px]"
+						className="-mt-0.5 shrink-0 text-[18px]"
 					/>
 					<div className="min-w-0">
-						<p className="truncate text-[13px] font-bold tracking-tight">
+						<p className="truncate text-[15px] font-bold tracking-tight">
 							{name}
 						</p>
 					</div>
@@ -279,25 +282,17 @@ export default function ServerCard({
 
 			{online && (
 				<>
-					<section className="mt-3 grid grid-cols-3 gap-2 px-1 text-center text-[11px]">
-						<div className="flex items-center justify-center gap-1.5">
-							<img src="/assets/logo/cpu.svg" alt="CPU" className="size-5" />
+					<section className="mt-3 grid grid-cols-[auto_auto_auto] justify-center gap-3 px-1 text-center text-[11px]">
+						<div className="flex items-center justify-center gap-1">
+							<Cpu className="size-4 text-sky-500" />
 							<span>{formatCpuCores(coreCount)}</span>
 						</div>
-						<div className="flex items-center justify-center gap-1.5">
-							<img
-								src="/assets/logo/memory.svg"
-								alt="内存"
-								className="size-5"
-							/>
+						<div className="flex items-center justify-center gap-1">
+							<MemoryStick className="size-4 text-emerald-500" />
 							<span>{formatBytes(mem_total)}</span>
 						</div>
-						<div className="flex items-center justify-center gap-1.5">
-							<img
-								src="/assets/logo/storage.svg"
-								alt="硬盘"
-								className="size-5"
-							/>
+						<div className="flex items-center justify-center gap-1">
+							<HardDrive className="size-4 text-violet-500" />
 							<span>{formatBytes(disk_total)}</span>
 						</div>
 					</section>
@@ -315,13 +310,13 @@ export default function ServerCard({
 							<Pill
 								label={t("serverCard.upload")}
 								value={formatSpeed(up)}
-								icon={<ArrowUpFromLine className="size-4" />}
+								icon={<Upload className="size-4" />}
 								accent="blue"
 							/>
 							<Pill
 								label={t("serverCard.download")}
 								value={formatSpeed(down)}
-								icon={<ArrowDownToLine className="size-4" />}
+								icon={<Download className="size-4" />}
 								accent="purple"
 							/>
 							{shouldShowMonitorSlots && (
@@ -335,7 +330,7 @@ export default function ServerCard({
 									<Pill
 										label="丢包率"
 										value={formatLoss(latestLoss)}
-										icon={<CircleAlert className="size-4" />}
+										icon={<TriangleAlert className="size-4" />}
 										accent="orange"
 									/>
 								</>

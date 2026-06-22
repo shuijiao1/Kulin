@@ -99,6 +99,9 @@ func updateConfig(c *gin.Context) (any, error) {
 	singleton.Conf.IPChangeNotificationGroupID = sf.IPChangeNotificationGroupID
 	singleton.Conf.SiteName = sf.SiteName
 	singleton.Conf.AvatarURL = sf.AvatarURL
+	singleton.Conf.ThemeMode = sf.ThemeMode
+	singleton.Conf.BackgroundImage = sf.BackgroundImage
+	singleton.Conf.MobileBackgroundImage = sf.MobileBackgroundImage
 	singleton.Conf.CustomCode = sf.CustomCode
 	singleton.Conf.CustomCodeDashboard = sf.CustomCodeDashboard
 	singleton.Conf.WebRealIPHeader = sf.WebRealIPHeader

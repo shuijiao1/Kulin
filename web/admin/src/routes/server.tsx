@@ -1,5 +1,5 @@
 import { swrFetcher } from "@/api/api"
-import { deleteServer, forceUpdateServer, updateServer } from "@/api/server"
+import { deleteServer, updateServer } from "@/api/server"
 import { ActionButtonGroup } from "@/components/action-button-group"
 import { CopyButton } from "@/components/copy-button"
 import { HeaderButtonGroup } from "@/components/header-button-group"
@@ -24,10 +24,9 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { IconButton } from "@/components/xui/icon-button"
 import { t } from "@/lib/labels"
 import { joinIP } from "@/lib/utils"
-import { ModelServerTaskResponse, ModelServer as Server } from "@/types"
+import { ModelServer as Server } from "@/types"
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table"
 import { DragEvent, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
@@ -364,42 +363,6 @@ export default function ServerPage() {
                     }}
                 >
                     {serverSortDialog}
-                    <IconButton
-                        icon="update"
-                        onClick={async () => {
-                            const id = selectedRows.map((r) => r.original.id)
-                            if (id.length < 1) {
-                                toast(t("Error"), {
-                                    description: t("Results.SelectAtLeastOneServer"),
-                                })
-                                return
-                            }
-
-                            let resp: ModelServerTaskResponse
-                            try {
-                                resp = await forceUpdateServer(id)
-                            } catch (e) {
-                                console.error(e)
-                                toast(t("Error"), {
-                                    description: t("Results.UnExpectedError"),
-                                })
-                                return
-                            }
-                            toast(t("Done"), {
-                                description:
-                                    t("Results.ForceUpdate") +
-                                    (resp.success?.length
-                                        ? t(`Success`) + ` [${resp.success.join(",")}]`
-                                        : "") +
-                                    (resp.failure?.length
-                                        ? t(`Failure`) + ` [${resp.failure.join(",")}]`
-                                        : "") +
-                                    (resp.offline?.length
-                                        ? t(`Offline`) + ` [${resp.offline.join(",")}]`
-                                        : ""),
-                            })
-                        }}
-                    />
                     <InstallCommandsMenu className="shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] bg-blue-700 text-white hover:bg-blue-600 dark:hover:bg-blue-800 rounded-lg" />
                 </HeaderButtonGroup>
             </div>

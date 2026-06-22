@@ -37,14 +37,3 @@ type ServerForm struct {
 	TrafficProgressStartDay uint8  `json:"traffic_progress_start_day,omitempty" validate:"optional"`
 	HomeMonitorID           uint64 `json:"home_monitor_id,omitempty" validate:"optional"`
 }
-
-type ServerConfigForm struct {
-	Servers []uint64 `json:"servers,omitempty"`
-	Config  string   `json:"config,omitempty"`
-}
-
-type ServerTaskResponse struct {
-	Success []uint64 `json:"success,omitempty" validate:"optional"`
-	Failure []uint64 `json:"failure,omitempty" validate:"optional"`
-	Offline []uint64 `json:"offline,omitempty" validate:"optional"`
-}

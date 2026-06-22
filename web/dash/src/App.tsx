@@ -54,7 +54,13 @@ const MainApp: React.FC = () => {
 	});
 	const { setTheme } = useTheme();
 	const [isCustomCodeInjected, setIsCustomCodeInjected] = useState(false);
-	const { backgroundImage: customBackgroundImage } = useBackground();
+	const backgroundImageFromSetting =
+		settingData?.data?.config?.background_image || "";
+	const mobileBackgroundImageFromSetting =
+		settingData?.data?.config?.mobile_background_image || "";
+	const { backgroundImage: customBackgroundImage } = useBackground(
+		backgroundImageFromSetting || undefined,
+	);
 
 	useEffect(() => {
 		if (settingData?.data?.config?.custom_code) {
@@ -74,6 +80,18 @@ const MainApp: React.FC = () => {
 		}
 	}, [forceTheme, setTheme]);
 
+	useEffect(() => {
+		const root = window.document.documentElement;
+		root.classList.toggle(
+			"kulin-glass-theme",
+			settingData?.data?.config?.theme_mode === "glass",
+		);
+	}, [settingData?.data?.config?.theme_mode]);
+
+	useEffect(() => {
+		window.CustomMobileBackgroundImage = mobileBackgroundImageFromSetting || "";
+	}, [mobileBackgroundImageFromSetting]);
+
 	if (error) {
 		return <ErrorPage code={500} message={error.message} />;
 	}
@@ -86,15 +104,21 @@ const MainApp: React.FC = () => {
 		return null;
 	}
 
-	const customMobileBackgroundImage =
-		window.CustomMobileBackgroundImage !== ""
+	const backgroundEnabled =
+		sessionStorage.getItem("backgroundDisabled") !== "1";
+	const effectiveCustomBackgroundImage = backgroundEnabled
+		? customBackgroundImage
+		: undefined;
+	const customMobileBackgroundImage = backgroundEnabled
+		? window.CustomMobileBackgroundImage !== ""
 			? window.CustomMobileBackgroundImage
-			: undefined;
+			: mobileBackgroundImageFromSetting || undefined
+		: undefined;
 
 	return (
 		<ErrorBoundary>
 			{/* 固定定位的背景层 */}
-			{customBackgroundImage && (
+			{effectiveCustomBackgroundImage && (
 				<div
 					className={cn(
 						"fixed inset-0 z-0 bg-cover min-h-lvh bg-no-repeat bg-center dark:brightness-75",
@@ -102,7 +126,7 @@ const MainApp: React.FC = () => {
 							"hidden sm:block": customMobileBackgroundImage,
 						},
 					)}
-					style={{ backgroundImage: `url(${customBackgroundImage})` }}
+					style={{ backgroundImage: `url(${effectiveCustomBackgroundImage})` }}
 				/>
 			)}
 			{customMobileBackgroundImage && (
@@ -115,7 +139,7 @@ const MainApp: React.FC = () => {
 			)}
 			<div
 				className={cn("flex min-h-screen w-full flex-col", {
-					"bg-background": !customBackgroundImage,
+					"bg-background": !effectiveCustomBackgroundImage,
 				})}
 			>
 				<main className="flex z-20 min-h-[calc(100vh-calc(var(--spacing)*16))] flex-1 flex-col gap-4 p-4 md:p-10 md:pt-8">

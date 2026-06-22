@@ -14,17 +14,21 @@ import { Button } from "./ui/button";
 
 function Header() {
 	const navigate = useNavigate();
-	const { backgroundImage, updateBackground } = useBackground();
-
 	const { data: settingData } = useQuery({
 		queryKey: ["setting"],
 		queryFn: () => fetchSetting(),
 		refetchOnMount: true,
 		refetchOnWindowFocus: true,
 	});
-
 	const siteName = settingData?.data?.config?.site_name;
 	const avatarURL = settingData?.data?.config?.avatar_url;
+	const configuredBackgroundImage =
+		settingData?.data?.config?.background_image || "";
+	const configuredMobileBackgroundImage =
+		settingData?.data?.config?.mobile_background_image || "";
+	const { backgroundImage, updateBackground } = useBackground(
+		configuredBackgroundImage || undefined,
+	);
 
 	// @ts-expect-error CustomLogo is a global variable
 	const customLogo = avatarURL || window.CustomLogo || "/apple-touch-icon.png";
@@ -32,7 +36,7 @@ function Header() {
 	const customMobileBackgroundImage =
 		window.CustomMobileBackgroundImage !== ""
 			? window.CustomMobileBackgroundImage
-			: undefined;
+			: configuredMobileBackgroundImage || undefined;
 
 	useEffect(() => {
 		const link =
@@ -52,17 +56,29 @@ function Header() {
 	}, [siteName]);
 
 	const handleBackgroundToggle = () => {
-		if (window.CustomBackgroundImage) {
+		if (backgroundImage) {
 			// Store the current background image before removing it
-			sessionStorage.setItem(
-				"savedBackgroundImage",
-				window.CustomBackgroundImage,
-			);
+			sessionStorage.setItem("savedBackgroundImage", backgroundImage);
+			if (customMobileBackgroundImage) {
+				sessionStorage.setItem(
+					"savedMobileBackgroundImage",
+					customMobileBackgroundImage,
+				);
+			}
+			sessionStorage.setItem("backgroundDisabled", "1");
+			window.CustomMobileBackgroundImage = "";
 			updateBackground(undefined);
 		} else {
 			// Restore the saved background image
-			const savedImage = sessionStorage.getItem("savedBackgroundImage");
+			const savedImage =
+				sessionStorage.getItem("savedBackgroundImage") ||
+				configuredBackgroundImage;
 			if (savedImage) {
+				sessionStorage.removeItem("backgroundDisabled");
+				window.CustomMobileBackgroundImage =
+					sessionStorage.getItem("savedMobileBackgroundImage") ||
+					configuredMobileBackgroundImage ||
+					"";
 				updateBackground(savedImage);
 			}
 		}
@@ -92,10 +108,10 @@ function Header() {
 							height={40}
 							alt="apple-touch-icon"
 							src={customLogo}
-							className="relative m-0! border-2 border-transparent h-6 w-6 object-cover object-top p-0!"
+							className="relative m-0! border-2 border-transparent h-8 w-8 object-cover object-top p-0!"
 						/>
 					</div>
-					<span className="text-sm font-semibold">{siteName || "Kulin"}</span>
+					<span className="text-base font-normal">{siteName || "Kulin"}</span>
 				</section>
 				<section className="flex items-center gap-2 header-handles">
 					<div className="hidden sm:flex items-center gap-2">
@@ -112,14 +128,15 @@ function Header() {
 					</Button>
 					<ModeToggle />
 					{(customBackgroundImage ||
-						sessionStorage.getItem("savedBackgroundImage")) && (
+						sessionStorage.getItem("savedBackgroundImage") ||
+						configuredBackgroundImage ||
+						configuredMobileBackgroundImage) && (
 						<Button
 							variant="outline"
 							size="sm"
 							onClick={handleBackgroundToggle}
 							className={cn("rounded-full px-[9px] bg-white dark:bg-black", {
 								"bg-white/70 dark:bg-black/70": customBackgroundImage,
-								"hidden sm:block": customMobileBackgroundImage,
 							})}
 						>
 							<ImageMinus className="w-4 h-4" />
