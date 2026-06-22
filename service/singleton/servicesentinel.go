@@ -571,6 +571,8 @@ func (ss *ServiceSentinel) worker() {
 						AvgDelay:  ts.ping,
 						Data:      mh.Data,
 						ServerID:  r.Reporter,
+						Up:        uint64(ts.successCount),
+						Down:      uint64(ts.count - ts.successCount),
 					}).Error; err != nil {
 						log.Printf("KULIN>> Failed to save service monitor metrics: %v", err)
 					}
