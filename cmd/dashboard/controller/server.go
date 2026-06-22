@@ -72,8 +72,6 @@ func updateServer(c *gin.Context) (any, error) {
 			_ = json.Unmarshal(value, &sf.PublicNote)
 		case "display_index":
 			_ = json.Unmarshal(value, &sf.DisplayIndex)
-		case "hide_for_guest":
-			_ = json.Unmarshal(value, &sf.HideForGuest)
 		case "traffic_progress_enabled":
 			_ = json.Unmarshal(value, &sf.TrafficProgressEnabled)
 		case "traffic_progress_mode":
@@ -107,9 +105,6 @@ func updateServer(c *gin.Context) (any, error) {
 	}
 	if _, ok := raw["public_note"]; ok {
 		s.PublicNote = sf.PublicNote
-	}
-	if _, ok := raw["hide_for_guest"]; ok {
-		s.HideForGuest = sf.HideForGuest
 	}
 	if _, ok := raw["traffic_progress_enabled"]; ok {
 		s.TrafficProgressEnabled = sf.TrafficProgressEnabled

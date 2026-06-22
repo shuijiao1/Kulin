@@ -26,25 +26,9 @@ func callerIsAdmin(c *gin.Context) bool {
 	user, _ := u.(*model.User)
 	return user != nil && user.Role.IsAdmin()
 }
-func userCanViewServer(c *gin.Context, server *model.Server) bool {
-	if server == nil {
-		return false
-	}
-	u, ok := c.Get(model.CtxKeyAuthorizedUser)
-	if !ok {
-		return !server.HideForGuest
-	}
-	user, _ := u.(*model.User)
-	return user != nil && (user.Role.IsAdmin() || server.GetUserID() == user.ID || !server.HideForGuest)
+func userCanViewServer(_ *gin.Context, server *model.Server) bool {
+	return server != nil
 }
-func userCanViewService(c *gin.Context, service *model.Service) bool {
-	if service == nil {
-		return false
-	}
-	u, ok := c.Get(model.CtxKeyAuthorizedUser)
-	if !ok {
-		return !service.HideForGuest
-	}
-	user, _ := u.(*model.User)
-	return user != nil && (user.Role.IsAdmin() || service.GetUserID() == user.ID || !service.HideForGuest)
+func userCanViewService(_ *gin.Context, service *model.Service) bool {
+	return service != nil
 }

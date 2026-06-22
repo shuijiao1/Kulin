@@ -151,9 +151,8 @@ var requestGroup singleflight.Group
 
 // getServerStat returns the websocket frame the viewer is allowed to see.
 // The cache key must include the viewer's identity because the projection
-// depends on per-server ownership: prior to GHSA-hvv7-hfrh-7gxj this function
-// used a single isMember flag and leaked HideForGuest servers plus full Host
-// (PlatformVersion, agent Version, GPU) to every authenticated user.
+// depends on per-server ownership. Non-owner viewers receive a filtered Host
+// projection instead of full Host details.
 //
 // patCacheKey distinguishes PATs with disjoint server_ids whitelists so two
 // limited tokens for the same user do not share a singleflight projection.
@@ -180,23 +179,13 @@ func getServerStat(withPublicNote bool, viewerUserID uint64, viewerIsAdmin bool,
 func patStreamContext(c *gin.Context) string { return "jwt" }
 
 // filterServersForViewer projects the global server list down to what a single
-// viewer is allowed to see. The rules are:
-//   - HideForGuest servers are visible only to their owner and to admins.
-//   - Non-owner / non-admin viewers (including authenticated members) get
-//     Host.Filter() output, which drops PlatformVersion and agent Version.
-//   - Admins are unconstrained.
-//   - A non-nil pat whitelist narrows visibility further; servers outside its
-//     allow-list are dropped even from admins/owners (a PAT scoped to a
-//     subset must never widen via its caller's role).
-//
+// viewer is allowed to see. Non-owner / non-admin viewers (including guests)
+// receive Host.Filter() output, which drops PlatformVersion and agent Version.
 // viewerUserID == 0 represents an unauthenticated guest.
 func filterServersForViewer(servers []*model.Server, viewerUserID uint64, viewerIsAdmin bool, withPublicNote bool) []model.StreamServer {
 	out := make([]model.StreamServer, 0, len(servers))
 	for _, server := range servers {
 		isOwnerOrAdmin := viewerIsAdmin || (viewerUserID != 0 && server.GetUserID() == viewerUserID)
-		if server.HideForGuest && !isOwnerOrAdmin {
-			continue
-		}
 		var countryCode string
 		if server.GeoIP != nil {
 			countryCode = server.GeoIP.CountryCode

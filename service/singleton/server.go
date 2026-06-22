@@ -12,8 +12,6 @@ type ServerClass struct {
 	class[uint64, *model.Server]
 
 	uuidToID map[string]uint64
-
-	sortedListForGuest []*model.Server
 }
 
 func NewServerClass() *ServerClass {
@@ -92,13 +90,6 @@ func (c *ServerClass) Delete(idList []uint64) {
 	c.sortList()
 }
 
-func (c *ServerClass) GetSortedListForGuest() []*model.Server {
-	c.sortedListMu.RLock()
-	defer c.sortedListMu.RUnlock()
-
-	return slices.Clone(c.sortedListForGuest)
-}
-
 func (c *ServerClass) UUIDToID(uuid string) (id uint64, ok bool) {
 	c.listMu.RLock()
 	defer c.listMu.RUnlock()
@@ -122,10 +113,4 @@ func (c *ServerClass) sortList() {
 		return cmp.Compare(b.DisplayIndex, a.DisplayIndex)
 	})
 
-	c.sortedListForGuest = make([]*model.Server, 0, len(c.sortedList))
-	for _, s := range c.sortedList {
-		if !s.HideForGuest {
-			c.sortedListForGuest = append(c.sortedListForGuest, s)
-		}
-	}
 }

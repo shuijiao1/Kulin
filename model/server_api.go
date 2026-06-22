@@ -31,7 +31,6 @@ type ServerForm struct {
 	Note                    string `json:"note,omitempty" validate:"optional"`        // 管理员可见备注
 	PublicNote              string `json:"public_note,omitempty" validate:"optional"` // 公开备注
 	DisplayIndex            int    `json:"display_index,omitempty" default:"0"`       // 展示排序，越大越靠前
-	HideForGuest            bool   `json:"hide_for_guest,omitempty" validate:"optional"`
 	TrafficProgressEnabled  bool   `json:"traffic_progress_enabled,omitempty" validate:"optional"`
 	TrafficProgressMode     string `json:"traffic_progress_mode,omitempty" validate:"optional"`
 	TrafficProgressLimit    uint64 `json:"traffic_progress_limit,omitempty" validate:"optional"`

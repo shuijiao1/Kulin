@@ -72,6 +72,10 @@ func initSystem(bus chan<- *model.Service) error {
 	if _, err := singleton.CronShared.AddFunc("0 0 * * * *", func() { singleton.RecordTransferHourlyUsage() }); err != nil {
 		return err
 	}
+
+	if err := singleton.StartRenewalNotificationCron(); err != nil {
+		return err
+	}
 	return nil
 }
 

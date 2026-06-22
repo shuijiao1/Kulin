@@ -40,6 +40,9 @@ func (notificationMuteLabel) ServiceStateChanged(serviceId uint64) string {
 func (notificationMuteLabel) ServiceTLS(serviceId uint64, extraInfo string) string {
 	return fmt.Sprintf("bf::stls-%d-%s", serviceId, extraInfo)
 }
+func (notificationMuteLabel) ServerRenewal(serverId uint64, daysBefore int, date string) string {
+	return fmt.Sprintf("bf::srn-%d-%d-%s", serverId, daysBefore, date)
+}
 
 func (notificationMuteLabel) AppendNotificationGroupName(muteLabel, groupName string) string {
 	if muteLabel == "" {
@@ -104,6 +107,14 @@ func (c *NotificationClass) UnMuteNotification(notificationGroupID uint64, muteL
 
 // SendNotification 向指定的通知方式组的所有通知方式发送通知
 func (c *NotificationClass) SendNotification(groupID uint64, desc, muteLabel string, ext ...*model.Server) {
+	if muteLabel != "" {
+		fullMuteLabel := NotificationMuteLabel.AppendNotificationGroupName(muteLabel, c.GetGroupName(groupID))
+		if _, ok := Cache.Get(fullMuteLabel); ok {
+			return
+		}
+		Cache.Set(fullMuteLabel, NotificationHistory{Duration: firstNotificationDelay, Until: time.Now().Add(firstNotificationDelay)}, firstNotificationDelay)
+	}
+
 	c.listMu.RLock()
 	notifications := slices.Clone(c.sortedList)
 	c.listMu.RUnlock()
