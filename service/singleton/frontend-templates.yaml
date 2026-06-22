@@ -2,12 +2,12 @@
   name: "KulinAdmin"
   repository: "https://github.com/shuijiao1/Kulin-Admin-Frontend"
   author: "shuijiao1"
-  version: "v2.2.4"
+  version: "v2.2.5"
   is_admin: true
   is_official: true
 - path: "user-dist"
   name: "Kulin"
   repository: "https://github.com/shuijiao1/Kulin-Dash"
   author: "shuijiao1"
-  version: "v2.3.1"
+  version: "v2.3.2"
   is_official: true

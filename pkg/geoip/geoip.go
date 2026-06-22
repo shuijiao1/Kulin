@@ -23,11 +23,22 @@ var (
 	})
 )
 
+type namedInfo struct {
+	IsoCode string `maxminddb:"iso_code"`
+	Code    string `maxminddb:"code"`
+}
+
 type IPInfo struct {
+	// ipinfo.io country.mmdb format
 	Country       string `maxminddb:"country"`
 	CountryName   string `maxminddb:"country_name"`
 	Continent     string `maxminddb:"continent"`
 	ContinentName string `maxminddb:"continent_name"`
+
+	// MaxMind GeoLite2-Country format
+	CountryObj           namedInfo `maxminddb:"country"`
+	RegisteredCountryObj namedInfo `maxminddb:"registered_country"`
+	ContinentObj         namedInfo `maxminddb:"continent"`
 }
 
 func Lookup(ip net.IP) (string, error) {
@@ -42,10 +53,16 @@ func Lookup(ip net.IP) (string, error) {
 		return "", err
 	}
 
-	if record.Country != "" {
-		return strings.ToLower(record.Country), nil
-	} else if record.Continent != "" {
-		return strings.ToLower(record.Continent), nil
+	for _, code := range []string{
+		record.Country,
+		record.CountryObj.IsoCode,
+		record.RegisteredCountryObj.IsoCode,
+		record.Continent,
+		record.ContinentObj.Code,
+	} {
+		if code != "" {
+			return strings.ToLower(code), nil
+		}
 	}
 
 	return "", errors.New("IP not found")

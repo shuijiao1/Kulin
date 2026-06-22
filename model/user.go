@@ -28,6 +28,7 @@ type User struct {
 	Role           Role   `json:"role"`
 	AgentSecret    string `json:"agent_secret,omitempty" gorm:"type:char(32)"`
 	RejectPassword bool   `json:"reject_password,omitempty"`
+	AvatarURL      string `json:"avatar_url,omitempty"`
 	TokenVersion   uint64 `json:"-" gorm:"not null;default:0"`
 }
 

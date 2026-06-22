@@ -37,6 +37,7 @@ const (
 type ConfigForGuests struct {
 	Language            string `koanf:"language" json:"language"` // 系统语言，默认 zh_CN
 	SiteName            string `koanf:"site_name" json:"site_name"`
+	AvatarURL           string `koanf:"avatar_url" json:"avatar_url,omitempty"`
 	CustomCode          string `koanf:"custom_code" json:"custom_code,omitempty"`
 	CustomCodeDashboard string `koanf:"custom_code_dashboard" json:"custom_code_dashboard,omitempty"`
 }

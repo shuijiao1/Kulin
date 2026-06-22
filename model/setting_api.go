@@ -5,6 +5,7 @@ type SettingForm struct {
 	IPChangeNotificationGroupID uint64 `json:"ip_change_notification_group_id,omitempty"` // IP变更提醒的通知组
 	Cover                       uint8  `json:"cover,omitempty"`
 	SiteName                    string `json:"site_name,omitempty" minLength:"1"`
+	AvatarURL                   string `json:"avatar_url,omitempty" validate:"optional"`
 	Language                    string `json:"language,omitempty" minLength:"2"`
 	InstallHost                 string `json:"install_host,omitempty" validate:"optional"`
 	DashboardHost               string `json:"dashboard_host,omitempty" validate:"optional"`

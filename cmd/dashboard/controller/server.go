@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"encoding/json"
 	"errors"
 	"slices"
 	"strconv"
@@ -56,9 +57,34 @@ func updateServer(c *gin.Context) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	var sf model.ServerForm
-	if err := c.ShouldBindJSON(&sf); err != nil {
+	var raw map[string]json.RawMessage
+	if err := c.ShouldBindJSON(&raw); err != nil {
 		return nil, err
+	}
+	var sf model.ServerForm
+	for key, value := range raw {
+		switch key {
+		case "name":
+			_ = json.Unmarshal(value, &sf.Name)
+		case "note":
+			_ = json.Unmarshal(value, &sf.Note)
+		case "public_note":
+			_ = json.Unmarshal(value, &sf.PublicNote)
+		case "display_index":
+			_ = json.Unmarshal(value, &sf.DisplayIndex)
+		case "hide_for_guest":
+			_ = json.Unmarshal(value, &sf.HideForGuest)
+		case "traffic_progress_enabled":
+			_ = json.Unmarshal(value, &sf.TrafficProgressEnabled)
+		case "traffic_progress_mode":
+			_ = json.Unmarshal(value, &sf.TrafficProgressMode)
+		case "traffic_progress_limit":
+			_ = json.Unmarshal(value, &sf.TrafficProgressLimit)
+		case "traffic_progress_start_day":
+			_ = json.Unmarshal(value, &sf.TrafficProgressStartDay)
+		case "home_monitor_id":
+			_ = json.Unmarshal(value, &sf.HomeMonitorID)
+		}
 	}
 
 	var s model.Server
@@ -70,17 +96,45 @@ func updateServer(c *gin.Context) (any, error) {
 		return nil, singleton.Localizer.ErrorT("permission denied")
 	}
 
-	s.Name = sf.Name
-	s.DisplayIndex = sf.DisplayIndex
-	s.Note = sf.Note
-	s.PublicNote = sf.PublicNote
-	s.HideForGuest = sf.HideForGuest
-	s.TrafficProgressEnabled = sf.TrafficProgressEnabled
-	s.TrafficProgressMode = sf.TrafficProgressMode
+	if _, ok := raw["name"]; ok {
+		s.Name = sf.Name
+	}
+	if _, ok := raw["display_index"]; ok {
+		s.DisplayIndex = sf.DisplayIndex
+	}
+	if _, ok := raw["note"]; ok {
+		s.Note = sf.Note
+	}
+	if _, ok := raw["public_note"]; ok {
+		s.PublicNote = sf.PublicNote
+	}
+	if _, ok := raw["hide_for_guest"]; ok {
+		s.HideForGuest = sf.HideForGuest
+	}
+	if _, ok := raw["traffic_progress_enabled"]; ok {
+		s.TrafficProgressEnabled = sf.TrafficProgressEnabled
+	}
+	if _, ok := raw["traffic_progress_mode"]; ok {
+		s.TrafficProgressMode = sf.TrafficProgressMode
+	}
 	if s.TrafficProgressMode == "" {
 		s.TrafficProgressMode = model.TrafficProgressModeOut
 	}
-	s.TrafficProgressLimit = sf.TrafficProgressLimit
+	if _, ok := raw["traffic_progress_limit"]; ok {
+		s.TrafficProgressLimit = sf.TrafficProgressLimit
+	}
+	if _, ok := raw["traffic_progress_start_day"]; ok {
+		if sf.TrafficProgressStartDay < 1 {
+			sf.TrafficProgressStartDay = 1
+		}
+		if sf.TrafficProgressStartDay > 31 {
+			sf.TrafficProgressStartDay = 31
+		}
+		s.TrafficProgressStartDay = sf.TrafficProgressStartDay
+	}
+	if _, ok := raw["home_monitor_id"]; ok {
+		s.HomeMonitorID = sf.HomeMonitorID
+	}
 
 	if err := singleton.DB.Save(&s).Error; err != nil {
 		return nil, newGormError("%v", err)

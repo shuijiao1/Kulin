@@ -11,4 +11,5 @@ type ProfileForm struct {
 	NewUsername      string `json:"new_username,omitempty"`
 	NewPassword      string `json:"new_password,omitempty"`
 	RejectPassword   bool   `json:"reject_password,omitempty" validate:"optional"`
+	AvatarURL        string `json:"avatar_url,omitempty" validate:"optional"`
 }

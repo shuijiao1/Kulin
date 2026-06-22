@@ -30,14 +30,32 @@ func listNotification(c *gin.Context) ([]*model.Notification, error) {
 		return nil, err
 	}
 
-	// 列表端点不回显写入态凭据：notifications 是 copier 复制出的副本，置零安全，
-	// 不影响 singleton 内原始数据。
+	// 列表端点保留 Telegram URL，供管理员编辑时回显 Token 与 User ID；请求头/请求体不回显。
 	for _, n := range notifications {
-		n.URL = ""
 		n.RequestHeader = ""
 		n.RequestBody = ""
 	}
 	return notifications, nil
+}
+
+func applyNotificationForm(n *model.Notification, nf model.NotificationForm, keepOldSecret bool) {
+	if nf.TelegramUserID != "" {
+		if nf.TelegramBotToken != "" || !keepOldSecret {
+			n.URL = model.BuildTelegramNotificationURL(nf.TelegramBotToken, nf.TelegramUserID)
+		} else if token := model.ExtractTelegramBotToken(n.URL); token != "" {
+			n.URL = model.BuildTelegramNotificationURL(token, nf.TelegramUserID)
+		}
+		n.RequestMethod = model.NotificationRequestMethodGET
+		n.RequestType = model.NotificationRequestTypeJSON
+		n.RequestHeader = ""
+		n.RequestBody = ""
+		return
+	}
+	n.RequestMethod = nf.RequestMethod
+	n.RequestType = nf.RequestType
+	n.RequestHeader = nf.RequestHeader
+	n.RequestBody = nf.RequestBody
+	n.URL = nf.URL
 }
 
 // Add notification
@@ -60,11 +78,7 @@ func createNotification(c *gin.Context) (uint64, error) {
 	var n model.Notification
 	n.UserID = getUid(c)
 	n.Name = nf.Name
-	n.RequestMethod = nf.RequestMethod
-	n.RequestType = nf.RequestType
-	n.RequestHeader = nf.RequestHeader
-	n.RequestBody = nf.RequestBody
-	n.URL = nf.URL
+	applyNotificationForm(&n, nf, false)
 	verifyTLS := nf.VerifyTLS
 	n.VerifyTLS = &verifyTLS
 	formatMetricUnits := nf.FormatMetricUnits
@@ -123,22 +137,15 @@ func updateNotification(c *gin.Context) (any, error) {
 	}
 
 	n.Name = nf.Name
-	n.RequestMethod = nf.RequestMethod
-	n.RequestType = nf.RequestType
+	applyNotificationForm(&n, nf, true)
 	verifyTLS := nf.VerifyTLS
 	n.VerifyTLS = &verifyTLS
 	formatMetricUnits := nf.FormatMetricUnits
 	n.FormatMetricUnits = &formatMetricUnits
 
-	// 凭据在列表接口已脱敏，前端无法回填；空值视为"不修改"，保留旧值避免误清空。
-	if nf.URL != "" {
+	// Telegram Token 留空时保留旧 URL；非 Telegram 的旧接口仍允许显式传 URL 覆盖。
+	if nf.TelegramBotToken == "" && nf.URL != "" {
 		n.URL = nf.URL
-	}
-	if nf.RequestHeader != "" {
-		n.RequestHeader = nf.RequestHeader
-	}
-	if nf.RequestBody != "" {
-		n.RequestBody = nf.RequestBody
 	}
 
 	ns := model.NotificationServerBundle{

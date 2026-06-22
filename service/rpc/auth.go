@@ -52,13 +52,17 @@ func (a *authHandler) check(ctx context.Context) (uint64, error) {
 		if clientUUID == "" {
 			clientUUID = clientSecret
 		}
-		server := model.Server{Common: model.Common{UserID: firstUserID()}, UUID: clientUUID}
-		if err := singleton.DB.Create(&server).Error; err != nil {
-			return 0, err
+		if id, ok := singleton.ServerShared.UUIDToID(clientUUID); ok {
+			clientID = id
+		} else {
+			server := model.Server{Common: model.Common{UserID: firstUserID()}, UUID: clientUUID}
+			if err := singleton.DB.Create(&server).Error; err != nil {
+				return 0, err
+			}
+			singleton.ServerShared.Update(&server, singleton.Conf.AgentSecretKey)
+			log.Printf("KULIN>> Agent registered server id=%d", server.ID)
+			return server.ID, nil
 		}
-		singleton.ServerShared.Update(&server, singleton.Conf.AgentSecretKey)
-		log.Printf("KULIN>> Agent registered server id=%d", server.ID)
-		return server.ID, nil
 	}
 	server, ok := singleton.ServerShared.Get(clientID)
 	if !ok || server == nil {

@@ -54,6 +54,7 @@ func routers(r *gin.Engine, frontendDist fs.FS) {
 	jwtMw := authMiddleware.MiddlewareFunc()
 	optionalAuth := api.Group("", fallbackAuthMw)
 	optionalAuth.GET("/ws/server", commonHandler(serverStream))
+	optionalAuth.GET("/server-group", commonHandler(listServerGroup))
 	optionalAuth.GET("/service", commonHandler(showService))
 	optionalAuth.GET("/service/server", commonHandler(listServerWithServices))
 	optionalAuth.GET("/service/:id/history", commonHandler(getServiceHistory))
@@ -62,6 +63,8 @@ func routers(r *gin.Engine, frontendDist fs.FS) {
 
 	auth := api.Group("", jwtMw, csrfMiddleware())
 	auth.POST("/refresh-token", authMiddleware.RefreshHandler)
+	auth.GET("/profile", commonHandler(getProfile))
+	auth.POST("/profile", commonHandler(updateProfile))
 	auth.GET("/server", listHandler(listServer))
 	auth.PATCH("/server/:id", commonHandler(updateServer))
 	auth.GET("/server/:id/service-binding", commonHandler(getServerServiceBinding))

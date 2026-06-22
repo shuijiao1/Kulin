@@ -25,6 +25,41 @@ const (
 	NotificationRequestMethodPOST
 )
 
+func BuildTelegramNotificationURL(botToken, userID string) string {
+	return "https://api.telegram.org/bot" + botToken + "/sendMessage?chat_id=" + url.QueryEscape(userID) + "&text=#NEZHA#"
+}
+
+func ExtractTelegramBotToken(rawURL string) string {
+	u, err := url.Parse(rawURL)
+	if err != nil || u.Host != "api.telegram.org" || !strings.HasPrefix(u.Path, "/bot") {
+		return ""
+	}
+	path := strings.TrimPrefix(u.Path, "/bot")
+	parts := strings.SplitN(path, "/", 2)
+	if len(parts) == 0 || parts[0] == "" || strings.Contains(parts[0], "*") {
+		return ""
+	}
+	return parts[0]
+}
+
+func MaskTelegramNotificationURL(rawURL string) string {
+	u, err := url.Parse(rawURL)
+	if err != nil || u.Host != "api.telegram.org" || !strings.HasPrefix(u.Path, "/bot") {
+		return ""
+	}
+	path := strings.TrimPrefix(u.Path, "/bot")
+	parts := strings.SplitN(path, "/", 2)
+	if len(parts) == 0 || parts[0] == "" {
+		return ""
+	}
+	token := parts[0]
+	masked := "***"
+	if colon := strings.Index(token, ":"); colon > 0 {
+		masked = token[:colon] + ":***"
+	}
+	return "https://api.telegram.org/bot" + masked + "/sendMessage?chat_id=" + url.QueryEscape(u.Query().Get("chat_id"))
+}
+
 type NotificationServerBundle struct {
 	Notification *Notification
 	Server       *Server

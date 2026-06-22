@@ -9,6 +9,7 @@ type ServiceInfos struct {
 	DisplayIndex int       `json:"display_index"` // 展示排序，越大越靠前
 	CreatedAt    []int64   `json:"created_at"`
 	AvgDelay     []float64 `json:"avg_delay"`
+	PacketLoss   []float64 `json:"packet_loss,omitempty"`
 }
 
 // DataPoint 数据点
