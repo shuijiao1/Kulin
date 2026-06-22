@@ -23,7 +23,7 @@
 
 	// Use 'postCreateCommand' to run commands after the container is created.
 	"postCreateCommand": {
-		"Init": "sudo apt update && sudo apt install -y protobuf-compiler && go install github.com/swaggo/swag/cmd/swag@latest && go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest && go install google.golang.org/protobuf/cmd/protoc-gen-go@latest && sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq && touch ./cmd/dashboard/user-dist/a && touch ./cmd/dashboard/admin-dist/a && script/bootstrap.sh && script/fetch-frontends.sh",
+		"Init": "sudo apt update && sudo apt install -y protobuf-compiler && go install github.com/swaggo/swag/cmd/swag@latest && go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest && go install google.golang.org/protobuf/cmd/protoc-gen-go@latest && sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq && touch ./cmd/dashboard/user-dist/a && touch ./cmd/dashboard/admin-dist/a && script/bootstrap.sh && script/build-frontends.sh",
 		"Init_build": "wget https://github.com/goreleaser/goreleaser/releases/download/v2.7.0/goreleaser_2.7.0_amd64.deb && sudo apt install -y ./goreleaser_2.7.0_amd64.deb && rm -rf ./goreleaser_2.7.0_amd64.deb && sudo apt install -y gcc-aarch64-linux-gnu gcc-s390x-linux-gnu mingw-w64",
 		"Init_DiD_Buildx": "docker buildx create --name nezha-builder --platform linux/amd64,linux/amd64/v2,linux/amd64/v3,linux/386,linux/arm64,linux/arm/v7,linux/s390x && docker buildx use nezha-builder && docker buildx inspect --bootstrap"
 	}

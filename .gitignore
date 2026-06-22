@@ -25,3 +25,7 @@
 /resource/static/custom
 /cmd/dashboard/docs
 .omo/
+/web/admin/node_modules
+/web/admin/dist
+/web/dash/node_modules
+/web/dash/dist

@@ -120,12 +120,18 @@ go test ./...
 go build ./cmd/dashboard
 ```
 
-前台和后台分别在：
+前台和后台源码已经合并到主仓库：
 
-- <https://github.com/shuijiao1/Kulin-Dash>
-- <https://github.com/shuijiao1/Kulin-Admin-Frontend>
+- 后台管理前端：`web/admin`
+- 公开首页前端：`web/dash`
 
-Release 构建会自动拉取前后台 dist 并嵌入到 Dashboard。
+本地构建前端并嵌入 Dashboard：
+
+```bash
+./script/build-frontends.sh
+```
+
+Release 构建会自动构建 `web/admin` 和 `web/dash`，再嵌入到 Dashboard。
 
 ## 上游
 
