@@ -326,15 +326,11 @@ func listServerServices(c *gin.Context) ([]*model.ServiceInfos, error) {
 			DisplayIndex: service.DisplayIndex,
 			CreatedAt:    make([]int64, len(serverStats.Stats.DataPoints)),
 			AvgDelay:     make([]float64, len(serverStats.Stats.DataPoints)),
-			PacketLoss:   make([]float64, len(serverStats.Stats.DataPoints)),
 		}
 
 		for i, dp := range serverStats.Stats.DataPoints {
 			infos.CreatedAt[i] = dp.Timestamp
 			infos.AvgDelay[i] = dp.Delay
-			if dp.Status == 0 {
-				infos.PacketLoss[i] = 100
-			}
 		}
 
 		result = append(result, infos)
@@ -382,17 +378,11 @@ func queryServerServicesFromDB(serverID uint64, serverName string, period tsdb.Q
 			DisplayIndex: service.DisplayIndex,
 			CreatedAt:    make([]int64, 0, len(records)),
 			AvgDelay:     make([]float64, 0, len(records)),
-			PacketLoss:   make([]float64, 0, len(records)),
 		}
 
 		for _, r := range records {
 			infos.CreatedAt = append(infos.CreatedAt, r.CreatedAt.Truncate(time.Minute).Unix()*1000)
 			infos.AvgDelay = append(infos.AvgDelay, r.AvgDelay)
-			loss := float64(0)
-			if r.Up+r.Down > 0 {
-				loss = float64(r.Down) / float64(r.Up+r.Down) * 100
-			}
-			infos.PacketLoss = append(infos.PacketLoss, loss)
 		}
 
 		result = append(result, infos)
