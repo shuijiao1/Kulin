@@ -252,19 +252,19 @@ export default function ServerCard({
 					className="absolute left-0 top-0 size-7 object-contain"
 					loading="lazy"
 				/>
-				<div className="flex min-w-0 items-center justify-center gap-2.5">
+				<div className="flex min-w-0 items-center justify-center gap-2">
 					<span
-						className={cn("h-2.5 w-2.5 shrink-0 rounded-full", {
+						className={cn("h-2 w-2 shrink-0 rounded-full", {
 							"bg-green-500": online,
 							"bg-red-500": !online,
 						})}
 					/>
 					<ServerFlag
 						country_code={country_code}
-						className="-mt-0.5 shrink-0 text-[18px]"
+						className="-mt-px shrink-0 text-[14px]"
 					/>
 					<div className="min-w-0">
-						<p className="truncate text-[15px] font-bold tracking-tight">
+						<p className="truncate text-[13px] font-semibold tracking-tight">
 							{name}
 						</p>
 					</div>

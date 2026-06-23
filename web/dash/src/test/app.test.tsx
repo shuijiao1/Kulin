@@ -29,6 +29,7 @@ vi.mock("../pages/ServerDetail", () => ({
 }));
 
 vi.mock("../hooks/use-background", () => ({
+	isBackgroundDisabled: () => localStorage.getItem("backgroundDisabled") === "1",
 	useBackground: () => ({ backgroundImage: appMocks.backgroundImage }),
 }));
 

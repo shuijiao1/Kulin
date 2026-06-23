@@ -7,7 +7,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import Footer from "./components/Footer";
 import Header, { RefreshToast } from "./components/Header";
 import { Skeleton } from "./components/ui/skeleton";
-import { useBackground } from "./hooks/use-background";
+import { isBackgroundDisabled, useBackground } from "./hooks/use-background";
 import { useTheme } from "./hooks/use-theme";
 import { InjectContext } from "./lib/inject";
 import { fetchSetting } from "./lib/nezha-api";
@@ -104,8 +104,7 @@ const MainApp: React.FC = () => {
 		return null;
 	}
 
-	const backgroundEnabled =
-		sessionStorage.getItem("backgroundDisabled") !== "1";
+	const backgroundEnabled = !isBackgroundDisabled();
 	const effectiveCustomBackgroundImage = backgroundEnabled
 		? customBackgroundImage
 		: undefined;

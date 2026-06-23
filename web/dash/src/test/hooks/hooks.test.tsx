@@ -69,7 +69,7 @@ describe("useBackground", () => {
 
 	it("restores a saved background image during polling", async () => {
 		vi.useFakeTimers();
-		sessionStorage.setItem("savedBackgroundImage", "/saved.png");
+		localStorage.setItem("savedBackgroundImage", "/saved.png");
 		render(<BackgroundProbe />);
 
 		act(() => {
@@ -77,6 +77,20 @@ describe("useBackground", () => {
 		});
 
 		expect(screen.getByText("/saved.png")).toBeInTheDocument();
+	});
+
+	it("keeps the background hidden when the saved preference disables it", async () => {
+		vi.useFakeTimers();
+		localStorage.setItem("backgroundDisabled", "1");
+		localStorage.setItem("savedBackgroundImage", "/saved.png");
+		render(<BackgroundProbe />);
+
+		act(() => {
+			vi.advanceTimersByTime(100);
+		});
+
+		expect(window.CustomBackgroundImage).toBe("");
+		expect(screen.getByText("empty")).toBeInTheDocument();
 	});
 });
 

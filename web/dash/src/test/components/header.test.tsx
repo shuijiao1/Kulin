@@ -27,6 +27,11 @@ vi.mock("@numeric-text/react", () => ({
 }));
 
 vi.mock("@/hooks/use-background", () => ({
+	disableBackground: () => localStorage.setItem("backgroundDisabled", "1"),
+	enableBackground: () => localStorage.removeItem("backgroundDisabled"),
+	getSavedBackgroundImage: () => localStorage.getItem("savedBackgroundImage"),
+	saveBackgroundImage: (backgroundImage: string) =>
+		localStorage.setItem("savedBackgroundImage", backgroundImage),
 	useBackground: () => ({
 		backgroundImage: headerMocks.backgroundImage,
 		updateBackground: headerMocks.updateBackground,
@@ -207,13 +212,14 @@ describe("Header", () => {
 
 		await user.click(toggleButton as HTMLButtonElement);
 
-		expect(sessionStorage.getItem("savedBackgroundImage")).toBe("/desktop.png");
+		expect(localStorage.getItem("savedBackgroundImage")).toBe("/desktop.png");
+		expect(localStorage.getItem("backgroundDisabled")).toBe("1");
 		expect(headerMocks.updateBackground).toHaveBeenCalledWith(undefined);
 	});
 
 	it("restores the saved custom background", async () => {
 		const user = userEvent.setup();
-		sessionStorage.setItem("savedBackgroundImage", "/saved.png");
+		localStorage.setItem("savedBackgroundImage", "/saved.png");
 
 		const { container } = renderHeader();
 		await screen.findByText("Nezha");
@@ -225,6 +231,7 @@ describe("Header", () => {
 
 		await user.click(toggleButton as HTMLButtonElement);
 
+		expect(localStorage.getItem("backgroundDisabled")).toBeNull();
 		expect(headerMocks.updateBackground).toHaveBeenCalledWith("/saved.png");
 	});
 });

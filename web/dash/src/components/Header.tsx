@@ -4,7 +4,13 @@ import { useEffect, useRef } from "react";
 import { t } from "@/lib/labels";
 import { useNavigate } from "react-router-dom";
 import { ModeToggle } from "@/components/ThemeSwitcher";
-import { useBackground } from "@/hooks/use-background";
+import {
+	disableBackground,
+	enableBackground,
+	getSavedBackgroundImage,
+	saveBackgroundImage,
+	useBackground,
+} from "@/hooks/use-background";
 import { useWebSocketContext } from "@/hooks/use-websocket-context";
 import { fetchLoginUser, fetchSetting } from "@/lib/nezha-api";
 import { cn } from "@/lib/utils";
@@ -58,25 +64,23 @@ function Header() {
 	const handleBackgroundToggle = () => {
 		if (backgroundImage) {
 			// Store the current background image before removing it
-			sessionStorage.setItem("savedBackgroundImage", backgroundImage);
+			saveBackgroundImage(backgroundImage);
 			if (customMobileBackgroundImage) {
-				sessionStorage.setItem(
+				localStorage.setItem(
 					"savedMobileBackgroundImage",
 					customMobileBackgroundImage,
 				);
 			}
-			sessionStorage.setItem("backgroundDisabled", "1");
+			disableBackground();
 			window.CustomMobileBackgroundImage = "";
 			updateBackground(undefined);
 		} else {
 			// Restore the saved background image
-			const savedImage =
-				sessionStorage.getItem("savedBackgroundImage") ||
-				configuredBackgroundImage;
+			const savedImage = getSavedBackgroundImage() || configuredBackgroundImage;
 			if (savedImage) {
-				sessionStorage.removeItem("backgroundDisabled");
+				enableBackground();
 				window.CustomMobileBackgroundImage =
-					sessionStorage.getItem("savedMobileBackgroundImage") ||
+					localStorage.getItem("savedMobileBackgroundImage") ||
 					configuredMobileBackgroundImage ||
 					"";
 				updateBackground(savedImage);
@@ -128,7 +132,7 @@ function Header() {
 					</Button>
 					<ModeToggle />
 					{(customBackgroundImage ||
-						sessionStorage.getItem("savedBackgroundImage") ||
+						getSavedBackgroundImage() ||
 						configuredBackgroundImage ||
 						configuredMobileBackgroundImage) && (
 						<Button
