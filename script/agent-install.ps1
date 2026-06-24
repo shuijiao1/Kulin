@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $Repo = "shuijiao1/Kulin-Agent"
-$Version = if ($env:KULIN_AGENT_VERSION) { $env:KULIN_AGENT_VERSION } else { "v0.1.1" }
+$Version = if ($env:KULIN_AGENT_VERSION) { $env:KULIN_AGENT_VERSION } else { "latest" }
 $InstallDir = if ($env:KULIN_AGENT_INSTALL_DIR) { $env:KULIN_AGENT_INSTALL_DIR } else { "C:\Program Files\Kulin Agent" }
 $ConfigFile = if ($env:KULIN_AGENT_CONFIG) { $env:KULIN_AGENT_CONFIG } else { Join-Path $InstallDir "config.yaml" }
 $Bin = Join-Path $InstallDir "kulin-agent.exe"

@@ -2,7 +2,7 @@
 set -eu
 
 REPO="shuijiao1/Kulin-Agent"
-VERSION="${KULIN_AGENT_VERSION:-v0.1.1}"
+VERSION="${KULIN_AGENT_VERSION:-latest}"
 INSTALL_DIR="${KULIN_AGENT_INSTALL_DIR:-/opt/kulin-agent}"
 CONFIG_FILE="${KULIN_AGENT_CONFIG:-$INSTALL_DIR/config.yaml}"
 BIN="$INSTALL_DIR/kulin-agent"

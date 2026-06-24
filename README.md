@@ -61,14 +61,14 @@ chmod +x /opt/kulin/dashboard-linux-amd64
 在后台添加服务器后复制 Agent 安装命令，或使用脚本手动安装 Kulin Agent：
 
 ```bash
-KULIN_SERVER="shuijiao.li:443" KULIN_CLIENT_SECRET="你的密钥" KULIN_TLS=true KULIN_AGENT_VERSION=v0.1.1 \
+KULIN_SERVER="shuijiao.li:443" KULIN_CLIENT_SECRET="你的密钥" KULIN_TLS=true \
   bash <(curl -fsSL https://raw.githubusercontent.com/shuijiao1/Kulin/master/script/agent-install.sh)
 ```
 
 Windows 可使用：
 
 ```powershell
-$env:KULIN_SERVER="shuijiao.li:443"; $env:KULIN_CLIENT_SECRET="你的密钥"; $env:KULIN_TLS="true"; $env:KULIN_AGENT_VERSION="v0.1.1"; iwr -useb https://raw.githubusercontent.com/shuijiao1/Kulin/master/script/agent-install.ps1 | iex
+$env:KULIN_SERVER="shuijiao.li:443"; $env:KULIN_CLIENT_SECRET="你的密钥"; $env:KULIN_TLS="true"; iwr -useb https://raw.githubusercontent.com/shuijiao1/Kulin/master/script/agent-install.ps1 | iex
 ```
 
 实际部署建议优先使用后台生成的安装命令，以确保 UUID、服务端地址和密钥正确。

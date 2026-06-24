@@ -139,7 +139,6 @@ const generateCommand = (
         `KULIN_SERVER=${install_host}`,
         `KULIN_TLS=${tls || false}`,
         `KULIN_CLIENT_SECRET=${agent_secret}`,
-        `KULIN_AGENT_VERSION=v0.1.1`,
     ]
     if (uuid) envParts.push(`KULIN_UUID=${uuid}`)
     const env = envParts.join(" ")
@@ -148,7 +147,6 @@ const generateCommand = (
         `$env:KULIN_SERVER="${install_host}";`,
         `$env:KULIN_TLS="${tls || false}";`,
         `$env:KULIN_CLIENT_SECRET="${agent_secret}";`,
-        `$env:KULIN_AGENT_VERSION="v0.1.1";`,
     ]
     if (uuid) envWinParts.push(`$env:KULIN_UUID="${uuid}";`)
     const env_win = envWinParts.join("")
