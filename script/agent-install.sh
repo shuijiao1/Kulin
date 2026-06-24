@@ -2,9 +2,9 @@
 set -eu
 
 REPO="shuijiao1/Kulin-Agent"
-VERSION="${KULIN_AGENT_VERSION:-latest}"
+VERSION="${KULIN_AGENT_VERSION:-v0.1.1}"
 INSTALL_DIR="${KULIN_AGENT_INSTALL_DIR:-/opt/kulin-agent}"
-CONFIG_FILE="${KULIN_AGENT_CONFIG:-$INSTALL_DIR/config.yml}"
+CONFIG_FILE="${KULIN_AGENT_CONFIG:-$INSTALL_DIR/config.yaml}"
 BIN="$INSTALL_DIR/kulin-agent"
 
 fail() {
@@ -16,8 +16,13 @@ need() {
   command -v "$1" >/dev/null 2>&1 || fail "未找到 $1，请先安装后重试"
 }
 
-[ -n "${NZ_SERVER:-}" ] || fail "必须设置 NZ_SERVER"
-[ -n "${NZ_CLIENT_SECRET:-}" ] || fail "必须设置 NZ_CLIENT_SECRET"
+KULIN_SERVER_VALUE="${KULIN_SERVER:-}"
+KULIN_CLIENT_SECRET_VALUE="${KULIN_CLIENT_SECRET:-}"
+KULIN_TLS_VALUE="${KULIN_TLS:-true}"
+KULIN_UUID_VALUE="${KULIN_UUID:-}"
+
+[ -n "$KULIN_SERVER_VALUE" ] || fail "必须设置 KULIN_SERVER"
+[ -n "$KULIN_CLIENT_SECRET_VALUE" ] || fail "必须设置 KULIN_CLIENT_SECRET"
 
 need uname
 need mktemp
@@ -82,14 +87,17 @@ FOUND=$(find "$TMP/extract" -type f -name 'kulin-agent' -o -name 'kulin-agent.ex
 [ -n "$FOUND" ] || fail "压缩包内未找到 kulin-agent"
 install -m 0755 "$FOUND" "$BIN"
 
-TLS_VALUE="${NZ_TLS:-true}"
-UUID_VALUE="${NZ_UUID:-}"
 cat > "$CONFIG_FILE" <<EOF_CFG
-server: "$NZ_SERVER"
-client_secret: "$NZ_CLIENT_SECRET"
-tls: $TLS_VALUE
-uuid: "$UUID_VALUE"
+server: "$KULIN_SERVER_VALUE"
+client_secret: "$KULIN_CLIENT_SECRET_VALUE"
+tls: $KULIN_TLS_VALUE
+uuid: "$KULIN_UUID_VALUE"
 disable_auto_update: true
+disable_force_update: true
+disable_nat: true
+disable_command_execute: true
+report_delay: 2
+ip_report_period: 1800
 EOF_CFG
 chmod 600 "$CONFIG_FILE"
 

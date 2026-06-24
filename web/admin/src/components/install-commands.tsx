@@ -136,28 +136,30 @@ const generateCommand = (
     if (!agent_secret) throw new Error(t("Results.AgentSecretRequired"))
 
     const envParts = [
-        `NZ_SERVER=${install_host}`,
-        `NZ_TLS=${tls || false}`,
-        `NZ_CLIENT_SECRET=${agent_secret}`,
+        `KULIN_SERVER=${install_host}`,
+        `KULIN_TLS=${tls || false}`,
+        `KULIN_CLIENT_SECRET=${agent_secret}`,
+        `KULIN_AGENT_VERSION=v0.1.1`,
     ]
-    if (uuid) envParts.push(`NZ_UUID=${uuid}`)
+    if (uuid) envParts.push(`KULIN_UUID=${uuid}`)
     const env = envParts.join(" ")
 
     const envWinParts = [
-        `$env:NZ_SERVER="${install_host}";`,
-        `$env:NZ_TLS="${tls || false}";`,
-        `$env:NZ_CLIENT_SECRET="${agent_secret}";`,
+        `$env:KULIN_SERVER="${install_host}";`,
+        `$env:KULIN_TLS="${tls || false}";`,
+        `$env:KULIN_CLIENT_SECRET="${agent_secret}";`,
+        `$env:KULIN_AGENT_VERSION="v0.1.1";`,
     ]
-    if (uuid) envWinParts.push(`$env:NZ_UUID="${uuid}";`)
+    if (uuid) envWinParts.push(`$env:KULIN_UUID="${uuid}";`)
     const env_win = envWinParts.join("")
 
     switch (type) {
     case OSTypes.Linux:
     case OSTypes.macOS: {
-        return `curl -L https://raw.githubusercontent.com/shuijiao1/Kulin/master/script/agent-install.sh -o kulin-agent.sh && chmod +x kulin-agent.sh && env ${env} ./kulin-agent.sh`
+        return `curl -fsSL https://raw.githubusercontent.com/shuijiao1/Kulin/master/script/agent-install.sh -o kulin-agent.sh && chmod +x kulin-agent.sh && env ${env} ./kulin-agent.sh`
     }
     case OSTypes.Windows: {
-        return `${env_win} [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Ssl3 -bor [Net.SecurityProtocolType]::Tls -bor [Net.SecurityProtocolType]::Tls11 -bor [Net.SecurityProtocolType]::Tls12;set-ExecutionPolicy RemoteSigned;Invoke-WebRequest https://raw.githubusercontent.com/shuijiao1/Kulin/master/script/agent-install.ps1 -OutFile C:\\kulin-agent.ps1;powershell.exe C:\\kulin-agent.ps1`
+        return `${env_win} [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;Invoke-WebRequest https://raw.githubusercontent.com/shuijiao1/Kulin/master/script/agent-install.ps1 -OutFile C:\\kulin-agent.ps1;powershell.exe -ExecutionPolicy Bypass -File C:\\kulin-agent.ps1`
     }
     default: {
         throw new Error(`Unknown OS: ${type}`)

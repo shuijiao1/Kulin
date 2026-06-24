@@ -1,13 +1,18 @@
 $ErrorActionPreference = "Stop"
 
 $Repo = "shuijiao1/Kulin-Agent"
-$Version = if ($env:KULIN_AGENT_VERSION) { $env:KULIN_AGENT_VERSION } else { "latest" }
+$Version = if ($env:KULIN_AGENT_VERSION) { $env:KULIN_AGENT_VERSION } else { "v0.1.1" }
 $InstallDir = if ($env:KULIN_AGENT_INSTALL_DIR) { $env:KULIN_AGENT_INSTALL_DIR } else { "C:\Program Files\Kulin Agent" }
-$ConfigFile = if ($env:KULIN_AGENT_CONFIG) { $env:KULIN_AGENT_CONFIG } else { Join-Path $InstallDir "config.yml" }
+$ConfigFile = if ($env:KULIN_AGENT_CONFIG) { $env:KULIN_AGENT_CONFIG } else { Join-Path $InstallDir "config.yaml" }
 $Bin = Join-Path $InstallDir "kulin-agent.exe"
 
-if (-not $env:NZ_SERVER) { throw "必须设置 NZ_SERVER" }
-if (-not $env:NZ_CLIENT_SECRET) { throw "必须设置 NZ_CLIENT_SECRET" }
+$KulinServer = $env:KULIN_SERVER
+$KulinClientSecret = $env:KULIN_CLIENT_SECRET
+$KulinTls = if ($env:KULIN_TLS) { $env:KULIN_TLS } else { "true" }
+$KulinUuid = if ($env:KULIN_UUID) { $env:KULIN_UUID } else { "" }
+
+if (-not $KulinServer) { throw "必须设置 KULIN_SERVER" }
+if (-not $KulinClientSecret) { throw "必须设置 KULIN_CLIENT_SECRET" }
 
 $Arch = $env:PROCESSOR_ARCHITECTURE
 switch -Regex ($Arch) {
@@ -40,14 +45,17 @@ try {
     New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
     Copy-Item $Found.FullName $Bin -Force
 
-    $Tls = if ($env:NZ_TLS) { $env:NZ_TLS } else { "true" }
-    $Uuid = if ($env:NZ_UUID) { $env:NZ_UUID } else { "" }
     @"
-server: "$env:NZ_SERVER"
-client_secret: "$env:NZ_CLIENT_SECRET"
-tls: $Tls
-uuid: "$Uuid"
+server: "$KulinServer"
+client_secret: "$KulinClientSecret"
+tls: $KulinTls
+uuid: "$KulinUuid"
 disable_auto_update: true
+disable_force_update: true
+disable_nat: true
+disable_command_execute: true
+report_delay: 2
+ip_report_period: 1800
 "@ | Set-Content -Path $ConfigFile -Encoding UTF8
 
     & $Bin service install -c $ConfigFile

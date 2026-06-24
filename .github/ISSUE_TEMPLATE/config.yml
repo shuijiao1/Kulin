@@ -1,7 +1,7 @@
 contact_links:
-  - name: Report nezha-agent issues / 反馈 nezha-agent 问题
+  - name: Report Kulin Agent issues / 反馈 Kulin Agent 问题
     url: https://github.com/nezhahq/agent/issues
-    about: 请在这里创建 nezha-agent 的问题反馈。
+    about: 请在这里创建 Kulin Agent 的问题反馈。
   - name: Report admin frontend issues / 反馈管理前端问题
     url: https://github.com/nezhahq/admin-frontend/issues
     about: 请在这里创建管理前端的问题反馈。
