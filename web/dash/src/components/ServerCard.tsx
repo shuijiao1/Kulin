@@ -249,7 +249,7 @@ export default function ServerCard({
 				<img
 					src={getOSImage(platform)}
 					alt={platform || "Linux"}
-					className="absolute left-0 top-0 size-7 object-contain"
+					className="absolute left-0 top-0 size-6 object-contain"
 					loading="lazy"
 				/>
 				<div className="flex min-w-0 items-center justify-center gap-2">

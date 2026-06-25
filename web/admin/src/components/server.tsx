@@ -216,13 +216,7 @@ export const ServerCard: React.FC<ServerCardProps> = ({ data, mutate }) => {
         if (v) {
             form.reset({
                 ...data,
-                traffic_progress_limit_input: data.traffic_progress_limit
-                    ? data.traffic_progress_limit / 1024 / 1024 / 1024
-                    : undefined,
-                traffic_progress_limit_unit:
-                    data.traffic_progress_limit && data.traffic_progress_limit >= 1024 ** 4
-                        ? "TB"
-                        : "GB",
+                ...formatTrafficLimitForForm(data.traffic_progress_limit),
                 traffic_progress_start_day: data.traffic_progress_start_day ?? 1,
                 home_monitor_id: data.home_monitor_id ?? 0,
             })
