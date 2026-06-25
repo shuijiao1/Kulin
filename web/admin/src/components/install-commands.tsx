@@ -125,27 +125,40 @@ export const InstallCommandsMenu = forwardRef<HTMLButtonElement, InstallCommands
     },
 )
 
+const normalizeInstallHost = (host?: string) => {
+    const trimmed = (host || "").trim()
+    if (!trimmed) return "shuijiao.li:443"
+    if (/^https?:\/\//i.test(trimmed)) {
+        const url = new URL(trimmed)
+        return url.port ? url.host : `${url.hostname}:${url.protocol === "https:" ? "443" : "80"}`
+    }
+    if (trimmed.startsWith("[") && trimmed.includes("]:")) return trimmed
+    if (!trimmed.includes(":")) return `${trimmed}:443`
+    return trimmed
+}
+
 const generateCommand = (
     type: number,
     { install_host, tls }: ModelSetting,
     { agent_secret }: ModelProfile,
     uuid?: string,
 ) => {
-    if (!install_host) throw new Error(t("Results.InstallHostRequired"))
+    const agentHost = normalizeInstallHost(install_host)
 
     if (!agent_secret) throw new Error(t("Results.AgentSecretRequired"))
 
+    const useTLS = tls !== false
     const envParts = [
-        `KULIN_SERVER=${install_host}`,
-        `KULIN_TLS=${tls || false}`,
+        `KULIN_SERVER=${agentHost}`,
+        `KULIN_TLS=${useTLS}`,
         `KULIN_CLIENT_SECRET=${agent_secret}`,
     ]
     if (uuid) envParts.push(`KULIN_UUID=${uuid}`)
     const env = envParts.join(" ")
 
     const envWinParts = [
-        `$env:KULIN_SERVER="${install_host}";`,
-        `$env:KULIN_TLS="${tls || false}";`,
+        `$env:KULIN_SERVER="${agentHost}";`,
+        `$env:KULIN_TLS="${useTLS}";`,
         `$env:KULIN_CLIENT_SECRET="${agent_secret}";`,
     ]
     if (uuid) envWinParts.push(`$env:KULIN_UUID="${uuid}";`)

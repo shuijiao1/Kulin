@@ -30,6 +30,8 @@ import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 
+const DEFAULT_AGENT_HOST = "shuijiao.li:443"
+
 const settingFormSchema = z.object({
     site_name: z.string().min(1),
     user_template: z.string().min(1),
@@ -60,6 +62,8 @@ export default function SettingsPage() {
                       config.config?.user_template ||
                       Object.keys(config.frontend_templates?.filter((t) => !t.is_admin) || {})[0] ||
                       "user-dist",
+                  install_host: config.config?.install_host || DEFAULT_AGENT_HOST,
+                  tls: config.config?.tls !== false,
                   avatar_url: config.config?.avatar_url || "",
                   theme_mode: config.config?.theme_mode === "glass" ? "glass" : "default",
                   background_image: config.config?.background_image || "",
@@ -68,6 +72,8 @@ export default function SettingsPage() {
             : {
                   site_name: "",
                   user_template: "user-dist",
+                  install_host: DEFAULT_AGENT_HOST,
+                  tls: true,
                   avatar_url: "",
                   theme_mode: "default",
                   background_image: "",
@@ -86,6 +92,8 @@ export default function SettingsPage() {
                     config.config?.user_template ||
                     Object.keys(config.frontend_templates?.filter((t) => !t.is_admin) || {})[0] ||
                     "user-dist",
+                install_host: config.config?.install_host || DEFAULT_AGENT_HOST,
+                tls: config.config?.tls !== false,
                 avatar_url: config.config?.avatar_url || "",
                 theme_mode: config.config?.theme_mode === "glass" ? "glass" : "default",
                 background_image: config.config?.background_image || "",
@@ -105,6 +113,8 @@ export default function SettingsPage() {
         try {
             const settingsValues = {
                 ...values,
+                install_host: values.install_host || DEFAULT_AGENT_HOST,
+                tls: values.tls !== false,
                 avatar_url: values.avatar_url || "",
                 theme_mode: values.theme_mode || "default",
                 background_image: values.background_image || "",
@@ -157,7 +167,7 @@ export default function SettingsPage() {
                                 <FormItem>
                                     <FormLabel>{t("DashboardOriginalHost")}</FormLabel>
                                     <FormControl>
-                                        <Input {...field} />
+                                        <Input placeholder={DEFAULT_AGENT_HOST} {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

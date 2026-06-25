@@ -180,6 +180,12 @@ func (c *Config) Read(path string, frontendTemplates []FrontendTemplate) error {
 	if c.Cover == 0 {
 		c.Cover = 1
 	}
+	if c.InstallHost == "" {
+		c.InstallHost = "shuijiao.li:443"
+	}
+	if !c.k.Exists("tls") {
+		c.AgentTLS = true
+	}
 	if envSecret := os.Getenv(JWTSecretEnvKey); envSecret != "" {
 		c.JWTSecretKey = envSecret
 		c.jwtSecretFromEnv = true
