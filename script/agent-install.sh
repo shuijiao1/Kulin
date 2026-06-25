@@ -101,7 +101,7 @@ ip_report_period: 1800
 EOF_CFG
 chmod 600 "$CONFIG_FILE"
 
-"$BIN" service install -c "$CONFIG_FILE" || true
-"$BIN" service restart -c "$CONFIG_FILE" || "$BIN" service start -c "$CONFIG_FILE"
+"$BIN" service -c "$CONFIG_FILE" install || true
+"$BIN" service -c "$CONFIG_FILE" restart || "$BIN" service -c "$CONFIG_FILE" start
 
 echo "Kulin Agent 已安装并启动"

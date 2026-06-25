@@ -58,11 +58,11 @@ report_delay: 2
 ip_report_period: 1800
 "@ | Set-Content -Path $ConfigFile -Encoding UTF8
 
-    & $Bin service install -c $ConfigFile
+    & $Bin service -c $ConfigFile install
     try {
-        & $Bin service restart -c $ConfigFile
+        & $Bin service -c $ConfigFile restart
     } catch {
-        & $Bin service start -c $ConfigFile
+        & $Bin service -c $ConfigFile start
     }
 
     Write-Host "Kulin Agent 已安装并启动"

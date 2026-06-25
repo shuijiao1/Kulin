@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/goccy/go-json"
 	"gorm.io/gorm"
 
 	pb "github.com/shuijiao1/Kulin/proto"
@@ -168,74 +167,6 @@ func (s *Server) AfterFind(tx *gorm.DB) error {
 		s.TrafficProgressMode = TrafficProgressModeOut
 	}
 	return nil
-}
-
-// ServerOwnerInfo carries the user-facing identity for Server.UserID. It is
-// returned by the lookup function installed by the singleton layer; model
-// must not import singleton (cycle), so the dependency flows through a
-// package-level function variable instead.
-type ServerOwnerInfo struct {
-	ID       uint64 `json:"id"`
-	Username string `json:"username,omitempty"`
-}
-
-// ServerOwnerLookup is installed by singleton at startup to resolve a
-// Server.UserID into a display-ready owner record. Returns ok=false when
-// the uid does not map to a known user; the caller renders that as an
-// "unknown user" placeholder so deleted-user rows stay debuggable. Left nil
-// in tests / headless contexts so the JSON simply omits the owner field.
-var ServerOwnerLookup func(uid uint64) (ServerOwnerInfo, bool)
-
-// OwnerServerIDsLookup is installed by singleton at startup to enumerate the
-// IDs of every in-memory Server whose UserID == ownerUID. It exists so that
-// OwnerServerIDsLookup is retained for owner-aware service filtering.
-var OwnerServerIDsLookup func(ownerUID uint64) []uint64
-
-// OwnerIsAdminLookup reports whether ownerUID is an admin user. When the
-// owner is admin the runtime dispatch path (CronTrigger, DispatchTask) gates
-// on userIsAdmin(cr.UserID) / userIsAdmin(svc.UserID) and fans out across
-// EVERY in-memory server — not just the owner's. DenyListSafeForLimitedPAT
-// must mirror that fan-out widening or a limited PAT can pass safety check
-// with a deny-list that covers only the admin's own servers while the
-// runtime still ships the task to foreign-owned servers.
-//
-// Left nil in tests / headless contexts; callers fall back to
-// "owner-set only" which matches the pre-C1 behaviour.
-var OwnerIsAdminLookup func(ownerUID uint64) bool
-
-// AllServerIDsLookup returns every in-memory server ID, regardless of
-// owner. It is the system-wide fan-out set the runtime uses for
-// admin-owned CoverAll cron/service dispatch and is the only correct
-// containment set for a server-limited PAT operating on an admin-owned
-// resource. Left nil in tests / headless contexts.
-var AllServerIDsLookup func() []uint64
-
-type serverJSON Server
-
-type serverWithOwner struct {
-	*serverJSON
-	Owner *ServerOwnerInfo `json:"owner,omitempty"`
-}
-
-// MarshalJSON projects Server.UserID into a structured owner field on the
-// wire. Server.UserID itself stays `json:"-"` (set on Common) so callers
-// that do not need owner info pay nothing and members do not accidentally
-// receive raw uid integers. The lookup function is consulted only when
-// installed; if absent we still emit a minimal {id} record so clients can
-// at least distinguish ownership, except for uid=0 which is the legacy
-// global-secret pseudo-owner and is best surfaced as such by the caller's
-// translation table on the frontend.
-func (s *Server) MarshalJSON() ([]byte, error) {
-	owner := &ServerOwnerInfo{ID: s.GetUserID()}
-	if ServerOwnerLookup != nil {
-		if info, ok := ServerOwnerLookup(owner.ID); ok {
-			owner.Username = info.Username
-		}
-	}
-	return json.Marshal(serverWithOwner{
-		serverJSON: (*serverJSON)(s),
-		Owner:      owner,
-	})
 }
 
 func (s *Server) HasPermission(ctx *gin.Context) bool {

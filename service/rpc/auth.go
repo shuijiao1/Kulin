@@ -59,7 +59,7 @@ func (a *authHandler) check(ctx context.Context) (uint64, error) {
 			if err := singleton.DB.Create(&server).Error; err != nil {
 				return 0, err
 			}
-			singleton.ServerShared.Update(&server, singleton.Conf.AgentSecretKey)
+			singleton.ServerShared.Update(&server, server.UUID)
 			log.Printf("KULIN>> Agent registered server id=%d", server.ID)
 			return server.ID, nil
 		}

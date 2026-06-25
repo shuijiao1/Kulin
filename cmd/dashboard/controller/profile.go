@@ -14,7 +14,7 @@ func getProfile(c *gin.Context) (*model.Profile, error) {
 		return nil, singleton.Localizer.ErrorT("unauthorized")
 	}
 	user := u.(*model.User)
-	return &model.Profile{User: *user}, nil
+	return &model.Profile{User: *user, AgentSecret: singleton.Conf.AgentSecretKey}, nil
 }
 
 func updateProfile(c *gin.Context) (any, error) {

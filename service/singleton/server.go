@@ -32,32 +32,7 @@ func NewServerClass() *ServerClass {
 	}
 	sc.sortList()
 
-	model.OwnerServerIDsLookup = sc.ownerServerIDs
-	model.AllServerIDsLookup = sc.allServerIDs
-
 	return sc
-}
-
-func (c *ServerClass) ownerServerIDs(ownerUID uint64) []uint64 {
-	var ids []uint64
-	c.Range(func(id uint64, s *model.Server) bool {
-		if s != nil && s.GetUserID() == ownerUID {
-			ids = append(ids, id)
-		}
-		return true
-	})
-	return ids
-}
-
-func (c *ServerClass) allServerIDs() []uint64 {
-	var ids []uint64
-	c.Range(func(id uint64, s *model.Server) bool {
-		if s != nil {
-			ids = append(ids, id)
-		}
-		return true
-	})
-	return ids
 }
 
 func (c *ServerClass) Update(s *model.Server, uuid string) {

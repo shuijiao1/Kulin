@@ -54,7 +54,8 @@ func (u *User) BeforeSave(tx *gorm.DB) error {
 
 type Profile struct {
 	User
-	LoginIP string `json:"login_ip,omitempty"`
+	AgentSecret string `json:"agent_secret,omitempty"`
+	LoginIP     string `json:"login_ip,omitempty"`
 }
 
 type OnlineUser struct {

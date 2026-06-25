@@ -79,7 +79,6 @@ export interface ModelServer {
     host?: ModelServerHost
     state?: ModelServerState
     last_active?: string
-    owner?: ModelUser
     geoip?: { ip?: ModelIP }
     version?: string
     traffic_progress_enabled?: boolean
