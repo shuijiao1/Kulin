@@ -25,7 +25,6 @@ const initialState: ThemeProviderState = {
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
 
-const rootDocument = () => window.document.documentElement
 
 export function ThemeProvider({
     children,
@@ -35,9 +34,6 @@ export function ThemeProvider({
 }: ThemeProviderProps) {
     const [theme, setTheme] = useState<Theme>(
         () => (localStorage.getItem(storageKey) as Theme) || defaultTheme,
-    )
-    const [themeMode, setThemeModeState] = useState<ThemeMode>(
-        () => (localStorage.getItem(`${storageKey}-mode`) as ThemeMode) || "default",
     )
 
     useEffect(() => {
@@ -57,21 +53,14 @@ export function ThemeProvider({
         root.classList.add(theme)
     }, [theme])
 
-    useEffect(() => {
-        rootDocument().classList.toggle("kulin-glass-theme", themeMode === "glass")
-    }, [themeMode])
-
     const value = {
         theme,
         setTheme: (theme: Theme) => {
             localStorage.setItem(storageKey, theme)
             setTheme(theme)
         },
-        themeMode,
-        setThemeMode: (themeMode: ThemeMode) => {
-            localStorage.setItem(`${storageKey}-mode`, themeMode)
-            setThemeModeState(themeMode)
-        },
+        themeMode: "default" as ThemeMode,
+        setThemeMode: () => null,
     }
 
     return (

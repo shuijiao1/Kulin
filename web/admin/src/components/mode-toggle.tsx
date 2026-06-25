@@ -1,4 +1,4 @@
-import { Theme, ThemeMode, useTheme } from "@/components/theme-provider"
+import { Theme, useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
@@ -10,14 +10,10 @@ import { t } from "@/lib/labels"
 import { Moon, Sun } from "lucide-react"
 
 export function ModeToggle() {
-    const { setTheme, setThemeMode } = useTheme()
+    const { setTheme } = useTheme()
 
     const toggleTheme = (theme: Theme) => {
         setTheme(theme)
-    }
-
-    const toggleThemeMode = (themeMode: ThemeMode) => {
-        setThemeMode(themeMode)
     }
 
     return (
@@ -30,12 +26,6 @@ export function ModeToggle() {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => toggleThemeMode("default")}>
-                    默认主题
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => toggleThemeMode("glass")}>
-                    高斯模糊主题
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => toggleTheme("light")}>
                     {t("theme.light")}
                 </DropdownMenuItem>

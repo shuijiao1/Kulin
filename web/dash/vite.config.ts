@@ -30,6 +30,14 @@ const getVendorChunkName = (moduleId: string) => {
 	return packageName || null;
 };
 
+const devHttps =
+	fs.existsSync("./.cert/key.pem") && fs.existsSync("./.cert/cert.pem")
+		? {
+				key: fs.readFileSync("./.cert/key.pem"),
+				cert: fs.readFileSync("./.cert/cert.pem"),
+			}
+		: undefined;
+
 // https://vite.dev/config/
 export default defineConfig({
 	base: "/",
@@ -43,10 +51,7 @@ export default defineConfig({
 		},
 	},
 	server: {
-		https: {
-			key: fs.readFileSync("./.cert/key.pem"),
-			cert: fs.readFileSync("./.cert/cert.pem"),
-		},
+		https: devHttps,
 		proxy: {
 			"/api/v1/ws/server": {
 				target: "ws://localhost:8008",

@@ -11,11 +11,7 @@ import (
 var TSDBShared *tsdb.TSDB
 
 func InitTSDB() error {
-	config := &tsdb.Config{
-		RetentionDays:      30,
-		MinFreeDiskSpaceGB: 1,
-		MaxMemoryMB:        256,
-	}
+	config := tsdb.DefaultConfig()
 
 	if Conf.TSDB.DataPath != "" {
 		config.DataPath = Conf.TSDB.DataPath

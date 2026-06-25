@@ -4,7 +4,7 @@ import "time"
 
 // Config TSDB 配置选项
 type Config struct {
-	// DataPath 数据存储路径，为空则不启用 TSDB
+	// DataPath 数据存储路径，默认 data/tsdb；显式设为空可关闭 TSDB
 	DataPath string `koanf:"data_path" json:"data_path,omitempty"`
 	// RetentionDays 数据保留天数，默认 30 天
 	RetentionDays uint16 `koanf:"retention_days" json:"retention_days,omitempty"`
@@ -21,10 +21,10 @@ type Config struct {
 	WriteBufferFlushInterval time.Duration `koanf:"write_buffer_flush_interval" json:"write_buffer_flush_interval,omitempty"`
 }
 
-// DefaultConfig 返回默认配置（不设置 DataPath，需要显式配置才启用）
+// DefaultConfig 返回默认配置（默认启用 TSDB）
 func DefaultConfig() *Config {
 	return &Config{
-		DataPath:                 "",
+		DataPath:                 "data/tsdb",
 		RetentionDays:            30,
 		MinFreeDiskSpaceGB:       1,
 		MaxMemoryMB:              256,

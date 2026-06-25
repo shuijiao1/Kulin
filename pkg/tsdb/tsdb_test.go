@@ -13,11 +13,11 @@ import (
 func TestConfig_Defaults(t *testing.T) {
 	config := DefaultConfig()
 
-	assert.Equal(t, "", config.DataPath) // 默认为空，不启用 TSDB
+	assert.Equal(t, "data/tsdb", config.DataPath) // 默认启用 TSDB
 	assert.Equal(t, uint16(30), config.RetentionDays)
 	assert.Equal(t, float64(1), config.MinFreeDiskSpaceGB)
 	assert.Equal(t, 30*time.Second, config.DedupInterval)
-	assert.False(t, config.Enabled())
+	assert.True(t, config.Enabled())
 }
 
 func TestConfig_Enabled(t *testing.T) {
