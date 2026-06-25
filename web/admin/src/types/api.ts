@@ -8,7 +8,6 @@ export interface ModelUser {
     username: string
     password?: string
     role?: number
-    reject_password?: boolean
     avatar_url?: string
 }
 
@@ -17,17 +16,10 @@ export interface ModelProfile extends ModelUser {
     login_ip?: string
 }
 
-export interface ModelUserForm {
-    username?: string
-    password?: string
-    role?: number
-}
-
 export interface ModelProfileForm {
     original_password?: string
     new_username?: string
     new_password?: string
-    reject_password?: boolean
     avatar_url?: string
 }
 
@@ -71,8 +63,6 @@ export interface ModelServer {
     id: number
     name: string
     uuid?: string
-    user?: ModelUser
-    user_id?: number
     note?: string
     public_note?: string
     display_index?: number

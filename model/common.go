@@ -45,18 +45,8 @@ func (c *Common) SetUserID(uid uint64) {
 }
 
 func (c *Common) HasPermission(ctx *gin.Context) bool {
-	auth, ok := ctx.Get(CtxKeyAuthorizedUser)
-	if !ok {
-		return false
-	}
-
-	user := *auth.(*User)
-	if user.Role == RoleAdmin {
-		return true
-	}
-
-	// 必须走 GetUserID 而不是裸读 c.UserID，避免 dashboard 热路径并发读写形成 data race。
-	return user.ID == c.GetUserID()
+	_, ok := ctx.Get(CtxKeyAuthorizedUser)
+	return ok
 }
 
 type CommonInterface interface {

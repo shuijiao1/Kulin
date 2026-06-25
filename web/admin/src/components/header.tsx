@@ -174,7 +174,16 @@ export default function Header() {
                                         {item.label}
                                     </Link>
                                 ))}
-                                {isAdmin && (
+                                <NavigationMenuItem>
+                                <NzNavigationMenuLink
+                                    asChild
+                                    active={location.pathname === "/dashboard/profile"}
+                                    className={navigationMenuTriggerStyle()}
+                                >
+                                    <Link to="/dashboard/profile">{t("Profile")}</Link>
+                                </NzNavigationMenuLink>
+                            </NavigationMenuItem>
+                            {isAdmin && (
                                     <Link
                                         to="/dashboard/settings"
                                         className="rounded-lg px-3 py-2 text-sm hover:bg-muted"

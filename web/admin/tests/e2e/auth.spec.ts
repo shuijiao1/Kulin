@@ -22,7 +22,6 @@ test("password change rotates TokenVersion and revokes existing session", async 
                 original_password: defaultAdmin.password,
                 new_password: newPassword,
                 new_username: defaultAdmin.username,
-                reject_password: false,
             },
         })
         expect(resp.ok(), "profile update must succeed").toBeTruthy()
@@ -48,7 +47,6 @@ test("password change rotates TokenVersion and revokes existing session", async 
                     original_password: newPassword,
                     new_password: defaultAdmin.password,
                     new_username: defaultAdmin.username,
-                    reject_password: false,
                 },
             })
             expect(restoreResp.ok(), "password restore must succeed so other suites can still log in").toBeTruthy()

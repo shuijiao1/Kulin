@@ -312,8 +312,6 @@ func fallbackToFrontend(frontendDist fs.FS) func(*gin.Context) {
 		regexp.MustCompile(`^/dashboard/notification$`),
 		regexp.MustCompile(`^/dashboard/alert-rule$`),
 		regexp.MustCompile(`^/dashboard/settings$`),
-		regexp.MustCompile(`^/dashboard/settings/user$`),
-		regexp.MustCompile(`^/dashboard/settings/online-user$`),
 		regexp.MustCompile(`^/dashboard/settings/waf$`),
 		regexp.MustCompile(`^/dashboard/settings/api-tokens$`),
 		// 注意：这里的白名单决定哪些 URL 走 index.html fallback；漏一条就会把

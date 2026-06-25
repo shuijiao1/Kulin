@@ -13,10 +13,13 @@ import (
 	"github.com/shuijiao1/Kulin/service/singleton"
 )
 
-const jwtClaimUserID = "uid"
+const (
+	jwtClaimUserID       = "uid"
+	jwtClaimTokenVersion = "ver"
+)
 
 func issueJWTSession(c *gin.Context, user *model.User, jwtTimeoutHours int) (map[string]interface{}, error) {
-	return map[string]interface{}{jwtClaimUserID: user.ID}, nil
+	return map[string]interface{}{jwtClaimUserID: user.ID, jwtClaimTokenVersion: user.TokenVersion}, nil
 }
 
 func initParams() *jwt.GinJWTMiddleware {
@@ -83,6 +86,12 @@ func identityHandler() func(c *gin.Context) any {
 		if err := singleton.DB.First(&user, uint64(uidFloat)).Error; err != nil {
 			return nil
 		}
+		if user.ID != singleton.DashboardUserIDOrFallback() {
+			return nil
+		}
+		if verFloat, ok := claims[jwtClaimTokenVersion].(float64); !ok || uint64(verFloat) != user.TokenVersion {
+			return nil
+		}
 		return &user
 	}
 }
@@ -108,7 +117,7 @@ func authenticator() func(c *gin.Context) (any, error) {
 		}
 
 		var user model.User
-		if err := singleton.DB.Select("id", "password", "reject_password", "token_version").Where("username = ?", loginVals.Username).First(&user).Error; err != nil {
+		if err := singleton.DB.Select("id", "password", "token_version").Where("username = ?", loginVals.Username).First(&user).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
 				loginLimiter.RecordFailure(c.ClientIP(), loginVals.Username)
 				return nil, jwt.ErrFailedAuthentication
@@ -117,7 +126,7 @@ func authenticator() func(c *gin.Context) (any, error) {
 			return nil, jwt.ErrFailedAuthentication
 		}
 
-		if user.RejectPassword {
+		if user.ID != singleton.DashboardUserIDOrFallback() {
 			loginLimiter.RecordFailure(c.ClientIP(), loginVals.Username)
 			return nil, jwt.ErrFailedAuthentication
 		}

@@ -160,7 +160,6 @@ const labels: Record<string, string> = {
     ConnectedAt: "连接时间",
     Total: "总数",
     ConfirmBlock: "确认封禁",
-    RejectPassword: "禁止密码登录",
     EmptyText: "空文本",
     EmptyNote: "您没有任何备注。",
     EditServerConfig: "编辑服务器配置",

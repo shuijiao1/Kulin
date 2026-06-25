@@ -67,6 +67,7 @@ func initSystem(bus chan<- *model.Service) error {
 		admin := model.User{
 			Username: "admin",
 			Password: string(hash),
+			Role:     model.RoleAdmin,
 		}
 		if err := singleton.DB.Create(&admin).Error; err != nil {
 			return err

@@ -140,18 +140,7 @@ func checkStatus() {
 			continue
 		}
 		for _, server := range m {
-			// 监测点
-			UserLock.RLock()
-			var role model.Role
-			if u, ok := UserInfoMap[alert.UserID]; !ok {
-				role = model.RoleMember
-			} else {
-				role = u.Role
-			}
-			UserLock.RUnlock()
-			if alert.UserID != server.GetUserID() && !role.IsAdmin() {
-				continue
-			}
+			// 单管理员模式：报警规则不再按所属用户过滤服务器。
 			alertsStore[alert.ID][server.ID] = append(alertsStore[alert.
 				ID][server.ID], alert.Snapshot(AlertsCycleTransferStatsStore[alert.ID], server, DB))
 			// 发送通知，分为触发报警和恢复通知

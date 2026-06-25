@@ -27,10 +27,10 @@ func updateProfile(c *gin.Context) (any, error) {
 	if err := c.ShouldBindJSON(&pf); err != nil {
 		return nil, err
 	}
-	if pf.OriginalPassword != "" && bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(pf.OriginalPassword)) != nil {
+	if pf.OriginalPassword == "" || bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(pf.OriginalPassword)) != nil {
 		return nil, singleton.Localizer.ErrorT("permission denied")
 	}
-	updates := map[string]any{"reject_password": pf.RejectPassword}
+	updates := map[string]any{}
 	if pf.NewUsername != "" {
 		updates["username"] = pf.NewUsername
 	}
@@ -43,6 +43,10 @@ func updateProfile(c *gin.Context) (any, error) {
 			return nil, err
 		}
 		updates["password"] = string(hash)
+		updates["token_version"] = user.TokenVersion + 1
+	}
+	if len(updates) == 0 {
+		return nil, nil
 	}
 	if err := singleton.DB.Model(&model.User{}).Where("id = ?", user.ID).Updates(updates).Error; err != nil {
 		return nil, newGormError("%v", err)

@@ -15,21 +15,19 @@ func (r Role) IsAdmin() bool {
 }
 
 const (
-	RoleAdmin Role = iota
-	RoleMember
+	RoleAdmin Role = 0
 )
 
 const DefaultAgentSecretLength = 32
 
 type User struct {
 	Common
-	Username       string `json:"username,omitempty" gorm:"uniqueIndex"`
-	Password       string `json:"password,omitempty" gorm:"type:char(72)"`
-	Role           Role   `json:"role"`
-	AgentSecret    string `json:"agent_secret,omitempty" gorm:"type:char(32)"`
-	RejectPassword bool   `json:"reject_password,omitempty"`
-	AvatarURL      string `json:"avatar_url,omitempty"`
-	TokenVersion   uint64 `json:"-" gorm:"not null;default:0"`
+	Username     string `json:"username,omitempty" gorm:"uniqueIndex"`
+	Password     string `json:"password,omitempty" gorm:"type:char(72)"`
+	Role         Role   `json:"role"`
+	AgentSecret  string `json:"agent_secret,omitempty" gorm:"type:char(32)"`
+	AvatarURL    string `json:"avatar_url,omitempty"`
+	TokenVersion uint64 `json:"-" gorm:"not null;default:0"`
 }
 
 type UserInfo struct {
@@ -58,8 +56,8 @@ type Profile struct {
 	LoginIP     string `json:"login_ip,omitempty"`
 }
 
+// OnlineUser is retained only for internal connection counters in lite/single-admin mode.
 type OnlineUser struct {
-	UserID      uint64    `json:"user_id,omitempty"`
 	ConnectedAt time.Time `json:"connected_at,omitempty"`
 	IP          string    `json:"ip,omitempty"`
 

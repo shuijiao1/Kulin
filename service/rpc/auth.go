@@ -18,12 +18,7 @@ func (a *authHandler) Check(ctx context.Context) (uint64, error)            { re
 func (a *authHandler) CheckRequestTask(ctx context.Context) (uint64, error) { return a.check(ctx) }
 
 func firstUserID() uint64 {
-	singleton.UserLock.RLock()
-	defer singleton.UserLock.RUnlock()
-	for id := range singleton.UserInfoMap {
-		return id
-	}
-	return 1
+	return singleton.DashboardUserIDOrFallback()
 }
 
 func (a *authHandler) check(ctx context.Context) (uint64, error) {
