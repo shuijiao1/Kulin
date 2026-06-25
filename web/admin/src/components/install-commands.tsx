@@ -170,7 +170,7 @@ const generateCommand = (
         return `curl -fsSL https://raw.githubusercontent.com/shuijiao1/Kulin/master/script/agent-install.sh -o kulin-agent.sh && chmod +x kulin-agent.sh && env ${env} ./kulin-agent.sh`
     }
     case OSTypes.Windows: {
-        return `${env_win} [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;Invoke-WebRequest https://raw.githubusercontent.com/shuijiao1/Kulin/master/script/agent-install.ps1 -OutFile C:\\kulin-agent.ps1;powershell.exe -ExecutionPolicy Bypass -File C:\\kulin-agent.ps1`
+        return `Remove-Item C:\\kulin-agent.ps1 -Force -ErrorAction SilentlyContinue;${env_win}[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12;Invoke-WebRequest "https://raw.githubusercontent.com/shuijiao1/Kulin/master/script/agent-install-windows.ps1" -Headers @{"Cache-Control"="no-cache"} -OutFile C:\\kulin-agent.ps1;powershell.exe -ExecutionPolicy Bypass -File C:\\kulin-agent.ps1`
     }
     default: {
         throw new Error(`Unknown OS: ${type}`)
