@@ -11,15 +11,15 @@ $KulinClientSecret = $env:KULIN_CLIENT_SECRET
 $KulinTls = if ($env:KULIN_TLS) { $env:KULIN_TLS } else { "true" }
 $KulinUuid = if ($env:KULIN_UUID) { $env:KULIN_UUID } else { "" }
 
-if (-not $KulinServer) { throw "必须设置 KULIN_SERVER" }
-if (-not $KulinClientSecret) { throw "必须设置 KULIN_CLIENT_SECRET" }
+if (-not $KulinServer) { throw "KULIN_SERVER is required" }
+if (-not $KulinClientSecret) { throw "KULIN_CLIENT_SECRET is required" }
 
 $Arch = $env:PROCESSOR_ARCHITECTURE
 switch -Regex ($Arch) {
     "AMD64" { $GoArch = "amd64"; break }
     "ARM64" { $GoArch = "arm64"; break }
     "86" { $GoArch = "386"; break }
-    default { throw "暂不支持架构: $Arch" }
+    default { throw "Unsupported architecture: $Arch" }
 }
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -27,7 +27,7 @@ switch -Regex ($Arch) {
 if ($Version -eq "latest") {
     $Release = Invoke-RestMethod "https://api.github.com/repos/$Repo/releases/latest"
     $Version = $Release.tag_name
-    if (-not $Version) { throw "无法获取最新版本" }
+    if (-not $Version) { throw "Unable to get latest version" }
 }
 
 $Asset = "kulin-agent_windows_$GoArch.zip"
@@ -36,11 +36,11 @@ $Tmp = Join-Path $env:TEMP ([System.Guid]::NewGuid().ToString())
 New-Item -ItemType Directory -Force -Path $Tmp | Out-Null
 try {
     $Zip = Join-Path $Tmp $Asset
-    Write-Host "下载 Kulin Agent $Version (windows/$GoArch)..."
+    Write-Host "Downloading Kulin Agent $Version (windows/$GoArch)..."
     Invoke-WebRequest $Url -OutFile $Zip
     Expand-Archive $Zip -DestinationPath $Tmp -Force
     $Found = Get-ChildItem $Tmp -Recurse -Filter "kulin-agent.exe" | Select-Object -First 1
-    if (-not $Found) { throw "压缩包内未找到 kulin-agent.exe" }
+    if (-not $Found) { throw "kulin-agent.exe not found in archive" }
 
     New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
     Copy-Item $Found.FullName $Bin -Force
@@ -65,7 +65,7 @@ ip_report_period: 1800
         & $Bin service -c $ConfigFile start
     }
 
-    Write-Host "Kulin Agent 已安装并启动"
+    Write-Host "Kulin Agent installed and started"
 } finally {
     Remove-Item $Tmp -Recurse -Force -ErrorAction SilentlyContinue
 }
