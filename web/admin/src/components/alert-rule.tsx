@@ -1,6 +1,5 @@
 import { createAlertRule, updateAlertRule } from "@/api/alert-rule"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
     Dialog,
     DialogClose,
@@ -33,6 +32,7 @@ import { IconButton } from "@/components/xui/icon-button"
 import { useNotification } from "@/hooks/useNotfication"
 import { useServer } from "@/hooks/useServer"
 import { t } from "@/lib/labels"
+import { conv } from "@/lib/utils"
 import { ModelAlertRule } from "@/types"
 import { triggerModes } from "@/types"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -43,6 +43,7 @@ import { KeyedMutator } from "swr"
 import { z } from "zod"
 
 import { Combobox } from "./ui/combobox"
+import { ExpandedCheckList } from "./xui/expanded-check-list"
 
 interface AlertRuleCardProps {
     data?: ModelAlertRule
@@ -171,6 +172,31 @@ export const AlertRuleCard: React.FC<AlertRuleCardProps> = ({ data, mutate }) =>
         value: `${n.id}`,
         label: n.name,
     })) || [{ value: "", label: "" }]
+    const serverList = servers?.map((s) => ({
+        value: `${s.id}`,
+        label: s.name,
+    })) || []
+
+    const selectedServerValues = (rule: AlertRuleEntry) => {
+        if ((rule.cover ?? 0) === 0) {
+            return serverList
+                .filter((server) => !rule.ignore?.[server.value])
+                .map((server) => server.value)
+        }
+        return conv.recordToStrArr(rule.ignore || {})
+    }
+
+    const updateRuleServers = (ruleIndex: number, selectedServers: string[]) => {
+        const next = [...rulesUI]
+        const allSelected =
+            serverList.length > 0 && selectedServers.length === serverList.length
+        next[ruleIndex] = {
+            ...next[ruleIndex],
+            cover: allSelected ? 0 : 1,
+            ignore: allSelected ? undefined : conv.arrToRecord(selectedServers),
+        }
+        setRulesUI(next)
+    }
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -442,90 +468,15 @@ export const AlertRuleCard: React.FC<AlertRuleCardProps> = ({ data, mutate }) =>
                                                     )}
                                                     <div className="space-y-2">
                                                         <Label className="text-sm">监控范围</Label>
-                                                        <Select
-                                                            onValueChange={(val) => {
-                                                                const next = [...rulesUI]
-                                                                next[idx] = {
-                                                                    ...next[idx],
-                                                                    cover: Number(val),
-                                                                    ignore:
-                                                                        Number(val) === 0
-                                                                            ? undefined
-                                                                            : next[idx].ignore ||
-                                                                              {},
-                                                                }
-                                                                setRulesUI(next)
-                                                            }}
-                                                            value={(r.cover ?? 0).toString()}
-                                                        >
-                                                            <SelectTrigger>
-                                                                <SelectValue />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectItem value="0">
-                                                                    全部服务器
-                                                                </SelectItem>
-                                                                <SelectItem value="1">
-                                                                    只监控指定服务器
-                                                                </SelectItem>
-                                                            </SelectContent>
-                                                        </Select>
-                                                        {(r.cover ?? 0) === 1 && (
-                                                            <div className="rounded-md border p-2 max-h-40 overflow-auto space-y-1">
-                                                                {(servers || []).map((server) => (
-                                                                    <label
-                                                                        key={server.id}
-                                                                        className="flex items-center gap-2 text-sm py-1"
-                                                                    >
-                                                                        <Checkbox
-                                                                            checked={Boolean(
-                                                                                r.ignore?.[
-                                                                                    String(
-                                                                                        server.id,
-                                                                                    )
-                                                                                ],
-                                                                            )}
-                                                                            onCheckedChange={(
-                                                                                checked,
-                                                                            ) => {
-                                                                                const next = [
-                                                                                    ...rulesUI,
-                                                                                ]
-                                                                                const ignore = {
-                                                                                    ...(next[idx]
-                                                                                        .ignore ||
-                                                                                        {}),
-                                                                                }
-                                                                                if (checked)
-                                                                                    ignore[
-                                                                                        String(
-                                                                                            server.id,
-                                                                                        )
-                                                                                    ] = true
-                                                                                else
-                                                                                    delete ignore[
-                                                                                        String(
-                                                                                            server.id,
-                                                                                        )
-                                                                                    ]
-                                                                                next[idx] = {
-                                                                                    ...next[idx],
-                                                                                    ignore,
-                                                                                }
-                                                                                setRulesUI(next)
-                                                                            }}
-                                                                        />
-                                                                        <span>{server.name}</span>
-                                                                    </label>
-                                                                ))}
-                                                                {(!servers ||
-                                                                    servers.length === 0) && (
-                                                                    <div className="text-sm text-muted-foreground">
-                                                                        暂无服务器
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        )}
+                                                        <ExpandedCheckList
+                                                            title="已选服务器"
+                                                            options={serverList}
+                                                            value={selectedServerValues(r)}
+                                                            onChange={(value) =>
+                                                                updateRuleServers(idx, value)
+                                                            }
+                                                            emptyText="暂无服务器"
+                                                        />
                                                     </div>
                                                 </div>
                                             )
