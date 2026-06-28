@@ -191,18 +191,20 @@ func filterServersForViewer(servers []*model.Server, viewerUserID uint64, viewer
 			countryCode = server.GeoIP.CountryCode
 		}
 		out = append(out, model.StreamServer{
-			ID:                     server.ID,
-			Name:                   server.Name,
-			PublicNote:             utils.IfOr(withPublicNote, server.PublicNote, ""),
-			DisplayIndex:           server.DisplayIndex,
-			Host:                   utils.IfOr(isOwnerOrAdmin, server.Host, server.Host.Filter()),
-			State:                  server.State,
-			CountryCode:            countryCode,
-			LastActive:             server.LastActive,
-			TrafficProgressEnabled: server.TrafficProgressEnabled,
-			TrafficProgressMode:    server.TrafficProgressMode,
-			TrafficProgressLimit:   server.TrafficProgressLimit,
-			HomeMonitorID:          server.HomeMonitorID,
+			ID:                       server.ID,
+			Name:                     server.Name,
+			PublicNote:               utils.IfOr(withPublicNote, server.PublicNote, ""),
+			DisplayIndex:             server.DisplayIndex,
+			Host:                     utils.IfOr(isOwnerOrAdmin, server.Host, server.Host.Filter()),
+			State:                    server.State,
+			CountryCode:              countryCode,
+			LastActive:               server.LastActive,
+			TrafficProgressEnabled:   server.TrafficProgressEnabled,
+			TrafficProgressMode:      server.TrafficProgressMode,
+			TrafficProgressLimit:     server.TrafficProgressLimit,
+			TrafficProgressLimitUnit: server.TrafficProgressLimitUnit,
+			TrafficProgressStartDay:  server.TrafficProgressStartDay,
+			HomeMonitorID:            server.HomeMonitorID,
 		})
 	}
 	return out

@@ -18,25 +18,38 @@ const (
 	TrafficProgressModeIn   = "in"
 	TrafficProgressModeMax  = "max"
 	TrafficProgressModeDual = "dual"
+
+	TrafficProgressLimitUnitGB = "GB"
+	TrafficProgressLimitUnitTB = "TB"
 )
+
+func NormalizeTrafficProgressLimitUnit(unit string) string {
+	switch unit {
+	case TrafficProgressLimitUnitTB:
+		return TrafficProgressLimitUnitTB
+	default:
+		return TrafficProgressLimitUnitGB
+	}
+}
 
 type Server struct {
 	Common
 
-	Name                    string     `json:"name"`
-	UUID                    string     `json:"uuid,omitempty" gorm:"unique"`
-	Note                    string     `json:"note,omitempty"`        // 管理员可见备注
-	PublicNote              string     `json:"public_note,omitempty"` // 公开备注
-	DisplayIndex            int        `json:"display_index"`         // 展示排序，越大越靠前
-	TrafficProgressEnabled  bool       `json:"traffic_progress_enabled,omitempty"`
-	TrafficProgressMode     string     `gorm:"default:'out'" json:"traffic_progress_mode,omitempty"`
-	TrafficProgressLimit    uint64     `json:"traffic_progress_limit,omitempty"`
-	TrafficProgressStartDay uint8      `gorm:"default:1" json:"traffic_progress_start_day,omitempty"`
-	HomeMonitorID           uint64     `json:"home_monitor_id,omitempty"`
-	Host                    *Host      `gorm:"-" json:"host,omitempty"`
-	State                   *HostState `gorm:"-" json:"state,omitempty"`
-	GeoIP                   *GeoIP     `gorm:"-" json:"geoip,omitempty"`
-	LastActive              time.Time  `gorm:"-" json:"last_active,omitempty"`
+	Name                     string     `json:"name"`
+	UUID                     string     `json:"uuid,omitempty" gorm:"unique"`
+	Note                     string     `json:"note,omitempty"`        // 管理员可见备注
+	PublicNote               string     `json:"public_note,omitempty"` // 公开备注
+	DisplayIndex             int        `json:"display_index"`         // 展示排序，越大越靠前
+	TrafficProgressEnabled   bool       `json:"traffic_progress_enabled,omitempty"`
+	TrafficProgressMode      string     `gorm:"default:'out'" json:"traffic_progress_mode,omitempty"`
+	TrafficProgressLimit     uint64     `json:"traffic_progress_limit,omitempty"`
+	TrafficProgressLimitUnit string     `gorm:"default:'GB'" json:"traffic_progress_limit_unit,omitempty"`
+	TrafficProgressStartDay  uint8      `gorm:"default:1" json:"traffic_progress_start_day,omitempty"`
+	HomeMonitorID            uint64     `json:"home_monitor_id,omitempty"`
+	Host                     *Host      `gorm:"-" json:"host,omitempty"`
+	State                    *HostState `gorm:"-" json:"state,omitempty"`
+	GeoIP                    *GeoIP     `gorm:"-" json:"geoip,omitempty"`
+	LastActive               time.Time  `gorm:"-" json:"last_active,omitempty"`
 
 	// taskStream MUST be accessed only via SetTaskStream / GetTaskStream. Direct
 	// field access from outside this file races with the gRPC RequestTask
@@ -166,6 +179,7 @@ func (s *Server) AfterFind(tx *gorm.DB) error {
 	if s.TrafficProgressMode == "" {
 		s.TrafficProgressMode = TrafficProgressModeOut
 	}
+	s.TrafficProgressLimitUnit = NormalizeTrafficProgressLimitUnit(s.TrafficProgressLimitUnit)
 	return nil
 }
 

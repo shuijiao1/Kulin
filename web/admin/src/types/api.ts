@@ -74,6 +74,7 @@ export interface ModelServer {
     traffic_progress_enabled?: boolean
     traffic_progress_mode?: "out" | "in" | "max" | "dual"
     traffic_progress_limit?: number
+    traffic_progress_limit_unit?: "GB" | "TB"
     traffic_progress_start_day?: number
     home_monitor_id?: number
 }

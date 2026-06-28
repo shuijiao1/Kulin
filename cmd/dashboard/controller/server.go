@@ -74,6 +74,8 @@ func updateServer(c *gin.Context) (any, error) {
 			_ = json.Unmarshal(value, &sf.TrafficProgressMode)
 		case "traffic_progress_limit":
 			_ = json.Unmarshal(value, &sf.TrafficProgressLimit)
+		case "traffic_progress_limit_unit":
+			_ = json.Unmarshal(value, &sf.TrafficProgressLimitUnit)
 		case "traffic_progress_start_day":
 			_ = json.Unmarshal(value, &sf.TrafficProgressStartDay)
 		case "home_monitor_id":
@@ -113,6 +115,9 @@ func updateServer(c *gin.Context) (any, error) {
 	}
 	if _, ok := raw["traffic_progress_limit"]; ok {
 		s.TrafficProgressLimit = sf.TrafficProgressLimit
+	}
+	if _, ok := raw["traffic_progress_limit_unit"]; ok {
+		s.TrafficProgressLimitUnit = model.NormalizeTrafficProgressLimitUnit(sf.TrafficProgressLimitUnit)
 	}
 	if _, ok := raw["traffic_progress_start_day"]; ok {
 		if sf.TrafficProgressStartDay < 1 {

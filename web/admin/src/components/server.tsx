@@ -60,18 +60,20 @@ interface ServerCardProps {
     mutate: KeyedMutator<ModelServer[]>
 }
 
-const formatTrafficLimitForForm = (limit?: number) => {
+const normalizeTrafficLimitUnit = (unit?: string) => (unit === "TB" ? "TB" : "GB")
+
+const formatTrafficLimitForForm = (limit?: number, unit?: string) => {
+    const normalizedUnit = normalizeTrafficLimitUnit(unit)
     if (!limit) {
         return {
             traffic_progress_limit_input: undefined,
-            traffic_progress_limit_unit: "GB" as const,
+            traffic_progress_limit_unit: normalizedUnit,
         }
     }
 
-    const isTB = limit >= 1024 ** 4
     return {
-        traffic_progress_limit_input: limit / (isTB ? 1024 ** 4 : 1024 ** 3),
-        traffic_progress_limit_unit: isTB ? ("TB" as const) : ("GB" as const),
+        traffic_progress_limit_input: limit / (normalizedUnit === "TB" ? 1024 ** 4 : 1024 ** 3),
+        traffic_progress_limit_unit: normalizedUnit,
     }
 }
 
@@ -90,7 +92,10 @@ export const ServerCard: React.FC<ServerCardProps> = ({ data, mutate }) => {
         resolver: zodResolver(serverFormSchema) as any,
         defaultValues: {
             ...data,
-            ...formatTrafficLimitForForm(data.traffic_progress_limit),
+            ...formatTrafficLimitForForm(
+                data.traffic_progress_limit,
+                data.traffic_progress_limit_unit,
+            ),
             traffic_progress_start_day: data.traffic_progress_start_day ?? 1,
             home_monitor_id: data.home_monitor_id ?? 0,
         },
@@ -167,12 +172,12 @@ export const ServerCard: React.FC<ServerCardProps> = ({ data, mutate }) => {
     const onSubmit = async (values: any) => {
         try {
             const limitValue = Number(values.traffic_progress_limit_input || 0)
-            const limitUnit = values.traffic_progress_limit_unit || "GB"
+            const limitUnit = normalizeTrafficLimitUnit(values.traffic_progress_limit_unit)
             values.traffic_progress_limit = Math.round(
                 limitValue * (limitUnit === "TB" ? 1024 ** 4 : 1024 ** 3),
             )
+            values.traffic_progress_limit_unit = limitUnit
             delete values.traffic_progress_limit_input
-            delete values.traffic_progress_limit_unit
 
             const { errors, valid } = validatePublicNote(publicNoteObj)
             if (!valid) {
@@ -216,7 +221,10 @@ export const ServerCard: React.FC<ServerCardProps> = ({ data, mutate }) => {
         if (v) {
             form.reset({
                 ...data,
-                ...formatTrafficLimitForForm(data.traffic_progress_limit),
+                ...formatTrafficLimitForForm(
+                    data.traffic_progress_limit,
+                    data.traffic_progress_limit_unit,
+                ),
                 traffic_progress_start_day: data.traffic_progress_start_day ?? 1,
                 home_monitor_id: data.home_monitor_id ?? 0,
             })
@@ -335,7 +343,7 @@ export const ServerCard: React.FC<ServerCardProps> = ({ data, mutate }) => {
                                                     <FormLabel>单位</FormLabel>
                                                     <Select
                                                         onValueChange={field.onChange}
-                                                        defaultValue={field.value ?? "GB"}
+                                                        value={field.value ?? "GB"}
                                                     >
                                                         <FormControl>
                                                             <SelectTrigger>
