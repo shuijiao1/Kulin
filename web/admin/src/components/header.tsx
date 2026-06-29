@@ -168,25 +168,28 @@ export default function Header() {
                                     <Link
                                         key={item.href}
                                         to={item.href}
-                                        className="rounded-lg px-3 py-2 text-sm hover:bg-muted"
+                                        className={
+                                            "rounded-lg px-3 py-2 text-sm transition-colors hover:bg-muted" +
+                                            (location.pathname === item.href ||
+                                            (item.href === "/dashboard/notification" &&
+                                                location.pathname === "/dashboard/alert-rule")
+                                                ? " bg-muted font-medium text-foreground"
+                                                : "")
+                                        }
                                         onClick={() => setOpen(false)}
                                     >
                                         {item.label}
                                     </Link>
                                 ))}
-                                <NavigationMenuItem>
-                                <NzNavigationMenuLink
-                                    asChild
-                                    active={location.pathname === "/dashboard/profile"}
-                                    className={navigationMenuTriggerStyle()}
-                                >
-                                    <Link to="/dashboard/profile">{t("Profile")}</Link>
-                                </NzNavigationMenuLink>
-                            </NavigationMenuItem>
-                            {isAdmin && (
+                                {isAdmin && (
                                     <Link
                                         to="/dashboard/settings"
-                                        className="rounded-lg px-3 py-2 text-sm hover:bg-muted"
+                                        className={
+                                            "rounded-lg px-3 py-2 text-sm transition-colors hover:bg-muted" +
+                                            (location.pathname === "/dashboard/settings"
+                                                ? " bg-muted font-medium text-foreground"
+                                                : "")
+                                        }
                                         onClick={() => setOpen(false)}
                                     >
                                         {t("Settings")}
