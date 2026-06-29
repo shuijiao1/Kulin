@@ -37,7 +37,7 @@ import { asOptionalField } from "@/lib/utils"
 import { ModelService } from "@/types"
 import { serviceTypes } from "@/types"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { KeyedMutator } from "swr"
@@ -69,43 +69,72 @@ const serviceFormSchema = z.object({
     type: z.coerce.number().int().min(0),
 })
 
+type ServerOption = {
+    value: string
+    label: string
+}
+
+const enabledServerKeys = (servers?: Record<string, boolean>) => {
+    return Object.entries(servers ?? {})
+        .filter(([, enabled]) => enabled)
+        .map(([id]) => id)
+}
+
+const selectedServerValues = (data: ModelService | undefined, serverList: ServerOption[]) => {
+    if (!data) return []
+
+    const validServerIds = new Set(serverList.map((server) => server.value))
+    if (data.cover === 0) {
+        return serverList
+            .filter((server) => !data.skip_servers?.[server.value])
+            .map((server) => server.value)
+    }
+
+    return enabledServerKeys(data.skip_servers).filter((serverId) => validServerIds.has(serverId))
+}
+
+const serviceFormDefaults = (data: ModelService | undefined, serverList: ServerOption[]) => {
+    if (data) {
+        return {
+            ...data,
+            fail_trigger_tasks_raw: conv.arrToStr(data.fail_trigger_tasks || []),
+            recover_trigger_tasks_raw: conv.arrToStr(data.recover_trigger_tasks || []),
+            skip_servers_raw: selectedServerValues(data, serverList),
+        }
+    }
+
+    return {
+        type: 1,
+        cover: 1,
+        name: "",
+        target: "",
+        max_latency: 0.0,
+        min_latency: 0.0,
+        duration: 30,
+        notification_group_id: 0,
+        fail_trigger_tasks: [],
+        fail_trigger_tasks_raw: "",
+        recover_trigger_tasks: [],
+        recover_trigger_tasks_raw: "",
+        skip_servers: {},
+        skip_servers_raw: [],
+    }
+}
+
 export const ServiceCard: React.FC<ServiceCardProps> = ({ data, mutate }) => {
     const { servers } = useServer()
-    const serverList = servers?.map((s) => ({
-        value: `${s.id}`,
-        label: s.name,
-    })) || [{ value: "", label: "" }]
+    const serverList = useMemo(
+        () =>
+            servers?.map((s) => ({
+                value: `${s.id}`,
+                label: s.name,
+            })) || [],
+        [servers],
+    )
 
     const form = useForm({
         resolver: zodResolver(serviceFormSchema) as any,
-        defaultValues: data
-            ? {
-                  ...data,
-                  fail_trigger_tasks_raw: conv.arrToStr(data.fail_trigger_tasks || []),
-                  recover_trigger_tasks_raw: conv.arrToStr(data.recover_trigger_tasks || []),
-                  skip_servers_raw:
-                      data.cover === 0
-                          ? serverList
-                                .filter((server) => !data.skip_servers?.[server.value])
-                                .map((server) => server.value)
-                          : conv.recordToStrArr(data.skip_servers ? data.skip_servers : {}),
-              }
-            : {
-                  type: 1,
-                  cover: 1,
-                  name: "",
-                  target: "",
-                  max_latency: 0.0,
-                  min_latency: 0.0,
-                  duration: 30,
-                  notification_group_id: 0,
-                  fail_trigger_tasks: [],
-                  fail_trigger_tasks_raw: "",
-                  recover_trigger_tasks: [],
-                  recover_trigger_tasks_raw: "",
-                  skip_servers: {},
-                  skip_servers_raw: [],
-              },
+        defaultValues: serviceFormDefaults(data, serverList),
         resetOptions: {
             keepDefaultValues: false,
         },
@@ -113,7 +142,17 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ data, mutate }) => {
 
     const [open, setOpen] = useState(false)
 
+    useEffect(() => {
+        if (open) {
+            form.reset(serviceFormDefaults(data, serverList))
+        }
+    }, [data, form, open, serverList])
+
     const onSubmit = async (values: any) => {
+        const validServerIds = new Set(serverList.map((server) => server.value))
+        values.skip_servers_raw = (values.skip_servers_raw ?? []).filter(
+            (serverId: string) => serverList.length === 0 || validServerIds.has(serverId),
+        )
         values.cover = 1
         values.skip_servers = conv.arrToRecord(values.skip_servers_raw)
         values.fail_trigger_tasks = conv.strToArr(values.fail_trigger_tasks_raw).map(Number)

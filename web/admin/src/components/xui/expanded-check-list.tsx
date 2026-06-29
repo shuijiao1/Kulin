@@ -29,14 +29,18 @@ export const ExpandedCheckList: React.FC<ExpandedCheckListProps> = ({
     renderRight,
 }) => {
     const [expanded, setExpanded] = useState(false)
-    const selectedSet = new Set(value)
+    const optionValueSet = new Set(options.map((option) => option.value))
+    const normalizedValue = Array.from(
+        new Set((Array.isArray(value) ? value : []).filter((item) => optionValueSet.has(item))),
+    )
+    const selectedSet = new Set(normalizedValue)
 
     const toggleValue = (optionValue: string, checked: boolean) => {
         if (checked) {
-            onChange(Array.from(new Set([...value, optionValue])))
+            onChange(Array.from(new Set([...normalizedValue, optionValue])))
             return
         }
-        onChange(value.filter((item) => item !== optionValue))
+        onChange(normalizedValue.filter((item) => item !== optionValue))
     }
 
     return (
@@ -48,7 +52,7 @@ export const ExpandedCheckList: React.FC<ExpandedCheckListProps> = ({
                 onClick={() => setExpanded((current) => !current)}
             >
                 <span>
-                    {title} {value.length}/{options.length}
+                    {title} {normalizedValue.length}/{options.length}
                 </span>
                 <ChevronDown
                     className={cn(
