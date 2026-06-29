@@ -45,10 +45,10 @@ func initParams() *jwt.GinJWTMiddleware {
 		Authenticator:   authenticator(),
 		Authorizator:    authorizator(),
 		Unauthorized:    unauthorized(),
-		// query: token still accepted because the WebSocket browser API
-		// cannot set Authorization headers; removing it would break the
-		// /ws/* routes until the frontend migrates to cookie auth.
-		TokenLookup:   "header: Authorization, query: token, cookie: nz-jwt",
+		// Never accept JWTs from query strings: URLs are routinely stored in
+		// browser history, reverse-proxy logs, Referer headers, and screenshots.
+		// WebSocket clients use the same-origin nz-jwt cookie instead.
+		TokenLookup:   "header: Authorization, cookie: nz-jwt",
 		TokenHeadName: "Bearer",
 		TimeFunc:      time.Now,
 

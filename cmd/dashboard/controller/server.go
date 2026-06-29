@@ -116,9 +116,13 @@ func updateServer(c *gin.Context) (any, error) {
 		return nil, newGormError("%v", err)
 	}
 
-	rs, _ := singleton.ServerShared.Get(s.ID)
-	s.CopyFromRunningServer(rs)
-	singleton.ServerShared.Update(&s, "")
+	if rs, ok := singleton.ServerShared.Get(s.ID); ok && rs != nil {
+		s.CopyFromRunningServer(rs)
+		singleton.ServerShared.Update(&s, "")
+	} else {
+		model.InitServer(&s)
+		singleton.ServerShared.Update(&s, s.UUID)
+	}
 
 	return nil, nil
 }

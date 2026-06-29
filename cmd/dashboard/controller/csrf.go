@@ -98,8 +98,11 @@ const (
 //
 // Bypass conditions:
 //   - Safe methods (GET/HEAD/OPTIONS): no state mutation, no CSRF risk.
-//   - Bearer-token PAT requests (`Authorization: Bearer nzp_*`): stateless,
-//     no ambient cookie, so a CSRF attack cannot induce them.
+//
+// Kulin's current dashboard mutation routes are cookie/JWT authenticated, so
+// unsafe methods always require the signed double-submit pair. If stateless
+// bearer/PAT mutation routes are added later, they should live behind a
+// separate auth middleware that can make an explicit CSRF decision.
 //
 // Reject conditions:
 //   - Missing or empty X-CSRF-Token header.

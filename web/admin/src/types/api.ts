@@ -6,14 +6,16 @@ export interface ModelIP {
 export interface ModelUser {
     id: number
     username: string
-    password?: string
     role?: number
     avatar_url?: string
 }
 
 export interface ModelProfile extends ModelUser {
-    agent_secret?: string
     login_ip?: string
+}
+
+export interface ModelAgentSecretResponse {
+    agent_secret?: string
 }
 
 export interface ModelProfileForm {
@@ -79,7 +81,7 @@ export interface ModelServer {
     home_monitor_id?: number
 }
 
-export interface ModelServerForm extends Partial<ModelServer> {}
+export type ModelServerForm = Partial<ModelServer>
 
 export interface ModelService {
     id: number
@@ -103,7 +105,7 @@ export interface ModelService {
     display_index?: number
 }
 
-export interface ModelServiceForm extends Partial<ModelService> {}
+export type ModelServiceForm = Partial<ModelService>
 
 export interface ModelNotification {
     id: number
@@ -120,7 +122,7 @@ export interface ModelNotification {
     format_metric_units?: boolean
 }
 
-export interface ModelNotificationForm extends Partial<ModelNotification> {}
+export type ModelNotificationForm = Partial<ModelNotification>
 
 export interface ModelAlertRuleEntry {
     type: string
@@ -147,7 +149,7 @@ export interface ModelAlertRule {
     enable?: boolean
 }
 
-export interface ModelAlertRuleForm extends Partial<ModelAlertRule> {}
+export type ModelAlertRuleForm = Partial<ModelAlertRule>
 
 export interface FrontendTemplate {
     path?: string
@@ -177,7 +179,7 @@ export interface ModelSetting {
     version?: string
 }
 
-export interface ModelSettingForm extends Partial<ModelSetting> {}
+export type ModelSettingForm = Partial<ModelSetting>
 
 export interface ModelSettingResponse {
     config?: ModelSetting

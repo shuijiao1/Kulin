@@ -26,9 +26,18 @@ func callerIsAdmin(c *gin.Context) bool {
 	user, _ := u.(*model.User)
 	return user != nil && user.Role.IsAdmin()
 }
-func userCanViewServer(_ *gin.Context, server *model.Server) bool {
-	return server != nil
+
+func forceAuthBlocksGuest(c *gin.Context) bool {
+	if singleton.Conf == nil || !singleton.Conf.ForceAuth {
+		return false
+	}
+	_, ok := c.Get(model.CtxKeyAuthorizedUser)
+	return !ok
 }
-func userCanViewService(_ *gin.Context, service *model.Service) bool {
-	return service != nil
+
+func userCanViewServer(c *gin.Context, server *model.Server) bool {
+	return server != nil && !forceAuthBlocksGuest(c)
+}
+func userCanViewService(c *gin.Context, service *model.Service) bool {
+	return service != nil && !forceAuthBlocksGuest(c)
 }

@@ -65,6 +65,7 @@ func routers(r *gin.Engine, frontendDist fs.FS) {
 	auth.POST("/refresh-token", authMiddleware.RefreshHandler)
 	auth.GET("/profile", commonHandler(getProfile))
 	auth.POST("/profile", commonHandler(updateProfile))
+	auth.POST("/agent-secret", adminHandler(getAgentSecret))
 	auth.GET("/server", listHandler(listServer))
 	auth.PATCH("/server/:id", commonHandler(updateServer))
 	auth.GET("/server/:id/service-binding", commonHandler(getServerServiceBinding))
@@ -93,7 +94,7 @@ func routers(r *gin.Engine, frontendDist fs.FS) {
 }
 
 func recordPath(c *gin.Context) {
-	url := c.Request.URL.String()
+	url := c.Request.URL.Path
 	for _, p := range c.Params {
 		url = strings.Replace(url, p.Value, ":"+p.Key, 1)
 	}

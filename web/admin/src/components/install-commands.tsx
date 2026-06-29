@@ -1,3 +1,4 @@
+import { getAgentSecret } from "@/api/user"
 import { Button, ButtonProps } from "@/components/ui/button"
 import {
     DropdownMenu,
@@ -5,11 +6,10 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useAuth } from "@/hooks/useAuth"
 import useSettings from "@/hooks/useSetting"
-import { copyToClipboard } from "@/lib/utils"
-import { ModelProfile, ModelSetting } from "@/types"
 import { t } from "@/lib/labels"
+import { copyToClipboard } from "@/lib/utils"
+import { ModelSetting } from "@/types"
 import { Check, Copy, Download } from "lucide-react"
 import { forwardRef, useState } from "react"
 import { toast } from "sonner"
@@ -30,17 +30,15 @@ export const InstallCommandsMenu = forwardRef<HTMLButtonElement, InstallCommands
     ({ uuid, iconOnly = false, menuItem = false, ...props }, ref) => {
         const [copy, setCopy] = useState(false)
         const { data: settings } = useSettings()
-        const { profile } = useAuth()
-
 
         const switchState = async (type: number) => {
             if (!copy) {
                 try {
                     setCopy(true)
-                    if (!profile) throw new Error("Profile is not found.")
                     if (!settings?.config) throw new Error("Settings is not found.")
+                    const { agent_secret } = await getAgentSecret()
                     await copyToClipboard(
-                        generateCommand(type, settings!.config, profile, uuid) || "",
+                        generateCommand(type, settings!.config, agent_secret, uuid) || "",
                     )
                 } catch (e: Error | any) {
                     console.error(e)
@@ -72,12 +70,7 @@ export const InstallCommandsMenu = forwardRef<HTMLButtonElement, InstallCommands
                             <span>{t("InstallCommands")}</span>
                         </button>
                     ) : iconOnly ? (
-                        <Button
-                            ref={ref}
-                            title={t("InstallCommands")}
-                            size="icon"
-                            {...props}
-                        >
+                        <Button ref={ref} title={t("InstallCommands")} size="icon" {...props}>
                             {copy ? (
                                 <Check className="h-4 w-4" />
                             ) : (
@@ -137,10 +130,13 @@ const normalizeInstallHost = (host?: string) => {
     return trimmed
 }
 
+const shellQuote = (value: string | boolean) => `'${String(value).replace(/'/g, `'\\''`)}'`
+const powerShellQuote = (value: string | boolean) => `'${String(value).replace(/'/g, `''`)}'`
+
 const generateCommand = (
     type: number,
     { install_host, tls }: ModelSetting,
-    { agent_secret }: ModelProfile,
+    agent_secret?: string,
     uuid?: string,
 ) => {
     const agentHost = normalizeInstallHost(install_host)
@@ -149,31 +145,26 @@ const generateCommand = (
 
     const useTLS = tls !== false
     const envParts = [
-        `KULIN_SERVER=${agentHost}`,
-        `KULIN_TLS=${useTLS}`,
-        `KULIN_CLIENT_SECRET=${agent_secret}`,
+        `KULIN_SERVER=${shellQuote(agentHost)}`,
+        `KULIN_TLS=${shellQuote(useTLS)}`,
+        `KULIN_CLIENT_SECRET=${shellQuote(agent_secret)}`,
     ]
-    if (uuid) envParts.push(`KULIN_UUID=${uuid}`)
+    if (uuid) envParts.push(`KULIN_UUID=${shellQuote(uuid)}`)
     const env = envParts.join(" ")
 
     const envWinParts = [
-        `$env:KULIN_SERVER="${agentHost}";`,
-        `$env:KULIN_TLS="${useTLS}";`,
-        `$env:KULIN_CLIENT_SECRET="${agent_secret}";`,
+        `$env:KULIN_SERVER=${powerShellQuote(agentHost)};`,
+        `$env:KULIN_TLS=${powerShellQuote(useTLS)};`,
+        `$env:KULIN_CLIENT_SECRET=${powerShellQuote(agent_secret)};`,
     ]
-    if (uuid) envWinParts.push(`$env:KULIN_UUID="${uuid}";`)
+    if (uuid) envWinParts.push(`$env:KULIN_UUID=${powerShellQuote(uuid)};`)
     const env_win = envWinParts.join("")
 
-    switch (type) {
-    case OSTypes.Linux:
-    case OSTypes.macOS: {
+    if (type === OSTypes.Linux || type === OSTypes.macOS) {
         return `curl -fsSL https://raw.githubusercontent.com/shuijiao1/Kulin/master/script/agent-install.sh -o kulin-agent.sh && chmod +x kulin-agent.sh && env ${env} ./kulin-agent.sh`
     }
-    case OSTypes.Windows: {
+    if (type === OSTypes.Windows) {
         return `Remove-Item C:\\kulin-agent.ps1 -Force -ErrorAction SilentlyContinue;${env_win}[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12;Invoke-WebRequest "https://raw.githubusercontent.com/shuijiao1/Kulin/master/script/agent-install-windows.ps1" -Headers @{"Cache-Control"="no-cache"} -OutFile C:\\kulin-agent.ps1;powershell.exe -ExecutionPolicy Bypass -File C:\\kulin-agent.ps1`
     }
-    default: {
-        throw new Error(`Unknown OS: ${type}`)
-    }
-    }
+    throw new Error(`Unknown OS: ${type}`)
 }

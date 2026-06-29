@@ -23,9 +23,9 @@ const DefaultAgentSecretLength = 32
 type User struct {
 	Common
 	Username     string `json:"username,omitempty" gorm:"uniqueIndex"`
-	Password     string `json:"password,omitempty" gorm:"type:char(72)"`
+	Password     string `json:"-" gorm:"type:char(72)"`
 	Role         Role   `json:"role"`
-	AgentSecret  string `json:"agent_secret,omitempty" gorm:"type:char(32)"`
+	AgentSecret  string `json:"-" gorm:"type:char(32)"`
 	AvatarURL    string `json:"avatar_url,omitempty"`
 	TokenVersion uint64 `json:"-" gorm:"not null;default:0"`
 }
@@ -51,9 +51,15 @@ func (u *User) BeforeSave(tx *gorm.DB) error {
 }
 
 type Profile struct {
-	User
+	ID        uint64 `json:"id,omitempty"`
+	Username  string `json:"username,omitempty"`
+	Role      Role   `json:"role"`
+	AvatarURL string `json:"avatar_url,omitempty"`
+	LoginIP   string `json:"login_ip,omitempty"`
+}
+
+type AgentSecretResponse struct {
 	AgentSecret string `json:"agent_secret,omitempty"`
-	LoginIP     string `json:"login_ip,omitempty"`
 }
 
 // OnlineUser is retained only for internal connection counters in lite/single-admin mode.

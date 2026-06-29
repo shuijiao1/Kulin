@@ -45,11 +45,14 @@ func (a *authHandler) check(ctx context.Context) (uint64, error) {
 	}
 	if clientID == 0 {
 		if clientUUID == "" {
-			clientUUID = clientSecret
+			return 0, errors.New("client uuid missing")
 		}
 		if id, ok := singleton.ServerShared.UUIDToID(clientUUID); ok {
 			clientID = id
 		} else {
+			if clientSecret != singleton.Conf.AgentSecretKey {
+				return 0, errors.New("unauthorized")
+			}
 			server := model.Server{Common: model.Common{UserID: firstUserID()}, UUID: clientUUID}
 			if err := singleton.DB.Create(&server).Error; err != nil {
 				return 0, err

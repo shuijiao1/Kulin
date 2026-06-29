@@ -1,9 +1,13 @@
-import { ModelProfile, ModelProfileForm } from "@/types"
+import { ModelAgentSecretResponse, ModelProfile, ModelProfileForm } from "@/types"
 
 import { FetcherMethod, fetcher } from "./api"
 
 export const getProfile = async (): Promise<ModelProfile> => {
     return fetcher<ModelProfile>(FetcherMethod.GET, "/api/v1/profile", null)
+}
+
+export const getAgentSecret = async (): Promise<ModelAgentSecretResponse> => {
+    return fetcher<ModelAgentSecretResponse>(FetcherMethod.POST, "/api/v1/agent-secret", null)
 }
 
 export const login = async (username: string, password: string): Promise<void> => {
