@@ -210,6 +210,101 @@ func TestLoadTodayStatsFromDB(t *testing.T) {
 	assert.Equal(t, uint64(3), ms.TotalDown)
 }
 
+func TestLoadTodayStatsFromDB_UnknownServiceIgnored(t *testing.T) {
+	cleanup := setupTestDB(t)
+	defer cleanup()
+
+	year, month, day := time.Now().Date()
+	today := time.Date(year, month, day, 0, 0, 0, 0, time.UTC)
+
+	serviceID := uint64(1)
+	ss := newTestSentinel([]uint64{serviceID})
+
+	DB.Create(&model.ServiceHistory{
+		ServiceID: 999,
+		ServerID:  0,
+		AvgDelay:  10.0,
+		Up:        5,
+		Down:      1,
+		CreatedAt: today.Add(1 * time.Hour),
+	})
+
+	assert.NotPanics(t, func() {
+		ss.loadTodayStats(today)
+	})
+
+	st := ss.serviceStatusToday[serviceID]
+	assert.Equal(t, uint64(0), st.Up)
+	assert.Equal(t, uint64(0), st.Down)
+	assert.Equal(t, float64(0), st.Delay)
+
+	ms := ss.monthlyStatus[serviceID]
+	assert.Equal(t, uint64(0), ms.TotalUp)
+	assert.Equal(t, uint64(0), ms.TotalDown)
+}
+
+func TestServiceSentinelDeleteUnknownServiceIgnored(t *testing.T) {
+	ss := &ServiceSentinel{
+		serviceStatusToday:       map[uint64]*_TodayStatsOfService{},
+		serviceCurrentStatusData: map[uint64]*serviceTaskStatus{},
+		serviceResponseDataStore: map[uint64]serviceResponseData{},
+		serviceResponsePing:      map[uint64]map[uint64]*pingStore{},
+		tlsCertCache:             map[uint64]string{},
+		services:                 map[uint64]*model.Service{},
+		monthlyStatus:            map[uint64]*serviceResponseItem{},
+	}
+
+	assert.NotPanics(t, func() {
+		ss.Delete([]uint64{999})
+	})
+}
+
+func TestServiceSentinelDeleteClearsAuxiliaryCaches(t *testing.T) {
+	oldCron := CronShared
+	oldLoc := Loc
+	if Loc == nil {
+		Loc = time.Local
+	}
+	CronShared = NewCronClass()
+	t.Cleanup(func() {
+		CronShared.Stop()
+		CronShared = oldCron
+		Loc = oldLoc
+	})
+
+	serviceID := uint64(1)
+	ss := &ServiceSentinel{
+		serviceStatusToday: map[uint64]*_TodayStatsOfService{
+			serviceID: {},
+		},
+		serviceCurrentStatusData: map[uint64]*serviceTaskStatus{
+			serviceID: {},
+		},
+		serviceResponseDataStore: map[uint64]serviceResponseData{
+			serviceID: {},
+		},
+		serviceResponsePing: map[uint64]map[uint64]*pingStore{
+			serviceID: {2: {}},
+		},
+		tlsCertCache: map[uint64]string{
+			serviceID: "cert",
+		},
+		services: map[uint64]*model.Service{
+			serviceID: {Common: model.Common{ID: serviceID}},
+		},
+		monthlyStatus: map[uint64]*serviceResponseItem{
+			serviceID: {},
+		},
+	}
+
+	ss.Delete([]uint64{serviceID})
+
+	assert.NotContains(t, ss.serviceResponsePing, serviceID)
+	assert.NotContains(t, ss.tlsCertCache, serviceID)
+	assert.NotContains(t, ss.services, serviceID)
+	assert.NotContains(t, ss.monthlyStatus, serviceID)
+}
+
 func TestLoadMonthlyStatusFromTSDB(t *testing.T) {
 	db, cleanup := setupTestTSDB(t)
 	defer cleanup()

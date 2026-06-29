@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"slices"
 	"strconv"
 
@@ -57,30 +58,9 @@ func updateServer(c *gin.Context) (any, error) {
 	if err := c.ShouldBindJSON(&raw); err != nil {
 		return nil, err
 	}
-	var sf model.ServerForm
-	for key, value := range raw {
-		switch key {
-		case "name":
-			_ = json.Unmarshal(value, &sf.Name)
-		case "note":
-			_ = json.Unmarshal(value, &sf.Note)
-		case "public_note":
-			_ = json.Unmarshal(value, &sf.PublicNote)
-		case "display_index":
-			_ = json.Unmarshal(value, &sf.DisplayIndex)
-		case "traffic_progress_enabled":
-			_ = json.Unmarshal(value, &sf.TrafficProgressEnabled)
-		case "traffic_progress_mode":
-			_ = json.Unmarshal(value, &sf.TrafficProgressMode)
-		case "traffic_progress_limit":
-			_ = json.Unmarshal(value, &sf.TrafficProgressLimit)
-		case "traffic_progress_limit_unit":
-			_ = json.Unmarshal(value, &sf.TrafficProgressLimitUnit)
-		case "traffic_progress_start_day":
-			_ = json.Unmarshal(value, &sf.TrafficProgressStartDay)
-		case "home_monitor_id":
-			_ = json.Unmarshal(value, &sf.HomeMonitorID)
-		}
+	sf, err := decodeServerForm(raw)
+	if err != nil {
+		return nil, err
 	}
 
 	var s model.Server
@@ -141,6 +121,39 @@ func updateServer(c *gin.Context) (any, error) {
 	singleton.ServerShared.Update(&s, "")
 
 	return nil, nil
+}
+
+func decodeServerForm(raw map[string]json.RawMessage) (model.ServerForm, error) {
+	var sf model.ServerForm
+	for key, value := range raw {
+		var err error
+		switch key {
+		case "name":
+			err = json.Unmarshal(value, &sf.Name)
+		case "note":
+			err = json.Unmarshal(value, &sf.Note)
+		case "public_note":
+			err = json.Unmarshal(value, &sf.PublicNote)
+		case "display_index":
+			err = json.Unmarshal(value, &sf.DisplayIndex)
+		case "traffic_progress_enabled":
+			err = json.Unmarshal(value, &sf.TrafficProgressEnabled)
+		case "traffic_progress_mode":
+			err = json.Unmarshal(value, &sf.TrafficProgressMode)
+		case "traffic_progress_limit":
+			err = json.Unmarshal(value, &sf.TrafficProgressLimit)
+		case "traffic_progress_limit_unit":
+			err = json.Unmarshal(value, &sf.TrafficProgressLimitUnit)
+		case "traffic_progress_start_day":
+			err = json.Unmarshal(value, &sf.TrafficProgressStartDay)
+		case "home_monitor_id":
+			err = json.Unmarshal(value, &sf.HomeMonitorID)
+		}
+		if err != nil {
+			return sf, fmt.Errorf("invalid field %q: %w", key, err)
+		}
+	}
+	return sf, nil
 }
 
 func getServerServiceBinding(c *gin.Context) (map[uint64]bool, error) {

@@ -74,8 +74,10 @@ type ServiceSentinel struct {
 	serviceCurrentStatusData     map[uint64]*serviceTaskStatus    // 当前任务结果缓存
 	serviceResponseDataStore     map[uint64]serviceResponseData   // 当前数据
 
-	serviceResponsePing map[uint64]map[uint64]*pingStore // [service_id] -> ClientID -> delay
-	tlsCertCache        map[uint64]string
+	serviceResponsePingLock sync.Mutex
+	serviceResponsePing     map[uint64]map[uint64]*pingStore // [service_id] -> ClientID -> delay
+	tlsCertCacheLock        sync.RWMutex
+	tlsCertCache            map[uint64]string
 
 	servicesLock    sync.RWMutex
 	serviceListLock sync.RWMutex
@@ -292,6 +294,10 @@ func (ss *ServiceSentinel) loadMonthlyStatusFromDB(today time.Time) {
 func (ss *ServiceSentinel) loadTodayStats(today time.Time) {
 	if TSDBEnabled() {
 		for serviceID, ms := range ss.monthlyStatus {
+			todayStats := ss.serviceStatusToday[serviceID]
+			if ms == nil || todayStats == nil {
+				continue
+			}
 			result, err := TSDBShared.QueryServiceHistory(serviceID, tsdb.Period1Day)
 			if err != nil {
 				log.Printf("KULIN>> Failed to load TSDB today stats for service %d: %v", serviceID, err)
@@ -308,10 +314,10 @@ func (ss *ServiceSentinel) loadTodayStats(today time.Time) {
 					delayCount++
 				}
 			}
-			ss.serviceStatusToday[serviceID].Up = totalUp
-			ss.serviceStatusToday[serviceID].Down = totalDown
+			todayStats.Up = totalUp
+			todayStats.Down = totalDown
 			if delayCount > 0 {
-				ss.serviceStatusToday[serviceID].Delay = totalDelay / float64(delayCount)
+				todayStats.Delay = totalDelay / float64(delayCount)
 			}
 			ms.TotalUp += totalUp
 			ms.TotalDown += totalDown
@@ -322,15 +328,22 @@ func (ss *ServiceSentinel) loadTodayStats(today time.Time) {
 		totalDelay := make(map[uint64]float64)
 		totalDelayCount := make(map[uint64]int)
 		for _, mh := range mhs {
-			ss.serviceStatusToday[mh.ServiceID].Up += mh.Up
-			ss.monthlyStatus[mh.ServiceID].TotalUp += mh.Up
-			ss.serviceStatusToday[mh.ServiceID].Down += mh.Down
-			ss.monthlyStatus[mh.ServiceID].TotalDown += mh.Down
+			todayStats := ss.serviceStatusToday[mh.ServiceID]
+			monthlyStats := ss.monthlyStatus[mh.ServiceID]
+			if todayStats == nil || monthlyStats == nil {
+				continue
+			}
+			todayStats.Up += mh.Up
+			monthlyStats.TotalUp += mh.Up
+			todayStats.Down += mh.Down
+			monthlyStats.TotalDown += mh.Down
 			totalDelay[mh.ServiceID] += mh.AvgDelay
 			totalDelayCount[mh.ServiceID]++
 		}
 		for id, delay := range totalDelay {
-			ss.serviceStatusToday[id].Delay = delay / float64(totalDelayCount[id])
+			if todayStats := ss.serviceStatusToday[id]; todayStats != nil {
+				todayStats.Delay = delay / float64(totalDelayCount[id])
+			}
 		}
 	}
 }
@@ -386,15 +399,41 @@ func (ss *ServiceSentinel) Delete(ids []uint64) {
 	for _, id := range ids {
 		delete(ss.serviceCurrentStatusData, id)
 		delete(ss.serviceResponseDataStore, id)
-		delete(ss.tlsCertCache, id)
+		ss.serviceResponsePingLock.Lock()
+		delete(ss.serviceResponsePing, id)
+		ss.serviceResponsePingLock.Unlock()
+		ss.deleteTLSCertCache(id)
 		delete(ss.serviceStatusToday, id)
 
 		// 停掉定时任务
-		CronShared.Remove(ss.services[id].CronJobID)
+		if service, ok := ss.services[id]; ok && service != nil {
+			CronShared.Remove(service.CronJobID)
+		}
 		delete(ss.services, id)
 
 		delete(ss.monthlyStatus, id)
 	}
+}
+
+func (ss *ServiceSentinel) getTLSCertCache(id uint64) string {
+	ss.tlsCertCacheLock.RLock()
+	defer ss.tlsCertCacheLock.RUnlock()
+	return ss.tlsCertCache[id]
+}
+
+func (ss *ServiceSentinel) setTLSCertCache(id uint64, cert string) {
+	ss.tlsCertCacheLock.Lock()
+	defer ss.tlsCertCacheLock.Unlock()
+	if ss.tlsCertCache == nil {
+		ss.tlsCertCache = make(map[uint64]string)
+	}
+	ss.tlsCertCache[id] = cert
+}
+
+func (ss *ServiceSentinel) deleteTLSCertCache(id uint64) {
+	ss.tlsCertCacheLock.Lock()
+	defer ss.tlsCertCacheLock.Unlock()
+	delete(ss.tlsCertCache, id)
 }
 
 func (ss *ServiceSentinel) LoadStats() map[uint64]*serviceResponseItem {
@@ -540,6 +579,12 @@ func (ss *ServiceSentinel) worker() {
 		mh := r.Data
 		if mh.Type == model.TaskTypeTCPPing || mh.Type == model.TaskTypeICMPPing {
 			// TCP/ICMP Ping 使用平均值计算后再写入
+			var shouldPersist bool
+			var avgPing float64
+			var totalCount int
+			var successCount int
+
+			ss.serviceResponsePingLock.Lock()
 			serviceTcpMap, ok := ss.serviceResponsePing[mh.GetId()]
 			if !ok {
 				serviceTcpMap = make(map[uint64]*pingStore)
@@ -555,33 +600,41 @@ func (ss *ServiceSentinel) worker() {
 				ts.successCount++
 			}
 			if ts.count == Conf.AvgPingCount {
+				shouldPersist = true
+				avgPing = ts.ping
+				totalCount = ts.count
+				successCount = ts.successCount
+				ts.count = 0
+				ts.ping = 0
+				ts.successCount = 0
+			}
+			serviceTcpMap[r.Reporter] = ts
+			ss.serviceResponsePingLock.Unlock()
+
+			if shouldPersist {
 				if TSDBEnabled() {
 					if err := TSDBShared.WriteServiceMetrics(&tsdb.ServiceMetrics{
 						ServiceID:  mh.GetId(),
 						ServerID:   r.Reporter,
 						Timestamp:  time.Now(),
-						Delay:      ts.ping,
-						Successful: ts.successCount*2 >= ts.count,
+						Delay:      avgPing,
+						Successful: successCount*2 >= totalCount,
 					}); err != nil {
 						log.Printf("KULIN>> Failed to save service monitor metrics to TSDB: %v", err)
 					}
 				} else {
 					if err := DB.Create(&model.ServiceHistory{
 						ServiceID: mh.GetId(),
-						AvgDelay:  ts.ping,
+						AvgDelay:  avgPing,
 						Data:      mh.Data,
 						ServerID:  r.Reporter,
-						Up:        uint64(ts.successCount),
-						Down:      uint64(ts.count - ts.successCount),
+						Up:        uint64(successCount),
+						Down:      uint64(totalCount - successCount),
 					}).Error; err != nil {
 						log.Printf("KULIN>> Failed to save service monitor metrics: %v", err)
 					}
 				}
-				ts.count = 0
-				ts.ping = 0
-				ts.successCount = 0
 			}
-			serviceTcpMap[r.Reporter] = ts
 		} else {
 			if TSDBEnabled() {
 				if err := TSDBShared.WriteServiceMetrics(&tsdb.ServiceMetrics{
@@ -597,32 +650,41 @@ func (ss *ServiceSentinel) worker() {
 		}
 
 		ss.serviceResponseDataStoreLock.Lock()
+		todayStats := ss.serviceStatusToday[mh.GetId()]
+		currentStatus := ss.serviceCurrentStatusData[mh.GetId()]
+		if todayStats == nil || currentStatus == nil {
+			ss.serviceResponsePingLock.Lock()
+			delete(ss.serviceResponsePing, mh.GetId())
+			ss.serviceResponsePingLock.Unlock()
+			ss.deleteTLSCertCache(mh.GetId())
+			ss.serviceResponseDataStoreLock.Unlock()
+			continue
+		}
 		// 写入当天状态
 		if mh.Successful {
-			ss.serviceStatusToday[mh.GetId()].Delay = (ss.serviceStatusToday[mh.
-				GetId()].Delay*float64(ss.serviceStatusToday[mh.GetId()].Up) +
-				float64(mh.Delay)) / float64(ss.serviceStatusToday[mh.GetId()].Up+1)
-			ss.serviceStatusToday[mh.GetId()].Up++
+			todayStats.Delay = (todayStats.Delay*float64(todayStats.Up) +
+				float64(mh.Delay)) / float64(todayStats.Up+1)
+			todayStats.Up++
 		} else {
-			ss.serviceStatusToday[mh.GetId()].Down++
+			todayStats.Down++
 		}
 
 		currentTime := time.Now()
-		if ss.serviceCurrentStatusData[mh.GetId()].t.IsZero() {
-			ss.serviceCurrentStatusData[mh.GetId()].t = currentTime
+		if currentStatus.t.IsZero() {
+			currentStatus.t = currentTime
 		}
 
 		// 写入当前数据
-		if ss.serviceCurrentStatusData[mh.GetId()].t.Before(currentTime) {
-			ss.serviceCurrentStatusData[mh.GetId()].t = currentTime.Add(30 * time.Second)
-			ss.serviceCurrentStatusData[mh.GetId()].result = append(ss.serviceCurrentStatusData[mh.GetId()].result, mh)
+		if currentStatus.t.Before(currentTime) {
+			currentStatus.t = currentTime.Add(30 * time.Second)
+			currentStatus.result = append(currentStatus.result, mh)
 		}
 
 		// 更新当前状态
 		ss.serviceResponseDataStore[mh.GetId()] = serviceResponseData{}
 
 		// 永远是最新的 30 个数据的状态 [01:00, 02:00, 03:00] -> [04:00, 02:00, 03: 00]
-		for _, cs := range ss.serviceCurrentStatusData[mh.GetId()].result {
+		for _, cs := range currentStatus.result {
 			if cs.GetId() > 0 {
 				rd := ss.serviceResponseDataStore[mh.GetId()]
 				if cs.Successful {
@@ -646,8 +708,8 @@ func (ss *ServiceSentinel) worker() {
 			stateCode = GetStatusCode(upPercent)
 		}
 
-		if len(ss.serviceCurrentStatusData[mh.GetId()].result) == _CurrentStatusSize {
-			ss.serviceCurrentStatusData[mh.GetId()].t = currentTime
+		if len(currentStatus.result) == _CurrentStatusSize {
+			currentStatus.t = currentTime
 			if !TSDBEnabled() {
 				rd := ss.serviceResponseDataStore[mh.GetId()]
 				if err := DB.Create(&model.ServiceHistory{
@@ -660,7 +722,7 @@ func (ss *ServiceSentinel) worker() {
 					log.Printf("KULIN>> Failed to save service monitor metrics: %v", err)
 				}
 			}
-			ss.serviceCurrentStatusData[mh.GetId()].result = ss.serviceCurrentStatusData[mh.GetId()].result[:0]
+			currentStatus.result = currentStatus.result[:0]
 		}
 
 		cs, _ = ss.Get(mh.GetId())
@@ -671,10 +733,10 @@ func (ss *ServiceSentinel) worker() {
 		}
 
 		// 状态变更报警+触发任务执行
-		if stateCode == StatusDown || stateCode != ss.serviceCurrentStatusData[mh.GetId()].lastStatus {
-			lastStatus := ss.serviceCurrentStatusData[mh.GetId()].lastStatus
+		if stateCode == StatusDown || stateCode != currentStatus.lastStatus {
+			lastStatus := currentStatus.lastStatus
 			// 存储新的状态值
-			ss.serviceCurrentStatusData[mh.GetId()].lastStatus = stateCode
+			currentStatus.lastStatus = stateCode
 
 			notifyCheck(&r, m, cs, mh, lastStatus, stateCode)
 		}
@@ -702,11 +764,17 @@ func (ss *ServiceSentinel) worker() {
 				enableNotify := cs.Notify
 
 				// 首次获取证书信息时，缓存证书信息
-				if ss.tlsCertCache[mh.GetId()] == "" {
-					ss.tlsCertCache[mh.GetId()] = mh.Data
+				cachedCert := ss.getTLSCertCache(mh.GetId())
+				if cachedCert == "" {
+					ss.setTLSCertCache(mh.GetId(), mh.Data)
+					cachedCert = mh.Data
 				}
 
-				oldCert := strings.Split(ss.tlsCertCache[mh.GetId()], "|")
+				oldCert := strings.Split(cachedCert, "|")
+				if len(oldCert) <= 1 {
+					ss.setTLSCertCache(mh.GetId(), mh.Data)
+					oldCert = newCert
+				}
 				isCertChanged := false
 				expiresOld, _ := time.Parse("2006-01-02 15:04:05 -0700 MST", oldCert[1])
 				expiresNew, _ := time.Parse("2006-01-02 15:04:05 -0700 MST", newCert[1])
@@ -714,7 +782,7 @@ func (ss *ServiceSentinel) worker() {
 				// 证书变更时，更新缓存
 				if oldCert[0] != newCert[0] && !expiresNew.Equal(expiresOld) {
 					isCertChanged = true
-					ss.tlsCertCache[mh.GetId()] = mh.Data
+					ss.setTLSCertCache(mh.GetId(), mh.Data)
 				}
 
 				notificationGroupID := cs.NotificationGroupID
