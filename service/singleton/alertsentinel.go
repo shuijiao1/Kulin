@@ -15,6 +15,9 @@ const (
 	_RuleCheckNoData = iota
 	_RuleCheckFail
 	_RuleCheckPass
+
+	alertIncidentLabel = "故障"
+	alertResolvedLabel = "恢复"
 )
 
 type NotificationHistory struct {
@@ -154,7 +157,7 @@ func checkStatus() {
 				// 始终触发模式或上次检查不为失败时触发报警（跳过单次触发+上次失败的情况）
 				if alert.TriggerMode == model.ModeAlwaysTrigger || alertsPrevState[alert.ID][server.ID] != _RuleCheckFail {
 					alertsPrevState[alert.ID][server.ID] = _RuleCheckFail
-					message := fmt.Sprintf("[%s] %s(%s) %s", Localizer.T("Incident"),
+					message := fmt.Sprintf("[%s] %s(%s) %s", alertIncidentLabel,
 						server.Name, IPDesensitize(server.GeoIP.IP.Join()), alert.Name)
 					go CronShared.SendTriggerTasks(alert.FailTriggerTasks, curServer.ID, alert.UserID)
 					go NotificationShared.SendNotification(alert.NotificationGroupID, message, NotificationMuteLabel.ServerIncident(server.ID, alert.ID), &curServer)
@@ -164,7 +167,7 @@ func checkStatus() {
 			} else {
 				// 本次通过检查但上一次的状态为失败，则发送恢复通知
 				if alertsPrevState[alert.ID][server.ID] == _RuleCheckFail {
-					message := fmt.Sprintf("[%s] %s(%s) %s", Localizer.T("Resolved"),
+					message := fmt.Sprintf("[%s] %s(%s) %s", alertResolvedLabel,
 						server.Name, IPDesensitize(server.GeoIP.IP.Join()), alert.Name)
 					go CronShared.SendTriggerTasks(alert.RecoverTriggerTasks, curServer.ID, alert.UserID)
 					go NotificationShared.SendNotification(alert.NotificationGroupID, message, NotificationMuteLabel.ServerIncidentResolved(server.ID, alert.ID), &curServer)

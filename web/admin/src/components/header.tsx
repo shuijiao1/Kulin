@@ -153,7 +153,7 @@ export default function Header() {
             <div className="flex shrink-0 items-center justify-center">
                 {profile && (
                     <Drawer open={open} onOpenChange={setOpen}>
-                        <DrawerTrigger aria-label="Toggle Menu" asChild>
+                        <DrawerTrigger aria-label="切换菜单" asChild>
                             <IconButton icon="menu" variant="ghost" />
                         </DrawerTrigger>
                         <DrawerContent>

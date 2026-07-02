@@ -95,7 +95,12 @@ func updateConfig(c *gin.Context) (any, error) {
 		return nil, err
 	}
 
-	singleton.Conf.Language = strings.ReplaceAll(sf.Language, "-", "_")
+	if sf.Language != "" {
+		singleton.Conf.Language = strings.ReplaceAll(sf.Language, "-", "_")
+	}
+	if singleton.Conf.Language == "" {
+		singleton.Conf.Language = "zh_CN"
+	}
 
 	singleton.Conf.EnableIPChangeNotification = sf.EnableIPChangeNotification
 	singleton.Conf.EnablePlainIPInNotification = sf.EnablePlainIPInNotification

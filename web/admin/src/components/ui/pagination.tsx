@@ -47,25 +47,25 @@ PaginationLink.displayName = "PaginationLink"
 
 const PaginationPrevious = ({ className, ...props }: ComponentProps<typeof PaginationLink>) => (
     <PaginationLink
-        aria-label="Go to previous page"
+        aria-label="转到上一页"
         size="default"
         className={cn("gap-1 pl-2.5", className)}
         {...props}
     >
         <ChevronLeft className="h-4 w-4" />
-        <span>Previous</span>
+        <span>上一页</span>
     </PaginationLink>
 )
 PaginationPrevious.displayName = "PaginationPrevious"
 
 const PaginationNext = ({ className, ...props }: ComponentProps<typeof PaginationLink>) => (
     <PaginationLink
-        aria-label="Go to next page"
+        aria-label="转到下一页"
         size="default"
         className={cn("gap-1 pr-2.5", className)}
         {...props}
     >
-        <span>Next</span>
+        <span>下一页</span>
         <ChevronRight className="h-4 w-4" />
     </PaginationLink>
 )
@@ -78,7 +78,7 @@ const PaginationEllipsis = ({ className, ...props }: ComponentProps<"span">) => 
         {...props}
     >
         <MoreHorizontal className="h-4 w-4" />
-        <span className="sr-only">More pages</span>
+        <span className="sr-only">更多页面</span>
     </span>
 )
 PaginationEllipsis.displayName = "PaginationEllipsis"

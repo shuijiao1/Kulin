@@ -30,7 +30,7 @@ export const ServerProvider: React.FC<ServerProviderProps> = ({
                     const serverData = s.map(({ id, name }) => ({ id, name }))
                     setServer(serverData)
                 } catch (error: any) {
-                    toast("ServerProvider Error", {
+                    toast("服务器数据错误", {
                         description: error.message,
                     })
                     setServer(undefined)

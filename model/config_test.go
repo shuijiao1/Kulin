@@ -20,6 +20,7 @@ func TestReadConfig(t *testing.T) {
 			Value any
 			Cond  bool
 		}{
+			{"language", c.Language, c.Language == "zh_CN"},
 			{"jwt_secret_key", c.JWTSecretKey, c.JWTSecretKey != ""},
 			{"user_template", c.UserTemplate, c.UserTemplate == "user-dist"},
 			{"admin_template", c.AdminTemplate, c.AdminTemplate == "admin-dist"},

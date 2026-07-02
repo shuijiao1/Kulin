@@ -1228,7 +1228,7 @@ function MemChart({
 										{formatBytes(data.host.swap_total)}
 									</>
 								) : (
-									<>no swap</>
+									<>无虚拟内存</>
 								)}
 							</div>
 						</section>

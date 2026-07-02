@@ -133,7 +133,7 @@ export const NotifierCard: React.FC<NotifierCardProps> = ({ data, mutate }) => {
                                         <FormItem>
                                             <FormLabel>{t("Name")}</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="My Notifier" {...field} />
+                                                <Input placeholder="我的通知渠道" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -164,10 +164,10 @@ export const NotifierCard: React.FC<NotifierCardProps> = ({ data, mutate }) => {
                                     name="user_id"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Telegram User ID</FormLabel>
+                                            <FormLabel>Telegram 用户 ID</FormLabel>
                                             <FormControl>
                                                 <Input
-                                                    placeholder="填写接收通知的 User ID"
+                                                    placeholder="填写接收通知的用户 ID"
                                                     {...field}
                                                 />
                                             </FormControl>

@@ -69,7 +69,7 @@ export const Combobox = forwardRef<HTMLButtonElement, ComboboxProps>(
                     >
                         <CommandInput placeholder={placeholder} className="h-9" />
                         <CommandList>
-                            <CommandEmpty>No result found.</CommandEmpty>
+                            <CommandEmpty>没有找到结果。</CommandEmpty>
                             <CommandGroup>
                                 {options.map((option) => (
                                     <CommandItem

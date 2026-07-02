@@ -63,7 +63,7 @@ export const Filepath: FC<FilepathProps> = ({ path, setPath }) => {
                                 <DropdownMenu open={open} onOpenChange={setOpen}>
                                     <DropdownMenuTrigger
                                         className="flex items-center gap-1"
-                                        aria-label="Toggle menu"
+                                        aria-label="切换菜单"
                                     >
                                         <BreadcrumbEllipsis className="h-4 w-4" />
                                     </DropdownMenuTrigger>

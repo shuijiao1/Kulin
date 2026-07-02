@@ -200,10 +200,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ data, mutate }) => {
                                         <FormItem>
                                             <FormLabel>{t("Name")}</FormLabel>
                                             <FormControl>
-                                                <Input
-                                                    placeholder="My Service Monitor"
-                                                    {...field}
-                                                />
+                                                <Input placeholder="我的延迟监控" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -237,7 +234,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ data, mutate }) => {
                                             >
                                                 <FormControl>
                                                     <SelectTrigger>
-                                                        <SelectValue placeholder="Select service type" />
+                                                        <SelectValue placeholder="选择监控类型" />
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent>

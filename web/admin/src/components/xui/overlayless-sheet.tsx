@@ -58,7 +58,7 @@ const SheetContent = forwardRef<ComponentRef<typeof SheetPrimitive.Content>, She
                             setOpen(false)
                         }}
                     />
-                    <span className="sr-only">Close</span>
+                    <span className="sr-only">关闭</span>
                 </SheetPrimitive.Close>
             </SheetPrimitive.Content>
         </SheetPortal>

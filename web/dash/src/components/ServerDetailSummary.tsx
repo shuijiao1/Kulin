@@ -2,6 +2,7 @@
 
 import { Progress } from "@/components/ui/progress";
 import { useWebSocketContext } from "@/hooks/use-websocket-context";
+import { t } from "@/lib/labels";
 import { formatNezhaInfo } from "@/lib/utils";
 
 export default function ServerDetailSummary({
@@ -43,21 +44,21 @@ export default function ServerDetailSummary({
 			</section>
 			<section className="flex w-24 flex-col justify-center gap-1 px-1.5 py-1">
 				<section className="flex items-center justify-between">
-					<span className="text-[10px] text-muted-foreground">Mem</span>
+					<span className="text-[10px] text-muted-foreground">{t("serverDetail.mem")}</span>
 					<span className="font-medium text-[10px]">{mem.toFixed(2)}%</span>
 				</section>
 				<UsageBar value={mem} />
 			</section>
 			<section className="flex w-24 flex-col justify-center gap-1 px-1.5 py-1">
 				<section className="flex items-center justify-between">
-					<span className="text-[10px] text-muted-foreground">Disk</span>
+					<span className="text-[10px] text-muted-foreground">{t("serverDetail.disk")}</span>
 					<span className="font-medium text-[10px]">{disk.toFixed(2)}%</span>
 				</section>
 				<UsageBar value={disk} />
 			</section>
 			<section className="flex min-w-[85px] flex-col justify-center px-1.5 py-1">
 				<section className="flex items-center justify-between gap-4">
-					<span className="text-[10px] text-muted-foreground">Process</span>
+					<span className="text-[10px] text-muted-foreground">{t("serverDetailChart.process")}</span>
 					<span className="font-medium text-[10px]">{process}</span>
 				</section>
 			</section>
@@ -73,11 +74,11 @@ export default function ServerDetailSummary({
 			</section>
 			<section className="flex min-w-[120px] flex-col justify-center gap-0.5 px-1.5 py-1">
 				<section className="flex items-center justify-between gap-4">
-					<span className="text-[10px] text-muted-foreground">Upload</span>
+					<span className="text-[10px] text-muted-foreground">{t("serverDetail.upload")}</span>
 					<span className="font-medium text-[10px]">{up.toFixed(2)}M/s</span>
 				</section>
 				<section className="flex items-center justify-between gap-4">
-					<span className="text-[10px] text-muted-foreground">Download</span>
+					<span className="text-[10px] text-muted-foreground">{t("serverDetail.download")}</span>
 					<span className="font-medium text-[10px]">{down.toFixed(2)}M/s</span>
 				</section>
 			</section>

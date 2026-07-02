@@ -30,7 +30,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
                     const nData = n.map(({ id, name }) => ({ id, name }))
                     setNotifier(nData)
                 } catch (error: any) {
-                    toast("NotificationProvider Error", {
+                    toast("通知数据错误", {
                         description: error.message,
                     })
                     setNotifier(undefined)

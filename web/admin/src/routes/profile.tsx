@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useMainStore } from "@/hooks/useMainStore"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
 import { useServer } from "@/hooks/useServer"
+import { t } from "@/lib/labels"
 import { Server } from "lucide-react"
 
 export default function ProfilePage() {
@@ -32,7 +33,7 @@ export default function ProfilePage() {
                     </Avatar>
                     <div>
                         <p className="justify-center text-3xl font-semibold">{profile.username}</p>
-                        <p className="text-gray-400">IP: {profile.login_ip || "Unknown"}</p>
+                        <p className="text-gray-400">IP: {profile.login_ip || t("Unknown")}</p>
                     </div>
                     {isDesktop && (
                         <ProfileCard className="flex mt-4 justify-center items-center max-w-[300px] rounded-lg" />
@@ -45,7 +46,7 @@ export default function ProfilePage() {
                     <Card className="w-full">
                         <CardHeader>
                             <CardTitle className="flex gap-2 text-xl items-center">
-                                <Server /> Servers
+                                <Server /> {t("Servers")}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="text-lg font-semibold">

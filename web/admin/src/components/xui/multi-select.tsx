@@ -298,9 +298,9 @@ export const MultiSelect = forwardRef<HTMLButtonElement, MultiSelectProps>(
                     onTouchMove={stopTouchMoveEventPropagation}
                 >
                     <Command>
-                        <CommandInput placeholder="Search..." onKeyDown={handleInputKeyDown} />
+                        <CommandInput placeholder="搜索..." onKeyDown={handleInputKeyDown} />
                         <CommandList>
-                            <CommandEmpty>No results found.</CommandEmpty>
+                            <CommandEmpty>没有找到结果。</CommandEmpty>
                             <CommandGroup>
                                 <CommandItem
                                     key="all"
@@ -317,7 +317,7 @@ export const MultiSelect = forwardRef<HTMLButtonElement, MultiSelectProps>(
                                     >
                                         <CheckIcon className="h-4 w-4" />
                                     </div>
-                                    <span>(Select All)</span>
+                                    <span>全选</span>
                                 </CommandItem>
                                 {options.map((option) => {
                                     const isSelected = selectedValues.includes(option.value)

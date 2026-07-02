@@ -43,14 +43,14 @@ export default function ServicePage() {
                         (table.getIsSomePageRowsSelected() && "indeterminate")
                     }
                     onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-                    aria-label="Select all"
+                    aria-label="全选"
                 />
             ),
             cell: ({ row }) => (
                 <Checkbox
                     checked={row.getIsSelected()}
                     onCheckedChange={(value) => row.toggleSelected(!!value)}
-                    aria-label="Select row"
+                    aria-label="选择行"
                 />
             ),
             enableSorting: false,
@@ -146,7 +146,7 @@ export default function ServicePage() {
                                         .rows.find((row) => row.original.id === service.id)
                                         ?.toggleSelected(!!value)
                                 }}
-                                aria-label="Select row"
+                                aria-label="选择行"
                             />
                         </div>
                         <div className="mt-3 flex flex-wrap gap-2">

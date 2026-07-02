@@ -259,7 +259,7 @@ export const ServerCard: React.FC<ServerCardProps> = ({ data, mutate }) => {
                                         <FormItem>
                                             <FormLabel>{t("Name")}</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="My Server" {...field} />
+                                                <Input placeholder="我的服务器" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>

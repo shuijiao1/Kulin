@@ -80,7 +80,8 @@ const labels = {
 	},
 	"error": {
 		"pageNotFound": "页面不存在",
-		"backToHome": "回到主页"
+		"backToHome": "回到主页",
+		"somethingWentWrong": "页面遇到了异常"
 	},
 	"tabSwitch": {
 		"Detail": "详情",
